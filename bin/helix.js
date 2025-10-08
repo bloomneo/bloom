@@ -29,7 +29,7 @@ const verbose = process.argv.includes('--verbose');
 /**
  * Process template file with placeholder replacement
  */
-function processTemplateFile(sourcePath, destPath, projectName, verbose = false) {
+function processTemplateFile(sourcePath, destPath, projectName, verbose = false, extraReplacements = {}) {
   try {
     let content = readFileSync(sourcePath, 'utf8');
 
@@ -116,7 +116,7 @@ function copyHelixTemplate(templateType, verbose = false, extraReplacements = {}
           // Handle .template files with placeholder processing
           if (item.endsWith('.template')) {
             const destItem = join(destPath, item.replace('.template', ''));
-            processTemplateFile(sourceItem, destItem, projectName, verbose);
+            processTemplateFile(sourceItem, destItem, projectName, verbose, extraReplacements);
             filesCopied++;
             if (verbose) console.log(`🔍 [DEBUG] Processed template file: ${item} -> ${item.replace('.template', '')}`);
           } else {

@@ -8,7 +8,7 @@
  */
 
 import express from 'express';
-import { fileURLToPath } from 'url';
+import { fileURLToPath, pathToFileURL } from 'url';
 import { dirname, join } from 'path';
 import { readdir } from 'fs/promises';
 import { loggerClass } from '@voilajsx/appkit/logger';
@@ -54,7 +54,8 @@ export async function createApiRouter() {
         let loaded = false;
         for (const routeFile of routeFiles) {
           try {
-            const { default: featureRouter } = await import(routeFile);
+            const fileUrl = pathToFileURL(routeFile).href;
+            const { default: featureRouter } = await import(fileUrl);
             router.use(`/${featureName}`, featureRouter);
             discoveredRoutes.push(`/${featureName}`);
             const fileType = routeFile.endsWith('.ts') ? '.ts' : '.js';

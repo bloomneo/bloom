@@ -1,6 +1,6 @@
 {
   "name": "@voilajsx/helix",
-  "version": "1.0.15",
+  "version": "1.0.17",
   "description": "A modern fullstack framework combining UIKit (React) and AppKit (Express) with Feature-Based Component Architecture (FBCA)",
   "type": "module",
   "main": "./bin/helix.js",

@@ -42,11 +42,17 @@ npm run dev
 ```
 
 This will:
-1. Start Vite dev server (frontend) on port 5173
+1. Start Vite dev server (frontend) on port 5183
 2. Wait for Vite to be ready
 3. Start Electron app
 4. Spawn Express backend on port 3000
 5. Open desktop window with hot reload
+
+**Note:** Port 5183 must be available. If you see "Port 5183 is in use", stop any other processes using that port:
+```bash
+npx kill-port 5183
+npm run dev
+```
 
 ---
 
@@ -227,9 +233,17 @@ Distribute the built application to users:
 
 ## 🐛 Troubleshooting
 
-### Port Already in Use
+### Port 5183 Already in Use
+If Vite fails with "Port 5183 is in use":
 ```bash
-npx kill-port 3000 5173
+# Kill process using port 5183
+npx kill-port 5183
+npm run dev
+```
+
+### Backend Port Already in Use
+```bash
+npx kill-port 3000
 npm run dev
 ```
 

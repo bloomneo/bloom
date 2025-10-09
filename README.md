@@ -15,11 +15,13 @@ A modern fullstack framework that combines **UIKit** (React frontend) and **AppK
 - 🔄 **Hot Reload** - Fast development with Vite and nodemon
 - 📦 **Zero Configuration** - Convention over configuration approach
 - 🎭 **Multi-Theme Support** - Built-in theme system (base, elegant, metro, studio, vivid)
+- 🖥️ **Desktop App Support** - Cross-platform desktop apps with Electron
 
 ## 📦 Templates
 
 - **basicapp** - Basic fullstack app with routing and features (default)
 - **userapp** - Complete user management with authentication, roles, admin panel, and database
+- **desktop-basicapp** - Cross-platform Electron desktop app with FBCA architecture
 
 ## 🚀 Quick Start
 
@@ -43,13 +45,20 @@ cd my-userapp
 npx prisma db push
 npm run db:seed
 npm run dev
+
+# Desktop app (Electron)
+helix create my-desktop-app desktop-basicapp
+cd my-desktop-app
+npm run dev
 ```
 
 Your fullstack app runs on:
-- Frontend: http://localhost:5173
-- Backend: http://localhost:3000
+- **Web Apps**: Frontend (http://localhost:5173) + Backend (http://localhost:3000)
+- **Desktop Apps**: Electron window (http://localhost:5183) + Backend (http://localhost:3000)
 
 ## 📁 Project Structure
+
+### Web App Structure
 
 ```
 my-app/
@@ -77,6 +86,26 @@ my-app/
 ├── dist/                       # Production build
 ├── package.json
 └── tsconfig.json
+```
+
+### Desktop App Structure
+
+```
+my-desktop-app/
+├── src/
+│   └── desktop/
+│       ├── main/               # Backend (AppKit + Express)
+│       │   ├── features/
+│       │   ├── lib/
+│       │   └── server.ts
+│       └── renderer/           # Frontend (UIKit + React)
+│           ├── features/
+│           ├── shared/
+│           └── main.tsx
+├── electron/
+│   └── main.js                 # Electron main process
+├── dist/                       # Production build
+└── package.json
 ```
 
 ## 🎯 Feature-Based Architecture
@@ -167,19 +196,25 @@ const StatusCheck = () => {
 
 ## 📜 Available Scripts
 
-### Development
+### Web App Scripts
 
 ```bash
 npm run dev          # Both API (3000) + Web (5173)
 npm run dev:api      # Backend only
 npm run dev:web      # Frontend only
-```
-
-### Production
-
-```bash
 npm run build        # Build both frontend and backend
 npm start           # Start production server
+```
+
+### Desktop App Scripts
+
+```bash
+npm run dev          # Both backend + Electron window
+npm run dev:web      # Vite dev server only (5183)
+npm run dev:electron # Electron window only
+npm run build        # Build both frontend and backend
+npm run electron:build # Build distributable desktop app
+npm start           # Start Electron in production mode
 ```
 
 ### UserApp Database Commands
@@ -301,7 +336,7 @@ export default ProductsPage;
 
 ## 📚 Dependencies
 
-### Core Dependencies
+### Core Dependencies (Web Apps)
 
 - `@voilajsx/uikit` - React component library with FBCA support
 - `@voilajsx/appkit` - Express backend framework with structured logging
@@ -311,11 +346,21 @@ export default ProductsPage;
 - `cors` - Cross-origin resource sharing
 - `dotenv` - Environment variable loading
 
+### Core Dependencies (Desktop Apps)
+
+- All web app dependencies, plus:
+- `electron` - Cross-platform desktop application framework
+- `electron-builder` - Package and build desktop apps
+- `wait-on` - Wait for ports to be ready
+- `cross-env` - Cross-platform environment variables
+- `helmet` - Security headers
+- `morgan` - HTTP request logger
+
 ### Development Dependencies
 
 - `vite` - Fast frontend build tool
 - `typescript` - Type safety
-- `nodemon` - Backend auto-reload
+- `nodemon` - Backend auto-reload (web apps)
 - `concurrently` - Run multiple commands
 - `tsx` - TypeScript execution
 - `eslint` - Code linting

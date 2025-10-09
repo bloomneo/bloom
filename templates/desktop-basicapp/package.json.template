@@ -1,0 +1,101 @@
+{
+  "name": "{{PROJECT_NAME}}",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "{{PROJECT_NAME}} - Modern Electron desktop application with FBCA, UIKit, and AppKit",
+  "author": "",
+  "keywords": ["electron", "react", "express", "desktop", "fbca", "uikit", "appkit", "helix"],
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "main": "electron/main.js",
+  "scripts": {
+    "dev": "concurrently --names \"WEB,ELECTRON\" --prefix-colors \"green,blue\" \"npm run dev:web\" \"npm run dev:electron\"",
+    "dev:web": "vite",
+    "dev:electron": "wait-on tcp:5183 && cross-env VITE_PORT=5183 electron .",
+    "build": "npm run build:web && npm run build:main",
+    "build:web": "tsc -b && vite build",
+    "build:main": "tsc -p tsconfig.main.json",
+    "electron:build": "npm run build && electron-builder",
+    "start": "electron .",
+    "preview": "vite preview",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.main.json"
+  },
+  "dependencies": {
+    "@voilajsx/uikit": "latest",
+    "@voilajsx/appkit": "latest",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.28.1",
+    "lucide-react": "latest",
+    "express": "^4.21.1",
+    "cors": "^2.8.5",
+    "helmet": "^7.1.0",
+    "morgan": "^1.10.0",
+    "bcrypt": "^5.1.1",
+    "jsonwebtoken": "^9.0.2",
+    "dotenv": "^16.4.7"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.17",
+    "@types/react-dom": "^18.3.5",
+    "@types/express": "^5.0.3",
+    "@types/cors": "^2.8.19",
+    "@types/morgan": "^1.9.9",
+    "@types/bcrypt": "^5.0.2",
+    "@types/jsonwebtoken": "^9.0.6",
+    "@types/node": "^22.10.2",
+    "@typescript-eslint/eslint-plugin": "^8.22.0",
+    "@typescript-eslint/parser": "^8.22.0",
+    "@vitejs/plugin-react-swc": "^3.7.0",
+    "@tailwindcss/vite": "^4.0.0-alpha.26",
+    "tailwindcss": "^4.0.0-alpha.26",
+    "eslint": "^9.25.0",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "eslint-plugin-react-refresh": "^0.4.16",
+    "tsx": "^4.20.5",
+    "typescript": "^5.7.2",
+    "vite": "^6.3.6",
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1",
+    "wait-on": "^7.2.0",
+    "concurrently": "^8.2.2",
+    "cross-env": "^7.0.3"
+  },
+  "build": {
+    "appId": "com.{{PROJECT_NAME}}.app",
+    "productName": "{{PROJECT_NAME}}",
+    "asar": false,
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "node_modules/**/*",
+      "package.json",
+      "public/app.png",
+      "public/app-512.png"
+    ],
+    "directories": {
+      "output": "release"
+    },
+    "npmRebuild": false,
+    "buildDependenciesFromSource": false,
+    "nodeGypRebuild": false,
+    "mac": {
+      "target": "dmg",
+      "category": "public.app-category.developer-tools",
+      "icon": "public/app-512.png"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "public/app-512.png"
+    },
+    "linux": {
+      "target": "AppImage",
+      "category": "Development",
+      "icon": "public/app-512.png"
+    }
+  }
+}

@@ -367,8 +367,9 @@ Usage:
   helix start                             Start production server (requires build)
 
 Templates:
-  basicapp    Basic app with routing and features (default)
-  userapp     User management with auth, roles, and admin panel
+  basicapp            Basic app with routing and features (default)
+  userapp             User management with auth, roles, and admin panel
+  desktop-basicapp    Electron desktop app with FBCA (cross-platform)
 
 Examples:
   helix create my-app                    # Create basicapp in my-app/ directory
@@ -388,7 +389,7 @@ if (command === 'create') {
   }
 
   // Validate template type
-  const validTemplates = ['basicapp', 'userapp'];
+  const validTemplates = ['basicapp', 'userapp', 'desktop-basicapp'];
   if (!validTemplates.includes(templateType)) {
     console.error(`❌ Invalid template "${templateType}". Available templates: ${validTemplates.join(', ')}`);
     process.exit(1);
@@ -397,7 +398,7 @@ if (command === 'create') {
   // Check if template exists
   const templatePath = join(__dirname, '../templates', templateType);
   if (!existsSync(templatePath)) {
-    console.error(`❌ Template "${templateType}" is not yet available. Currently available: basicapp, userapp`);
+    console.error(`❌ Template "${templateType}" is not yet available. Currently available: basicapp, userapp, desktop-basicapp`);
     process.exit(1);
   }
 
@@ -488,6 +489,18 @@ if (command === 'create') {
 
 💡 Default admin login: admin@example.com / admin123
 `);
+      } else if (templateType === 'desktop-basicapp') {
+        console.log(`
+✅ Helix Desktop installed successfully!
+
+🚀 Development:
+  npm run dev          # Start Electron + Backend + Frontend
+
+📦 Build Desktop App:
+  npm run electron:build   # Creates .exe/.dmg/.AppImage in release/
+
+💡 Your desktop app will open automatically when you run "npm run dev"!
+`);
       } else {
         console.log(`
 ✅ Helix ${templateType} installed successfully!
@@ -526,6 +539,22 @@ Next steps:
   npm start           # Start production server
 
 💡 Default admin login: admin@example.com / admin123
+`);
+      } else if (templateType === 'desktop-basicapp') {
+        console.log(`
+✅ Helix Desktop project ${projectName} created successfully!
+
+Next steps:
+  cd ${projectName}
+  npm run dev
+
+🚀 Development:
+  npm run dev          # Start Electron + Backend + Frontend
+
+📦 Build Desktop App:
+  npm run electron:build   # Creates .exe/.dmg/.AppImage
+
+💡 Your desktop app will open automatically!
 `);
       } else {
         console.log(`

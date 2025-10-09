@@ -3,6 +3,8 @@ import react from '@vitejs/plugin-react-swc'
 import path from 'path'
 import tailwindcss from '@tailwindcss/vite'
 import { fileURLToPath } from 'url'
+// @ts-ignore - Simple JS plugin for port detection
+import vitePluginPortFile from './vite-plugin-port-file.js'
 
 // Get __dirname equivalent in ESM
 const __filename = fileURLToPath(import.meta.url)
@@ -11,7 +13,7 @@ const __dirname = path.dirname(__filename)
 // https://vitejs.dev/config/
 export default defineConfig({
   base: './', // Use relative paths for Electron
-  plugins: [react(), tailwindcss()],
+  plugins: [react(), tailwindcss(), vitePluginPortFile()],
   root: 'src/desktop/renderer',
   publicDir: '../../../public', // Include public folder for icons (3 levels up from renderer)
   resolve: {
@@ -20,8 +22,8 @@ export default defineConfig({
     },
   },
   server: {
-    port: 5183, // Use different port for desktop apps to avoid conflicts
-    strictPort: true, // Fail if port is busy - ensures Electron connects to correct port
+    port: 5183, // Preferred port for desktop apps (will try 5184-5190 if busy)
+    strictPort: false, // Allow fallback to other ports (5184-5190)
     host: true,
   },
   build: {

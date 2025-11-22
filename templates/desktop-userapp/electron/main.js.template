@@ -1,0 +1,457 @@
+import 'dotenv/config';
+import { app, BrowserWindow, ipcMain, Menu } from 'electron';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+import { spawn } from 'child_process';
+import { loadProductionConfig } from './config.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Suppress Electron security warnings in development
+// The CSP warning about unsafe-eval is expected because Vite HMR requires it
+// This warning does not appear in production builds
+if (process.env.NODE_ENV === 'development') {
+  process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = 'true';
+}
+
+let mainWindow = null;
+let backendProcess = null;
+
+// Wait for backend to be healthy
+async function waitForBackend(maxRetries = 10) {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 1000);
+
+      const response = await fetch('http://localhost:3000/health', {
+        signal: controller.signal
+      });
+
+      clearTimeout(timeout);
+
+      if (response.ok) {
+        console.log('✅ Backend health check passed');
+        return true;
+      }
+    } catch (err) {
+      // Retry
+    }
+    await new Promise(resolve => setTimeout(resolve, 500));
+  }
+  throw new Error('Backend failed to start - health check timeout');
+}
+
+// Start Express backend server
+async function startBackend(logToRenderer) {
+  return new Promise((resolve, reject) => {
+    // Check if we're in development mode
+    // - If NODE_ENV is explicitly set to 'production', use production mode (for testing)
+    // - If app is packaged, use production mode
+    // - Otherwise, use development mode
+    const isDev = process.env.NODE_ENV !== 'production' && !app.isPackaged;
+
+    if (isDev) {
+      // Development: Use tsx to run TypeScript directly
+      const serverPath = join(__dirname, '../src/desktop/main/server.ts');
+      const tsxPath = join(__dirname, '../node_modules/.bin/tsx');
+
+      logToRenderer('Starting backend in development mode: ' + serverPath);
+
+      // Use system Node.js explicitly (not Electron's bundled Node.js)
+      // This is critical for native modules like better-sqlite3
+      // Find system node by searching common locations
+      const { execSync } = require('child_process');
+      let systemNodePath;
+      try {
+        // Try to find node in PATH (works for most setups including nvm, Herd, etc.)
+        systemNodePath = execSync('which node', { encoding: 'utf8' }).trim();
+        logToRenderer(`Found system Node.js at: ${systemNodePath}`);
+      } catch (err) {
+        // Fallback to common node locations
+        const commonPaths = [
+          '/usr/local/bin/node',
+          '/opt/homebrew/bin/node',
+          process.env.HOME + '/.nvm/versions/node/*/bin/node'
+        ];
+        systemNodePath = commonPaths[0]; // Default fallback
+        logToRenderer(`Warning: Could not find node in PATH, using fallback: ${systemNodePath}`);
+      }
+
+      const env = {
+        ...process.env,
+        NODE_ENV: 'development',
+        ELECTRON_USER_DATA_PATH: app.getPath('userData'),
+      };
+
+      // Run tsx with explicit system node executable
+      backendProcess = spawn(systemNodePath, [tsxPath, serverPath], {
+        env,
+        stdio: ['ignore', 'pipe', 'pipe'], // Capture stdout and stderr
+        shell: false  // No shell needed when using explicit paths
+      });
+
+      // Log backend output with error handling for EPIPE
+      backendProcess.stdout.on('data', (data) => {
+        const message = data.toString().trim();
+        try {
+          console.log('[Backend]', message);
+          logToRenderer('[Backend] ' + message);
+        } catch (err) {
+          // Ignore EPIPE errors (happens when stdout is closed)
+          if (err.code !== 'EPIPE') {
+            console.error('[Backend Logging Error]', err);
+          }
+        }
+      });
+
+      backendProcess.stderr.on('data', (data) => {
+        const message = data.toString().trim();
+        try {
+          console.error('[Backend Error]', message);
+          logToRenderer('[Backend Error] ' + message);
+        } catch (err) {
+          // Ignore EPIPE errors (happens when stderr is closed)
+          if (err.code !== 'EPIPE') {
+            console.error('[Backend Logging Error]', err);
+          }
+        }
+      });
+
+      backendProcess.on('error', (err) => {
+        logToRenderer('❌ Failed to start backend process: ' + err.message);
+        reject(err);
+      });
+
+      backendProcess.on('exit', (code, signal) => {
+        if (code !== 0 && code !== null) {
+          logToRenderer(`⚠️ Backend process exited with code ${code}`);
+        }
+      });
+
+      // Handle stream errors to prevent uncaught exceptions
+      backendProcess.stdout.on('error', (err) => {
+        if (err.code !== 'EPIPE') {
+          console.error('[Backend stdout error]', err);
+        }
+      });
+
+      backendProcess.stderr.on('error', (err) => {
+        if (err.code !== 'EPIPE') {
+          console.error('[Backend stderr error]', err);
+        }
+      });
+
+      // Wait a bit for the process to start, then check health
+      setTimeout(() => {
+        waitForBackend()
+          .then(() => resolve())
+          .catch(reject);
+      }, 2000); // Give it 2 seconds to start
+    } else {
+      // Production: Import and run backend directly in main process
+      let serverPath;
+
+      if (app.isPackaged) {
+        // Packaged app: use process.resourcesPath
+        const resourcesPath = process.resourcesPath || join(__dirname, '..');
+        serverPath = join(resourcesPath, 'app', 'dist', 'main', 'server.js');
+      } else {
+        // Local production test: use project directory
+        serverPath = join(__dirname, '..', 'dist', 'main', 'server.js');
+      }
+
+      logToRenderer('🔍 Starting backend in production mode');
+      logToRenderer('Server path: ' + serverPath);
+      logToRenderer('App packaged: ' + app.isPackaged);
+      logToRenderer('🚀 Importing backend server directly (no subprocess)');
+
+      // Set environment variables for the backend server
+      process.env.NODE_ENV = 'production';
+      process.env.ELECTRON_USER_DATA_PATH = app.getPath('userData');
+
+      // Load production configuration (allows overrides via environment variables)
+      const prodConfig = loadProductionConfig();
+      Object.assign(process.env, prodConfig);
+
+      logToRenderer('User data path: ' + app.getPath('userData'));
+      logToRenderer('Loaded production config from electron/config.js');
+
+      // Capture console.log and console.error from backend
+      const originalLog = console.log;
+      const originalError = console.error;
+
+      console.log = (...args) => {
+        const message = args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : String(arg)).join(' ');
+        originalLog.apply(console, ['[Backend]', ...args]);
+
+        // Send to renderer if window exists
+        if (mainWindow && mainWindow.webContents) {
+          mainWindow.webContents.executeJavaScript(`console.log('[Backend] ${message.replace(/'/g, "\\'")}');`).catch(() => {});
+        }
+      };
+
+      console.error = (...args) => {
+        const message = args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : String(arg)).join(' ');
+        originalError.apply(console, ['[Backend Error]', ...args]);
+
+        // Send to renderer if window exists
+        if (mainWindow && mainWindow.webContents) {
+          mainWindow.webContents.executeJavaScript(`console.error('[Backend Error] ${message.replace(/'/g, "\\'")}');`).catch(() => {});
+        }
+      };
+
+      try {
+        // Import the server module directly
+        import(serverPath)
+          .then(() => {
+            logToRenderer('✅ Backend server imported and started');
+            // Wait for backend to be healthy
+            waitForBackend()
+              .then(() => {
+                // Restore original console methods after backend starts
+                console.log = originalLog;
+                console.error = originalError;
+                resolve();
+              })
+              .catch(reject);
+          })
+          .catch((err) => {
+            logToRenderer('❌ Failed to import backend: ' + err.message);
+            logToRenderer('Error stack: ' + (err.stack || 'No stack trace'));
+            console.log = originalLog;
+            console.error = originalError;
+            reject(err);
+          });
+      } catch (err) {
+        logToRenderer('❌ Failed to start backend: ' + err.message);
+        console.log = originalLog;
+        console.error = originalError;
+        reject(err);
+      }
+    }
+  });
+}
+
+function createApplicationMenu() {
+  const isDev = process.env.NODE_ENV !== 'production' && !app.isPackaged;
+
+  const template = [
+    {
+      label: '{{PROJECT_NAME}}',
+      submenu: [
+        { role: 'about' },
+        { type: 'separator' },
+        { role: 'services' },
+        { type: 'separator' },
+        { role: 'hide' },
+        { role: 'hideOthers' },
+        { role: 'unhide' },
+        { type: 'separator' },
+        { role: 'quit' }
+      ]
+    },
+    {
+      label: 'Edit',
+      submenu: [
+        { role: 'undo' },
+        { role: 'redo' },
+        { type: 'separator' },
+        { role: 'cut' },
+        { role: 'copy' },
+        { role: 'paste' },
+        { role: 'selectAll' }
+      ]
+    },
+    {
+      label: 'View',
+      submenu: isDev ? [
+        { role: 'reload' },
+        { role: 'forceReload' },
+        { role: 'toggleDevTools' },
+        { type: 'separator' },
+        { role: 'resetZoom' },
+        { role: 'zoomIn' },
+        { role: 'zoomOut' },
+        { type: 'separator' },
+        { role: 'togglefullscreen' }
+      ] : [
+        { role: 'resetZoom' },
+        { role: 'zoomIn' },
+        { role: 'zoomOut' },
+        { type: 'separator' },
+        { role: 'togglefullscreen' }
+      ]
+    },
+    {
+      label: 'Window',
+      submenu: [
+        { role: 'minimize' },
+        { role: 'zoom' },
+        { type: 'separator' },
+        { role: 'front' },
+        { type: 'separator' },
+        { role: 'window' }
+      ]
+    }
+  ];
+
+  const menu = Menu.buildFromTemplate(template);
+  Menu.setApplicationMenu(menu);
+}
+
+function createWindow() {
+  mainWindow = new BrowserWindow({
+    width: 1400,
+    height: 900,
+    icon: join(__dirname, '../public/app-512.png'), // App icon (high-res for Retina displays)
+    webPreferences: {
+      preload: join(__dirname, 'preload.cjs'),
+      contextIsolation: true,
+      nodeIntegration: false,
+      // Security: Enable web security features
+      webSecurity: true,
+      allowRunningInsecureContent: false,
+    },
+  });
+
+  // Set Content Security Policy for security
+  // Note: Vite HMR requires 'unsafe-eval' in dev, which triggers a warning
+  // This is expected and the warning disappears in production builds
+  const isDev = process.env.NODE_ENV !== 'production' && !app.isPackaged;
+
+  mainWindow.webContents.session.webRequest.onHeadersReceived((details, callback) => {
+    const csp = isDev
+      ? // Development: Allow unsafe-eval for Vite HMR
+        "default-src 'self'; " +
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
+        "style-src 'self' 'unsafe-inline'; " +
+        "img-src 'self' data: https:; " +
+        "font-src 'self' data:; " +
+        "connect-src 'self' http://localhost:* ws://localhost:*; " +
+        "frame-src 'none';"
+      : // Production: Allow file:// protocol and localhost backend
+        "default-src 'self' file:; " +
+        "script-src 'self' 'unsafe-inline'; " +
+        "style-src 'self' 'unsafe-inline'; " +
+        "img-src 'self' data: https: file:; " +
+        "font-src 'self' data: file:; " +
+        "connect-src 'self' http://localhost:3000; " +
+        "frame-src 'none';";
+
+    callback({
+      responseHeaders: {
+        ...details.responseHeaders,
+        'Content-Security-Policy': [csp]
+      }
+    });
+  });
+
+  // Load the Vite dev server in development or built files in production
+  if (process.env.NODE_ENV !== 'production' && !app.isPackaged) {
+    const vitePort = process.env.VITE_PORT || '5183';
+    mainWindow.loadURL(`http://localhost:${vitePort}`);
+    // Open DevTools in development
+    mainWindow.webContents.openDevTools();
+  } else {
+    // Load from app directory (asar disabled)
+    let htmlPath;
+
+    if (app.isPackaged) {
+      // Packaged app: use process.resourcesPath
+      const resourcesPath = process.resourcesPath || join(__dirname, '..');
+      htmlPath = join(resourcesPath, 'app', 'dist', 'index.html');
+    } else {
+      // Local production test: use project directory
+      htmlPath = join(__dirname, '..', 'dist', 'index.html');
+    }
+
+    console.log('Loading frontend from:', htmlPath);
+    console.log('App packaged:', app.isPackaged);
+
+    // Use loadURL with file protocol
+    const fileUrl = `file://${htmlPath}`;
+    console.log('File URL:', fileUrl);
+    mainWindow.loadURL(fileUrl);
+  }
+
+  mainWindow.on('closed', () => {
+    mainWindow = null;
+  });
+}
+
+// Basic IPC Handlers
+ipcMain.handle('ping', async () => {
+  return 'pong';
+});
+
+app.whenReady().then(async () => {
+  // Set up application menu (hides DevTools in production)
+  createApplicationMenu();
+
+  try {
+    // Start backend FIRST before creating window
+    console.log('🚀 Starting backend server...');
+
+    // Simple logger that logs to console (window doesn't exist yet)
+    const consoleLogger = (message) => {
+      console.log(message);
+    };
+
+    await startBackend(consoleLogger);
+    console.log('✅ Backend server started and healthy');
+
+    // NOW create the window after backend is ready
+    createWindow();
+
+    // Log success to renderer after window is created
+    if (mainWindow && mainWindow.webContents) {
+      // Wait for the page to load before logging
+      mainWindow.webContents.once('did-finish-load', () => {
+        mainWindow.webContents.executeJavaScript(`console.log(${JSON.stringify('✅ Backend already running and healthy')});`);
+      });
+    }
+  } catch (err) {
+    console.error('❌ Failed to start backend:', err);
+    console.error('Error details:', err.message);
+
+    // Even if backend fails, create the window
+    createWindow();
+
+    // Show error in renderer console after window loads
+    if (mainWindow && mainWindow.webContents) {
+      mainWindow.webContents.once('did-finish-load', () => {
+        const errorMessage = err.message || 'Unknown error';
+        mainWindow.webContents.executeJavaScript(`
+          console.error('❌ Backend failed to start:', ${JSON.stringify(errorMessage)});
+          alert('Backend failed to start: ' + ${JSON.stringify(errorMessage)} + '\\n\\nThe app will run in frontend-only mode.');
+        `);
+      });
+    }
+  }
+});
+
+app.on('window-all-closed', () => {
+  // Kill backend process when app closes
+  if (backendProcess) {
+    backendProcess.kill();
+  }
+
+  if (process.platform !== 'darwin') {
+    app.quit();
+  }
+});
+
+app.on('activate', () => {
+  if (BrowserWindow.getAllWindows().length === 0) {
+    createWindow();
+  }
+});
+
+app.on('quit', () => {
+  // Ensure backend is killed on quit
+  if (backendProcess) {
+    backendProcess.kill();
+  }
+});

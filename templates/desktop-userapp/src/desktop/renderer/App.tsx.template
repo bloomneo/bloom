@@ -1,0 +1,36 @@
+/**
+ * Main App Component - FBCA Architecture
+ * Feature-Based Component Architecture with auto-discovery routing
+ */
+
+import { HashRouter as Router } from 'react-router-dom';
+import { ThemeProvider } from '@voilajsx/uikit/theme-provider';
+import { PageRouter } from './lib/page-router';
+import { ErrorBoundary, SetupGuard } from './shared/components';
+import { AuthProvider } from './features/auth';
+import { UserProvider } from './features/user';
+
+function App() {
+  return (
+    <ErrorBoundary>
+      <ThemeProvider theme="{{DEFAULT_THEME}}" mode="{{DEFAULT_MODE}}" forceConfig={true}>
+        <Router
+          future={{
+            v7_startTransition: true,
+            v7_relativeSplatPath: true,
+          }}
+        >
+          <SetupGuard>
+            <AuthProvider>
+              <UserProvider>
+                <PageRouter />
+              </UserProvider>
+            </AuthProvider>
+          </SetupGuard>
+        </Router>
+      </ThemeProvider>
+    </ErrorBoundary>
+  );
+}
+
+export default App;

@@ -370,6 +370,8 @@ Templates:
   basicapp            Basic app with routing and features (default)
   userapp             User management with auth, roles, and admin panel
   desktop-basicapp    Electron desktop app with FBCA (cross-platform)
+  desktop-userapp     Desktop user management with SQLite and PIN recovery
+  mobile-basicapp     Mobile app for iOS/Android with Capacitor (UI-only)
 
 Examples:
   helix create my-app                    # Create basicapp in my-app/ directory
@@ -389,7 +391,7 @@ if (command === 'create') {
   }
 
   // Validate template type
-  const validTemplates = ['basicapp', 'userapp', 'desktop-basicapp'];
+  const validTemplates = ['basicapp', 'userapp', 'desktop-basicapp', 'desktop-userapp', 'mobile-basicapp'];
   if (!validTemplates.includes(templateType)) {
     console.error(`❌ Invalid template "${templateType}". Available templates: ${validTemplates.join(', ')}`);
     process.exit(1);
@@ -398,7 +400,7 @@ if (command === 'create') {
   // Check if template exists
   const templatePath = join(__dirname, '../templates', templateType);
   if (!existsSync(templatePath)) {
-    console.error(`❌ Template "${templateType}" is not yet available. Currently available: basicapp, userapp, desktop-basicapp`);
+    console.error(`❌ Template "${templateType}" is not yet available. Currently available: basicapp, userapp, desktop-basicapp, desktop-userapp`);
     process.exit(1);
   }
 
@@ -438,6 +440,14 @@ if (command === 'create') {
     if (templateType === 'userapp') {
       const frontendKey = generateRandomSecret('voila_', 24);
       extraReplacements['{{VITE_FRONTEND_KEY}}'] = frontendKey;
+    }
+
+    // Generate secrets for desktop-userapp template
+    if (templateType === 'desktop-userapp') {
+      const jwtSecret = generateRandomSecret('jwt_', 48);
+      const authSecret = generateRandomSecret('auth_', 36);
+      extraReplacements['{{JWT_SECRET}}'] = jwtSecret;
+      extraReplacements['{{VOILA_AUTH_SECRET}}'] = authSecret;
     }
 
     // Copy complete Helix template (includes both frontend and backend)
@@ -501,6 +511,53 @@ if (command === 'create') {
 
 💡 Your desktop app will open automatically when you run "npm run dev"!
 `);
+      } else if (templateType === 'desktop-userapp') {
+        console.log(`
+✅ Helix Desktop UserApp installed successfully!
+
+🔐 First Run:
+  Setup wizard will appear automatically to create your admin account
+
+🚀 Development:
+  npm run dev          # Start Electron + Backend + Frontend
+
+📦 Build Desktop App:
+  npm run electron:build   # Creates .exe/.dmg/.AppImage in release/
+
+💡 Features:
+  - Complete user management with RBAC
+  - SQLite database (better-sqlite3)
+  - 4-digit PIN recovery for admins
+  - First-run setup wizard
+  - Offline-first architecture
+`);
+      } else if (templateType === 'mobile-basicapp') {
+        console.log(`
+✅ Helix Mobile installed successfully!
+
+📱 Requirements:
+  iOS: Xcode 15+
+  Android: Android Studio + Java JDK 17
+
+🚀 Development:
+  npm run dev                      # Start dev server (5173)
+  npm run mobile:run:android       # Run on Android emulator
+  npm run mobile:run:ios           # Run on iOS simulator
+
+📦 Production Build:
+  npm run android:build            # Build APK
+  npm run ios:build                # Build .app
+
+💡 Features:
+  - Cross-platform (iOS + Android)
+  - Hot reload during development
+  - Helix branding and icon
+  - Native keyboard handling
+  - 5 UIKit themes
+
+📚 Documentation:
+  See docs/DEVELOPMENT.md for complete guide
+`);
       } else {
         console.log(`
 ✅ Helix ${templateType} installed successfully!
@@ -555,6 +612,59 @@ Next steps:
   npm run electron:build   # Creates .exe/.dmg/.AppImage
 
 💡 Your desktop app will open automatically!
+`);
+      } else if (templateType === 'desktop-userapp') {
+        console.log(`
+✅ Helix Desktop UserApp project ${projectName} created successfully!
+
+Next steps:
+  cd ${projectName}
+  npm run dev
+
+🔐 First Run:
+  Setup wizard will appear to create your admin.system account
+
+🚀 Development:
+  npm run dev          # Start Electron + Backend + Frontend
+
+📦 Build Desktop App:
+  npm run electron:build   # Creates .exe/.dmg/.AppImage in release/
+
+💡 Features:
+  - Complete user management with 9-tier RBAC
+  - SQLite database (better-sqlite3) - offline-first
+  - 4-digit PIN recovery for admin password reset
+  - Settings system with database-backed configuration
+  - First-run setup wizard (unique credentials per install)
+
+🔒 Security:
+  - No default credentials (setup wizard creates unique admin)
+  - JWT authentication with auto-generated secrets
+  - Recovery PIN for admin self-service password reset
+`);
+      } else if (templateType === 'mobile-basicapp') {
+        console.log(`
+✅ Helix Mobile project ${projectName} created successfully!
+
+Next steps:
+  cd ${projectName}
+  npm run dev                      # Start dev server (required)
+
+📱 Requirements:
+  iOS: Xcode 15+
+  Android: Android Studio + Java JDK 17
+
+🚀 Development:
+  npm run mobile:run:android       # Run on Android emulator
+  npm run mobile:run:ios           # Run on iOS simulator
+
+📦 Production Build:
+  npm run android:build            # Build APK → build/helix-mobile-app.apk
+  npm run ios:build                # Build .app → build/helix-mobile-app.app
+
+💡 Complete guide: See docs/DEVELOPMENT.md
+
+🔗 Backend: This is a UI-only app. Use helix-basicapp as backend.
 `);
       } else {
         console.log(`

@@ -1,0 +1,114 @@
+{
+  "name": "{{projectName}}",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "{{PROJECT_NAME}} - Modern Electron desktop application with user management, authentication, and FBCA architecture",
+  "author": "",
+  "keywords": [
+    "electron",
+    "react",
+    "express",
+    "desktop",
+    "fbca",
+    "uikit",
+    "appkit",
+    "user-management",
+    "authentication"
+  ],
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "main": "electron/main.js",
+  "scripts": {
+    "dev": "concurrently --names \"WEB,ELECTRON\" --prefix-colors \"green,blue\" \"npm run dev:web\" \"npm run dev:electron\"",
+    "dev:web": "vite",
+    "dev:electron": "node scripts/dev-electron.js",
+    "build": "npm run build:web && npm run build:main",
+    "build:web": "tsc -b && vite build",
+    "build:main": "tsc -p tsconfig.main.json",
+    "rebuild:electron": "electron-rebuild -f -w better-sqlite3,bcrypt",
+    "electron:build": "npm run rebuild:electron && npm run build && electron-builder",
+    "start": "electron .",
+    "start:prod": "NODE_ENV=production electron .",
+    "preview": "vite preview",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.main.json"
+  },
+  "dependencies": {
+    "@voilajsx/appkit": "latest",
+    "@voilajsx/uikit": "latest",
+    "bcrypt": "^5.1.1",
+    "better-sqlite3": "^12.4.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.1",
+    "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "lucide-react": "latest",
+    "morgan": "^1.10.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.28.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.0.0-alpha.26",
+    "@types/bcrypt": "^5.0.2",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "@types/jsonwebtoken": "^9.0.6",
+    "@types/morgan": "^1.9.9",
+    "@types/node": "^22.10.2",
+    "@types/react": "^18.3.17",
+    "@types/react-dom": "^18.3.5",
+    "@typescript-eslint/eslint-plugin": "^8.22.0",
+    "@typescript-eslint/parser": "^8.22.0",
+    "@vitejs/plugin-react-swc": "^3.7.0",
+    "concurrently": "^8.2.2",
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1",
+    "electron-rebuild": "^3.2.9",
+    "eslint": "^9.25.0",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "eslint-plugin-react-refresh": "^0.4.16",
+    "tailwindcss": "^4.0.0-alpha.26",
+    "tsx": "^4.20.5",
+    "typescript": "^5.7.2",
+    "vite": "^6.3.6"
+  },
+  "build": {
+    "appId": "com.{{projectName}}.app",
+    "productName": "{{PROJECT_NAME}}",
+    "asar": false,
+    "npmRebuild": false,
+    "buildDependenciesFromSource": false,
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "node_modules/**/*",
+      "!node_modules/.cache/**/*",
+      "package.json",
+      "public/app.png",
+      "public/app-512.png"
+    ],
+    "directories": {
+      "output": "release"
+    },
+    "mac": {
+      "target": "dmg",
+      "category": "public.app-category.developer-tools",
+      "icon": "public/app-512.png"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "public/app-512.png"
+    },
+    "linux": {
+      "target": "AppImage",
+      "category": "Development",
+      "icon": "public/app-512.png"
+    }
+  }
+}

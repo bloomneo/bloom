@@ -1,0 +1,55 @@
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react-swc'
+import path from 'path'
+import tailwindcss from '@tailwindcss/vite'
+import { fileURLToPath } from 'url'
+// @ts-ignore - Simple JS plugin for port detection
+import vitePluginPortFile from './vite-plugin-port-file.js'
+
+// Get __dirname equivalent in ESM
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
+// https://vitejs.dev/config/
+export default defineConfig({
+  base: './', // Use relative paths for Electron
+  plugins: [react(), tailwindcss(), vitePluginPortFile()],
+  root: 'src/desktop/renderer',
+  publicDir: '../../../public', // Include public folder for icons (3 levels up from renderer)
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "../.."),
+    },
+  },
+  server: {
+    port: 5183, // Preferred port for desktop apps (will try 5184-5190 if busy)
+    strictPort: false, // Allow fallback to other ports (5184-5190)
+    host: true,
+  },
+  build: {
+    outDir: '../../../dist', // Build to root dist/ (3 levels up from renderer)
+    sourcemap: process.env.NODE_ENV === 'development', // Only in dev
+    emptyOutDir: false, // Don't clear dist since API files are also there
+    assetsDir: 'assets', // Put all assets in assets/ subdirectory
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          uikit: ['@voilajsx/uikit']
+        },
+        entryFileNames: 'assets/[name]-[hash].js',
+        chunkFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: (assetInfo) => {
+          // Put public assets (favicon, images) in public/ subdirectory
+          const nameParts = assetInfo.name?.split('.');
+          const extType = nameParts ? nameParts[nameParts.length - 1] : '';
+          if (/png|jpe?g|svg|gif|tiff|bmp|ico/i.test(extType)) {
+            return 'public/[name]-[hash].[ext]';
+          }
+          // Put CSS and other assets in assets/
+          return 'assets/[name]-[hash].[ext]';
+        }
+      }
+    }
+  }
+})

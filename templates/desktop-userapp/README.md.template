@@ -1,0 +1,640 @@
+# {{PROJECT_NAME}} 🚀
+
+> Modern Electron desktop application with complete user management, authentication system, and FBCA architecture
+
+A cross-platform desktop application built with Electron, featuring a complete user authentication and management system, Feature-Based Component Architecture on both frontend and backend, comprehensive UI components from UIKit, and powerful backend modules from AppKit.
+
+---
+
+## ✨ Features
+
+### 🖥️ Desktop Application
+- **Electron Desktop App** - Cross-platform (macOS, Windows, Linux)
+- **Native Integration** - File system, OS dialogs, system tray
+- **Offline-First** - Works without internet connection
+
+### 🔐 Authentication & User Management
+- **First-Run Setup Wizard** - Secure admin account creation on first launch
+- **Complete Auth System** - Login, Register, Logout, Password Reset
+- **JWT Authentication** - Secure token-based authentication
+- **Role-Based Access Control** - Admin, Moderator, User roles with permission levels
+- **User Management** - CRUD operations for user accounts
+- **Email Verification** - Verify user emails with tokens
+- **SQLite Database** - better-sqlite3 with auto-migrations
+- **HashRouter Navigation** - Electron-compatible routing with React Router
+
+### 🏗️ Architecture
+- **FBCA Frontend** - React with auto-discovery routing
+- **FBCA Backend** - Express with auto-discovery API routes
+- **UIKit Components** - 37+ production-ready components
+- **AppKit Modules** - Auth, Logger, Error, Config, Security modules
+
+### 🎨 UI/UX
+- **5 Professional Themes** - Base, Elegant, Metro, Studio, Vivid
+- **Light/Dark Mode** - Automatic theme switching
+- **Semantic Colors** - OKLCH color system with theme adaptation
+- **Responsive Layouts** - Page layouts with UIKit
+- **404 Error Page** - Proper error handling with back navigation
+
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
+- Node.js 18+ installed
+- npm or yarn package manager
+
+### Installation
+
+Dependencies are already installed. Just run:
+
+```bash
+npm run dev
+```
+
+This will:
+1. Start Vite dev server (frontend) on an available port (tries 5183-5190)
+2. Auto-detect which port Vite started on
+3. Start Electron app with the correct port
+4. Spawn Express backend on port 3000
+5. Open desktop window with hot reload
+
+**Smart Port Detection:** The dev script automatically finds an available port between 5183-5190, so you can run multiple desktop apps simultaneously without port conflicts!
+
+---
+
+## 📦 Project Structure
+
+```
+{{projectName}}/
+├── electron/                       # Electron main process
+│   ├── main.js                     # Entry point, spawns backend
+│   └── preload.cjs                 # IPC bridge (CommonJS)
+│
+├── src/desktop/
+│   ├── main/                       # Backend (Node.js/Express)
+│   │   ├── server.ts               # Express server entry
+│   │   ├── features/               # FBCA backend features
+│   │   │   ├── auth/               # Authentication API
+│   │   │   ├── user/               # User management API
+│   │   │   ├── setup/              # First-run setup API
+│   │   │   └── welcome/            # Welcome API
+│   │   └── lib/                    # Backend utilities
+│   │
+│   └── renderer/                   # Frontend (React)
+│       ├── App.tsx                 # React root component
+│       ├── main.tsx                # React entry point
+│       ├── features/               # FBCA features
+│       │   └── main/               # Main feature (homepage)
+│       │       └── pages/
+│       │           └── index.tsx   # Route: /
+│       ├── shared/                 # Shared resources
+│       │   ├── components/         # Reusable components
+│       │   └── hooks/              # Shared hooks
+│       ├── lib/                    # Frontend utilities
+│       └── styles/                 # Global styles
+│
+├── docs/                           # Documentation
+├── public/                         # Static assets
+├── package.json                    # Dependencies & scripts
+├── vite.config.ts                  # Vite configuration
+├── tsconfig.json                   # TypeScript (renderer)
+└── tsconfig.main.json              # TypeScript (main)
+```
+
+---
+
+## 🎯 Development Commands
+
+### Development
+```bash
+npm run dev              # Start Electron + backend + frontend (recommended)
+npm run dev:web          # Frontend only (Vite dev server)
+```
+
+### Database
+The database schema is managed directly via better-sqlite3 in `src/desktop/main/lib/db-client.ts`. Migrations are applied automatically on server start.
+
+### Production Build
+```bash
+npm run build            # Build frontend + backend
+npm run electron:build   # Create Electron distributables
+```
+
+### Utilities
+```bash
+npm run lint             # Lint code
+npm run typecheck        # Type check all code
+```
+
+---
+
+## 🎨 Theme Customization
+
+Change theme in `src/desktop/renderer/App.tsx`:
+
+```tsx
+<ThemeProvider theme="elegant" mode="light" forceConfig={true}>
+  <App />
+</ThemeProvider>
+```
+
+**Available themes:** `base` | `elegant` | `metro` | `studio` | `vivid`
+**Available modes:** `light` | `dark`
+
+---
+
+## 🧭 Routing & Navigation
+
+### HashRouter for Electron
+
+This app uses **React Router's HashRouter** instead of BrowserRouter because Electron loads pages using the `file://` protocol, which doesn't support traditional URL-based routing.
+
+**Key Points:**
+- ✅ **Use `useNavigate()` hook** - Never use `window.location.href` or `<a href>` for internal navigation
+- ✅ **Relative paths work** - Use `/user/profile` instead of full URLs
+- ✅ **Hash-based URLs** - Routes appear as `file:///path/to/app.html#/user/profile`
+- ❌ **Avoid window.location** - Causes full page reloads and breaks app state
+
+### Navigation Best Practices
+
+```tsx
+// ✅ CORRECT - Use useNavigate hook
+import { useNavigate } from 'react-router-dom';
+
+function MyComponent() {
+  const navigate = useNavigate();
+
+  return (
+    <Button onClick={() => navigate('/user/profile')}>
+      Go to Profile
+    </Button>
+  );
+}
+
+// ❌ WRONG - Don't use window.location
+function BadComponent() {
+  return (
+    <Button onClick={() => window.location.href = '/user/profile'}>
+      Go to Profile
+    </Button>
+  );
+}
+
+// ❌ WRONG - Don't use <a> tags for internal navigation
+function BadComponent2() {
+  return <a href="/user/profile">Profile</a>;
+}
+```
+
+### Role-Based Navigation
+
+The app implements role-based access control with three levels:
+- **Admin Roles:** `admin.tenant`, `admin.org`, `admin.system`
+- **Moderator Roles:** `moderator.review`, `moderator.approve`, `moderator.manage`
+- **User Roles:** `user.basic`, `user.pro`, `user.max`
+
+```tsx
+import { hasRole } from '@/shared/utils';
+
+// Check single role
+if (hasRole(user, ['admin.system'])) {
+  // Show admin features
+}
+
+// Check multiple roles
+if (hasRole(user, ['admin.tenant', 'admin.org', 'admin.system'])) {
+  // Show features for any admin
+}
+```
+
+### Route Helper Utility
+
+The `route()` helper ensures consistent routing across the app:
+
+```tsx
+import { route } from '@/shared/utils';
+
+// Use in navigation
+navigate(route('/user/admin'));
+
+// No longer needed for navigation, but available if needed
+// Previously used with window.location.href (deprecated pattern)
+```
+
+---
+
+## 📝 Adding Features
+
+### Frontend Feature
+
+```bash
+# 1. Create feature structure
+mkdir -p src/desktop/renderer/features/products/pages
+mkdir -p src/desktop/renderer/features/products/components
+
+# 2. Create page (auto-route: /products)
+# File: features/products/pages/index.tsx
+```
+
+```tsx
+import { PageLayout } from '@voilajsx/uikit/page';
+
+export default function ProductsPage() {
+  return (
+    <PageLayout>
+      <PageLayout.Content>
+        <h1 className="text-foreground">Products</h1>
+      </PageLayout.Content>
+    </PageLayout>
+  );
+}
+```
+
+**Done!** Route `/products` automatically available.
+
+### Backend Feature
+
+```bash
+# 1. Create route file
+mkdir -p src/desktop/main/features/products
+# File: features/products/products.route.ts
+```
+
+```typescript
+import { Router } from 'express';
+import { errorClass } from '@voilajsx/appkit/error';
+
+const router = Router();
+const error = errorClass.get();
+
+router.get('/', error.asyncRoute(async (req, res) => {
+  res.json({ products: [] });
+}));
+
+export default router;
+```
+
+**Done!** Endpoint `/api/products` automatically available.
+
+### Real-World Example: Setup Feature
+
+The **Setup Wizard** is a perfect example of FBCA in action. Here's how it's structured:
+
+**Frontend Feature** (`src/desktop/renderer/features/setup/`):
+```
+setup/
+├── pages/
+│   └── index.tsx          # Route: /setup (auto-discovered)
+└── components/            # Feature-specific components (if needed)
+```
+
+**Backend Feature** (`src/desktop/main/features/setup/`):
+```
+setup/
+└── setup.route.ts         # Routes: /api/setup/* (auto-discovered)
+```
+
+**Supporting Libraries** (`src/desktop/main/lib/`):
+```
+lib/
+├── first-run.ts           # First-run detection utility
+└── setup-database.ts      # Database initialization service
+```
+
+**Shared Components** (`src/desktop/renderer/shared/components/`):
+```
+shared/components/
+└── SetupGuard.tsx         # Guards app, redirects to setup if needed
+```
+
+**How It Works:**
+1. **Auto-Discovery:** No manual route registration needed
+2. **Isolation:** Setup feature is completely self-contained
+3. **Shared Logic:** Common utilities in `/lib` and `/shared`
+4. **Integration:** `SetupGuard` in `App.tsx` checks status on app start
+
+**Testing the Setup Flow:**
+```bash
+# Remove database to trigger first-run
+rm database/dev.db
+
+# Start app - automatically shows setup wizard
+npm run dev
+
+# Fill out form to create admin account
+# Success! Redirected to login page
+```
+
+This demonstrates how FBCA makes it easy to add complete features without touching existing code.
+
+---
+
+## 📦 Built With
+
+### Frontend
+- **[React 19](https://react.dev)** - UI library
+- **[TypeScript](https://typescriptlang.org)** - Type safety
+- **[Vite](https://vitejs.dev)** - Build tool and dev server
+- **[Tailwind CSS v4+](https://tailwindcss.com)** - Utility-first CSS
+- **[@voilajsx/uikit](https://github.com/voilajsx/uikit)** - UI components
+- **[Lucide React](https://lucide.dev)** - Icon library
+
+### Backend
+- **[Express](https://expressjs.com)** - Web framework
+- **[TypeScript](https://typescriptlang.org)** - Type safety
+- **[@voilajsx/appkit](https://github.com/voilajsx/appkit)** - Backend modules
+
+### Desktop
+- **[Electron](https://electronjs.org)** - Desktop framework
+- **[Electron Builder](https://electron.build)** - Packaging and distribution
+
+---
+
+## 🚀 Building & Distribution
+
+### Create Production Build
+```bash
+# Build application
+npm run build
+
+# Create Electron distributables
+npm run electron:build
+```
+
+### Output
+- **macOS:** `.dmg` in `release/`
+- **Windows:** `.exe` installer in `release/`
+- **Linux:** `.AppImage` in `release/`
+
+### Distribution
+Distribute the built application to users:
+- **macOS:** Drag `.app` to Applications folder
+- **Windows:** Run `.exe` installer
+- **Linux:** Run `.AppImage` or install `.deb`
+
+---
+
+## 💾 Database & First-Run Setup
+
+### First-Run Setup Wizard
+
+When you build and distribute the application, users will see a **Setup Wizard** on first launch to create their admin account securely.
+
+**Production Flow:**
+1. User launches the app for the first time
+2. Setup wizard automatically appears
+3. User creates admin account with custom credentials
+4. Database is initialized with their account
+5. User is redirected to login page
+
+**Development Flow:**
+The database is automatically initialized on first run. The schema is applied via better-sqlite3 migrations.
+
+**Important Security Notes:**
+- ✅ **Production:** Uses setup wizard (unique credentials per installation)
+- ❌ **Never ship pre-bundled database** (all users would have same credentials)
+- 🔒 **Database excluded from build** (configured in package.json)
+- 📁 **User data stored in:** `app.getPath('userData')` directory
+
+### Test User Accounts
+
+During development, you can create test accounts via the setup wizard or authentication endpoints:
+
+**Example User Roles:**
+
+| Role | Level | Full Permission |
+|------|-------|----------------|
+| admin | system | `admin.system` - System Administrator (full access) |
+| admin | org | `admin.org` - Organization Admin |
+| admin | tenant | `admin.tenant` - Tenant Admin |
+| moderator | manage | `moderator.manage` - Moderator Manager |
+| moderator | approve | `moderator.approve` - Moderator Approver |
+| moderator | review | `moderator.review` - Moderator Reviewer |
+| user | max | `user.max` - Max User |
+| user | pro | `user.pro` - Pro User |
+| user | basic | `user.basic` - Basic User |
+
+### Database Schema
+
+The User table is defined in `src/desktop/main/lib/db-client.ts`:
+
+```sql
+CREATE TABLE IF NOT EXISTS User (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  email TEXT NOT NULL UNIQUE,
+  password TEXT NOT NULL,
+  name TEXT,
+  phone TEXT,
+  role TEXT NOT NULL DEFAULT 'user',
+  level TEXT NOT NULL DEFAULT 'basic',
+  tenantId TEXT,
+  isVerified INTEGER NOT NULL DEFAULT 0,
+  isActive INTEGER NOT NULL DEFAULT 1,
+  lastLogin INTEGER,
+  resetToken TEXT,
+  resetTokenExpiry INTEGER,
+  verificationToken TEXT,
+  verificationExpiry INTEGER,
+  createdAt INTEGER NOT NULL DEFAULT (strftime('%s', 'now') * 1000),
+  updatedAt INTEGER NOT NULL DEFAULT (strftime('%s', 'now') * 1000)
+);
+```
+
+---
+
+## 🐛 Troubleshooting
+
+### All Ports Busy (5183-5190)
+If all ports are in use, the script will show an error. Free up a port:
+```bash
+# Kill a specific port
+npx kill-port 5183
+npm run dev
+```
+
+### Backend Port Already in Use
+```bash
+npx kill-port 3000
+npm run dev
+```
+
+### Module Not Found
+```bash
+rm -rf node_modules package-lock.json
+npm install
+```
+
+### Backend Not Responding
+```bash
+# Check health endpoint
+curl http://localhost:3000/health
+
+# Restart Electron
+npm run dev
+```
+
+### Navigation Not Working
+
+If clicking links doesn't navigate properly:
+
+**Check 1: Using HashRouter**
+```tsx
+// ✅ CORRECT in App.tsx
+import { HashRouter as Router } from 'react-router-dom';
+
+// ❌ WRONG - Don't use BrowserRouter in Electron
+import { BrowserRouter as Router } from 'react-router-dom';
+```
+
+**Check 2: Using useNavigate**
+```tsx
+// ✅ CORRECT
+const navigate = useNavigate();
+<Button onClick={() => navigate('/path')}>Go</Button>
+
+// ❌ WRONG - Don't use window.location
+<Button onClick={() => window.location.href = '/path'}>Go</Button>
+```
+
+**Check 3: Import Path Aliases**
+```tsx
+// ✅ Works in this project
+import { route } from '@/shared/utils';
+import { route } from '../../../../shared/utils';
+```
+
+### Database Issues
+
+```bash
+# Reset database completely (removes all data)
+rm database/dev.db
+
+# Restart app to recreate database
+npm run dev
+```
+
+---
+
+## 🏗️ Architecture Decisions
+
+### Why HashRouter?
+
+**Problem:** Electron loads pages using `file://` protocol, which doesn't support standard URL paths.
+
+**Solution:** Use HashRouter to handle routing via URL hash fragments (`#/path`).
+
+```tsx
+// src/desktop/renderer/App.tsx
+import { HashRouter as Router } from 'react-router-dom';
+
+<Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+  <AuthProvider>
+    <UserProvider>
+      <PageRouter />
+    </UserProvider>
+  </AuthProvider>
+</Router>
+```
+
+### Why useNavigate() Hook?
+
+**Problem:** `window.location.href` causes full page reloads, losing React state and breaking HashRouter.
+
+**Solution:** Use React Router's `useNavigate()` hook for client-side navigation.
+
+```tsx
+// ✅ All admin pages updated to use this pattern
+import { useNavigate } from 'react-router-dom';
+
+const navigate = useNavigate();
+navigate('/user/admin/show?id=123');  // Client-side navigation
+```
+
+### Why Relative Paths in HTML?
+
+**Problem:** Absolute paths (`/favicon.svg`) don't work with `file://` protocol.
+
+**Solution:** Use relative paths (`./favicon.svg`) in index.html.
+
+```html
+<!-- src/desktop/renderer/index.html -->
+<link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+<script type="module" src="./main.tsx"></script>
+```
+
+### Role-Based Access Control
+
+**Design:** Hierarchical permission system with `role.level` format.
+
+```typescript
+// User roles follow: role.level
+'admin.system'      // Highest level - full system access
+'admin.org'         // Organization-level admin
+'admin.tenant'      // Tenant-level admin
+'moderator.manage'  // Can manage content
+'moderator.approve' // Can approve content
+'moderator.review'  // Can review content
+'user.max'          // Premium user features
+'user.pro'          // Professional user features
+'user.basic'        // Standard user access
+```
+
+**Permission Checking:**
+```tsx
+// src/desktop/renderer/shared/utils/role.ts
+export const hasRole = (user: { role: string; level: string } | null, allowedRoles: string[]): boolean => {
+  if (!user || !allowedRoles.length) return true;
+  const userPermission = `${user.role}.${user.level}`;
+  return allowedRoles.includes(userPermission);
+};
+```
+
+### Feature-Based Component Architecture (FBCA)
+
+**Frontend Structure:**
+```
+src/desktop/renderer/features/
+├── auth/              # Authentication feature
+│   ├── pages/         # Auto-discovered routes
+│   ├── components/    # Feature-specific components
+│   ├── context/       # Auth context provider
+│   └── config/        # Auth configuration
+├── user/              # User management feature
+│   ├── pages/
+│   │   └── admin/     # Admin sub-routes
+│   ├── components/
+│   ├── context/       # User context provider
+│   └── types/         # TypeScript types
+└── main/              # Main/landing feature
+    └── pages/
+```
+
+**Backend Structure:**
+```
+src/desktop/main/features/
+├── auth/
+│   └── auth.route.ts    # Auto-discovered as /api/auth/*
+├── user/
+│   └── user.route.ts    # Auto-discovered as /api/user/*
+├── setup/
+│   └── setup.route.ts   # Auto-discovered as /api/setup/*
+└── welcome/
+    └── welcome.route.ts # Auto-discovered as /api/welcome/*
+```
+
+**Benefits:**
+- ✅ Auto-discovery - Add files, routes automatically available
+- ✅ Colocation - Related code stays together
+- ✅ Scalability - Easy to add/remove features
+- ✅ Team collaboration - Features can be developed independently
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License.
+
+---
+
+**{{PROJECT_NAME}} - Built with ❤️ using Electron, React, UIKit, and AppKit** ✨

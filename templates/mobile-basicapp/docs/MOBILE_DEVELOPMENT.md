@@ -6,10 +6,91 @@ Complete guide for developing, building, and testing the Helix Mobile app on iOS
 
 ## Table of Contents
 
-1. [Development Workflow](#development-workflow)
-2. [Production Build & Testing](#production-build--testing)
-3. [App Icons & Assets](#app-icons--assets)
-4. [Troubleshooting](#troubleshooting)
+1. [System Requirements](#system-requirements)
+2. [Development Workflow](#development-workflow)
+3. [Production Build & Testing](#production-build--testing)
+4. [App Icons & Assets](#app-icons--assets)
+5. [Troubleshooting](#troubleshooting)
+
+---
+
+## System Requirements
+
+### iOS Development
+
+**IMPORTANT: CocoaPods Required**
+
+iOS development requires CocoaPods for managing native dependencies.
+
+#### macOS - Install CocoaPods
+```bash
+# Install via Homebrew (recommended)
+brew install cocoapods
+
+# Verify installation
+pod --version  # Should show version 1.16+
+```
+
+**Other Requirements:**
+- macOS with Xcode 15+
+- Xcode Command Line Tools: `xcode-select --install`
+- iOS Simulator (included with Xcode)
+
+**First-time setup** (after cloning the project):
+```bash
+cd ios/App
+pod install
+cd ../..
+```
+
+### Android Development
+
+**IMPORTANT: Java 21+ Required**
+
+Capacitor 7 requires Java JDK 21 or newer (21, 25, etc.). Java 17 and older will NOT work.
+
+#### macOS - Install Java 21+
+```bash
+# Install Java 21 (recommended)
+brew install openjdk@21
+
+# Or install Java 25 (latest)
+brew install openjdk
+
+# Set JAVA_HOME (add to ~/.zshrc or ~/.bash_profile)
+export JAVA_HOME=/opt/homebrew/opt/openjdk@21
+export PATH="$JAVA_HOME/bin:$PATH"
+
+# Verify installation
+java -version  # Should show version 21 or higher
+```
+
+#### Windows - Install Java 21+
+1. Download Java 21+ from [Adoptium](https://adoptium.net/) or [Oracle](https://www.oracle.com/java/technologies/downloads/)
+2. Run the installer
+3. Set `JAVA_HOME` environment variable to installation path
+4. Add `%JAVA_HOME%\bin` to `PATH`
+5. Verify: `java -version`
+
+#### Linux - Install Java 21+
+```bash
+# Ubuntu/Debian
+sudo apt update
+sudo apt install openjdk-21-jdk
+
+# Fedora/RHEL
+sudo dnf install java-21-openjdk-devel
+
+# Verify
+java -version
+```
+
+### Android Studio
+- Download and install [Android Studio](https://developer.android.com/studio)
+- Configure Android SDK location in `android/local.properties`:
+  ```properties
+  sdk.dir=/path/to/Android/sdk
+  ```
 
 ---
 
@@ -17,9 +98,8 @@ Complete guide for developing, building, and testing the Helix Mobile app on iOS
 
 Development mode uses hot reload - changes to your code automatically reload in the app without rebuilding.
 
-### Prerequisites
+### Start Development Server
 
-Start the development server:
 ```bash
 npm run dev
 ```

@@ -16,12 +16,14 @@ A modern fullstack framework that combines **UIKit** (React frontend) and **AppK
 - 📦 **Zero Configuration** - Convention over configuration approach
 - 🎭 **Multi-Theme Support** - Built-in theme system (base, elegant, metro, studio, vivid)
 - 🖥️ **Desktop App Support** - Cross-platform desktop apps with Electron
+- 📱 **Mobile App Support** - Native iOS and Android apps with Capacitor
 
 ## 📦 Templates
 
 - **basicapp** - Basic fullstack app with routing and features (default)
 - **userapp** - Complete user management with authentication, roles, admin panel, and database
 - **desktop-basicapp** - Cross-platform Electron desktop app with FBCA architecture
+- **mobile-basicapp** - Native iOS and Android mobile app with Capacitor 7
 
 ## 🚀 Quick Start
 
@@ -50,11 +52,20 @@ npm run dev
 helix create my-desktop-app desktop-basicapp
 cd my-desktop-app
 npm run dev
+
+# Mobile app (iOS + Android)
+helix create my-mobile-app mobile-basicapp
+cd my-mobile-app
+npm install
+npm run dev                      # Start dev server
+npm run mobile:run:ios          # Run on iOS simulator
+npm run mobile:run:android      # Run on Android emulator
 ```
 
 Your fullstack app runs on:
 - **Web Apps**: Frontend (http://localhost:5173) + Backend (http://localhost:3000)
 - **Desktop Apps**: Electron window (http://localhost:5183) + Backend (http://localhost:3000)
+- **Mobile Apps**: Native iOS/Android apps connecting to dev server (http://localhost:5173)
 
 ## 📁 Project Structure
 
@@ -215,6 +226,18 @@ npm run dev:electron # Electron window only
 npm run build        # Build both frontend and backend
 npm run electron:build # Build distributable desktop app
 npm start           # Start Electron in production mode
+```
+
+### Mobile App Scripts
+
+```bash
+npm run dev                  # Start dev server for hot reload
+npm run mobile:sync:android # Sync Android platform
+npm run mobile:sync:ios     # Sync iOS platform
+npm run mobile:run:android  # Run on Android emulator
+npm run mobile:run:ios      # Run on iOS simulator
+npm run android:build       # Build Android APK
+npm run ios:build           # Build iOS .app
 ```
 
 ### UserApp Database Commands

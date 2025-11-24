@@ -536,8 +536,14 @@ if (command === 'create') {
 ✅ Helix Mobile installed successfully!
 
 📱 Requirements:
-  iOS: Xcode 15+
-  Android: Android Studio + Java JDK 17
+  iOS: Xcode 15+ + CocoaPods (brew install cocoapods)
+  Android: Android Studio + Java JDK 21+ (21, 25, or newer)
+
+⚡ Quick Start:
+  npm install                      # Install dependencies
+  cd ios/App && pod install && cd ../..  # Install iOS native deps (first time)
+  npm run mobile:sync:android      # Sync Android platform
+  npm run mobile:sync:ios          # Sync iOS platform
 
 🚀 Development:
   npm run dev                      # Start dev server (5173)
@@ -550,13 +556,20 @@ if (command === 'create') {
 
 💡 Features:
   - Cross-platform (iOS + Android)
+  - Compatible with Java 21, 25, and newer versions
   - Hot reload during development
   - Helix branding and icon
   - Native keyboard handling
   - 5 UIKit themes
 
 📚 Documentation:
-  See docs/DEVELOPMENT.md for complete guide
+  See docs/MOBILE_DEVELOPMENT.md for complete setup guide
+  Includes Java 21+ and CocoaPods installation instructions
+
+⚠️  IMPORTANT:
+  - Android: Requires Java 21+ (NOT Java 17)
+  - iOS: Requires CocoaPods (brew install cocoapods)
+  - Android SDK location must be set in android/local.properties
 `);
       } else {
         console.log(`

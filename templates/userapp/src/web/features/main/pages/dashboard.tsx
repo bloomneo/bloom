@@ -1,6 +1,5 @@
 import React from 'react';
-import { PageLayout } from '@bloomneo/uikit/page';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@bloomneo/uikit/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, PageLayout } from '@bloomneo/uikit';
 import { User, Mail, Shield } from 'lucide-react';
 import { Header, Footer, SEO } from '../../../shared/components';
 import { useAuth } from '../../auth';

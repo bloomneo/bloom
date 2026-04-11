@@ -22,8 +22,8 @@
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.api.json"
   },
   "dependencies": {
-    "@bloomneo/uikit": "latest",
-    "@bloomneo/appkit": "latest",
+    "@bloomneo/uikit": "^1.5.1",
+    "@bloomneo/appkit": "^1.5.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.26.0",

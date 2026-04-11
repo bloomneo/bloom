@@ -1,11 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@bloomneo/uikit/card';
-import { Badge } from '@bloomneo/uikit/badge';
-import { Alert, AlertDescription } from '@bloomneo/uikit/alert';
-import { Button } from '@bloomneo/uikit/button';
-import { Input } from '@bloomneo/uikit/input';
-import { useApi } from '@bloomneo/uikit/hooks';
-import { useTheme } from '@bloomneo/uikit/theme-provider';
+import { Alert, AlertDescription, Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input, useApi, useTheme } from '@bloomneo/uikit';
 import { Server, CheckCircle, XCircle, Loader2, RefreshCw, Palette, Code2, Database } from 'lucide-react';
 import { API_BASE_URL } from '../../../lib/api-config';
 

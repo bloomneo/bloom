@@ -1,14 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PageLayout } from '@bloomneo/uikit/page';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@bloomneo/uikit/card';
-import { Button } from '@bloomneo/uikit/button';
-import { Alert, AlertDescription, AlertTitle } from '@bloomneo/uikit/alert';
-import { Badge } from '@bloomneo/uikit/badge';
-import { Input } from '@bloomneo/uikit/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@bloomneo/uikit/select';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@bloomneo/uikit/table';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@bloomneo/uikit/dialog';
+import { Alert, AlertDescription, AlertTitle, Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, Input, PageLayout, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@bloomneo/uikit';
 import { Users, ArrowLeft, RefreshCw, AlertTriangle, Mail, Phone, Edit, Trash2, Eye, ChevronLeft, ChevronRight, Search, UserPlus } from 'lucide-react';
 import { Header, Footer, SEO } from '../../../../shared/components';
 import { AuthGuard } from '../../../auth';

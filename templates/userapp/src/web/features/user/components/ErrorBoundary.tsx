@@ -4,8 +4,7 @@
  */
 
 import React from 'react';
-import { Alert, AlertDescription, AlertTitle } from '@bloomneo/uikit/alert';
-import { Button } from '@bloomneo/uikit/button';
+import { Alert, AlertDescription, AlertTitle, Button } from '@bloomneo/uikit';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 
 interface ErrorBoundaryState {

@@ -1,11 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { PageLayout } from '@bloomneo/uikit/page';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@bloomneo/uikit/card';
-import { Button } from '@bloomneo/uikit/button';
-import { Badge } from '@bloomneo/uikit/badge';
-import { Alert, AlertDescription, AlertTitle } from '@bloomneo/uikit/alert';
-import { Input } from '@bloomneo/uikit/input';
+import { Alert, AlertDescription, AlertTitle, Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input, PageLayout } from '@bloomneo/uikit';
 import { ArrowLeft, AlertTriangle, RefreshCw, Mail, Phone, Calendar, Shield, User, Edit } from 'lucide-react';
 import { Header, Footer, SEO } from '../../../../shared/components';
 import { useAuth } from '../../../auth';

@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { ThemeProvider } from '@bloomneo/uikit/theme-provider';
+import { ThemeProvider } from '@bloomneo/uikit';
 import App from './App';
 import './styles/index.css';
 import '@bloomneo/uikit/styles';

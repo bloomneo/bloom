@@ -35,8 +35,8 @@
   "dependencies": {
     "@prisma/client": "^6.16.2",
     "@types/pg": "^8.15.5",
-    "@bloomneo/appkit": "latest",
-    "@bloomneo/uikit": "latest",
+    "@bloomneo/appkit": "^1.5.1",
+    "@bloomneo/uikit": "^1.5.1",
     "bcrypt": "^5.1.1",
     "concurrently": "^8.2.2",
     "cors": "^2.8.5",

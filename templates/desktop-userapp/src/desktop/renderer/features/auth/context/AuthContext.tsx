@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useApi } from '@bloomneo/uikit/hooks';
+import { useApi } from '@bloomneo/uikit';
 import { config } from '../config';
 import type { AuthState, LoginCredentials, RegisterData, AuthContextType, VerifyEmailData, ForgotPasswordData, ResetPasswordData } from '../types';
 

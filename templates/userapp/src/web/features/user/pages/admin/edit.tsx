@@ -1,11 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { PageLayout } from '@bloomneo/uikit/page';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@bloomneo/uikit/card';
-import { Button } from '@bloomneo/uikit/button';
-import { Input } from '@bloomneo/uikit/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@bloomneo/uikit/select';
-import { Alert, AlertDescription, AlertTitle } from '@bloomneo/uikit/alert';
+import { Alert, AlertDescription, AlertTitle, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input, PageLayout, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@bloomneo/uikit';
 import { Edit, ArrowLeft, AlertTriangle, CheckCircle, RefreshCw } from 'lucide-react';
 import { Header, Footer, SEO } from '../../../../shared/components';
 import { useAuth } from '../../../auth';

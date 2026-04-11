@@ -1,5 +1,5 @@
 import React from 'react';
-import { PageLayout } from '@bloomneo/uikit/page';
+import { PageLayout } from '@bloomneo/uikit';
 import { Header, Footer, SEO } from '../../../shared/components';
 
 const TermsPage: React.FC = () => {

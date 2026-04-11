@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Button } from '@bloomneo/uikit/button';
-import { AuthLayout } from '@bloomneo/uikit/auth';
-import { Alert, AlertTitle, AlertDescription } from '@bloomneo/uikit/alert';
+import { Alert, AlertDescription, AlertTitle, AuthLayout, Button } from '@bloomneo/uikit';
 import { CheckCircle, Loader2, AlertTriangle, Mail, RefreshCw } from 'lucide-react';
 import { SEO } from '../../../shared/components';
 import { useAuthContext } from '../context/AuthContext';

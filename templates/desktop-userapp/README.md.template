@@ -238,7 +238,7 @@ mkdir -p src/desktop/renderer/features/products/components
 ```
 
 ```tsx
-import { PageLayout } from '@bloomneo/uikit/page';
+import { PageLayout } from '@bloomneo/uikit';
 
 export default function ProductsPage() {
   return (

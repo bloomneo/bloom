@@ -8,11 +8,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PageLayout } from '@bloomneo/uikit/page';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@bloomneo/uikit/card';
-import { Button } from '@bloomneo/uikit/button';
-import { Input } from '@bloomneo/uikit/input';
-import { Alert, AlertDescription, AlertTitle } from '@bloomneo/uikit/alert';
+import { Alert, AlertDescription, AlertTitle, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input, PageLayout } from '@bloomneo/uikit';
 import { UserPlus, CheckCircle, AlertTriangle, Loader2, Wifi, WifiOff, ShieldAlert, Key, Eye, EyeOff } from 'lucide-react';
 import { SEO, clearSetupCache } from '../../../shared/components';
 

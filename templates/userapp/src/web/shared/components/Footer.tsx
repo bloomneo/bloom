@@ -1,5 +1,5 @@
 import React from 'react';
-import { Footer as UIFooter } from '@bloomneo/uikit/footer';
+import { Footer as UIFooter } from '@bloomneo/uikit';
 
 // Configurable Footer Component using UIKit sections
 export const Footer: React.FC = () => {

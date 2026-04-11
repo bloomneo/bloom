@@ -1,7 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Footer as UIFooter } from '@bloomneo/uikit/footer';
-import type { NavigationItem } from '@bloomneo/uikit';
+import { Footer as UIFooter, type NavigationItem } from '@bloomneo/uikit';
 
 // Footer navigation - FBCA routes
 const footerNavigation: NavigationItem[] = [

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Helix CLI - Fullstack FBCA Framework
+ * Bloom CLI - Fullstack FBCA Framework
  * Combines UIKit (frontend) and AppKit (backend) scaffolding
  */
 
@@ -77,9 +77,9 @@ function convertToESM(packageObj) {
 }
 
 /**
- * Copy Helix template files to the generated project
+ * Copy Bloom template files to the generated project
  */
-function copyHelixTemplate(templateType, verbose = false, extraReplacements = {}) {
+function copyBloomTemplate(templateType, verbose = false, extraReplacements = {}) {
   try {
     const templatePath = join(__dirname, '../templates', templateType);
     if (verbose) console.log(`🔍 [DEBUG] Template path: ${templatePath}`);
@@ -130,7 +130,7 @@ function copyHelixTemplate(templateType, verbose = false, extraReplacements = {}
     }
 
     copyRecursive(templatePath, './');
-    console.log('📋 Applied Helix template files');
+    console.log('📋 Applied Bloom template files');
     if (verbose) console.log(`🔍 [DEBUG] Total files copied: ${filesCopied}`);
 
   } catch (error) {
@@ -262,9 +262,9 @@ function addViteApiUrl() {
 }
 
 /**
- * Merge Helix fullstack package.json template with existing package.json
+ * Merge Bloom fullstack package.json template with existing package.json
  */
-async function mergeHelixPackageJson(verbose = false) {
+async function mergeBloomPackageJson(verbose = false) {
   try {
     if (verbose) console.log('🔍 [DEBUG] Starting package.json merge...');
 
@@ -278,12 +278,12 @@ async function mergeHelixPackageJson(verbose = false) {
     existingPackage = convertToESM(existingPackage);
     if (verbose) console.log('🔍 [DEBUG] ESM conversion completed, type:', existingPackage.type);
 
-    // Read Helix template package.json
+    // Read Bloom template package.json
     const templatePath = join(__dirname, '../templates/package.json');
-    if (verbose) console.log('🔍 [DEBUG] Reading Helix template from:', templatePath);
-    const helixTemplate = JSON.parse(readFileSync(templatePath, 'utf8'));
-    if (verbose) console.log('🔍 [DEBUG] Template scripts:', Object.keys(helixTemplate.scripts || {}));
-    if (verbose) console.log('🔍 [DEBUG] Template dependencies:', Object.keys(helixTemplate.dependencies || {}));
+    if (verbose) console.log('🔍 [DEBUG] Reading Bloom template from:', templatePath);
+    const bloomTemplate = JSON.parse(readFileSync(templatePath, 'utf8'));
+    if (verbose) console.log('🔍 [DEBUG] Template scripts:', Object.keys(bloomTemplate.scripts || {}));
+    if (verbose) console.log('🔍 [DEBUG] Template dependencies:', Object.keys(bloomTemplate.dependencies || {}));
 
     // Ensure dependencies object exists
     if (!existingPackage.dependencies) existingPackage.dependencies = {};
@@ -292,7 +292,7 @@ async function mergeHelixPackageJson(verbose = false) {
     // Merge missing dependencies
     let addedDeps = 0;
     for (const [dep, version] of Object.entries(
-      helixTemplate.dependencies || {}
+      bloomTemplate.dependencies || {}
     )) {
       if (!existingPackage.dependencies[dep]) {
         existingPackage.dependencies[dep] = version;
@@ -305,7 +305,7 @@ async function mergeHelixPackageJson(verbose = false) {
     // Merge missing devDependencies
     let addedDevDeps = 0;
     for (const [dep, version] of Object.entries(
-      helixTemplate.devDependencies || {}
+      bloomTemplate.devDependencies || {}
     )) {
       if (!existingPackage.devDependencies[dep]) {
         existingPackage.devDependencies[dep] = version;
@@ -318,9 +318,9 @@ async function mergeHelixPackageJson(verbose = false) {
     // Ensure scripts object exists
     if (!existingPackage.scripts) existingPackage.scripts = {};
 
-    // Add/override Helix scripts from template
+    // Add/override Bloom scripts from template
     let addedScripts = 0;
-    for (const [script, command] of Object.entries(helixTemplate.scripts || {})) {
+    for (const [script, command] of Object.entries(bloomTemplate.scripts || {})) {
       const wasOverride = !!existingPackage.scripts[script];
       existingPackage.scripts[script] = command;
       addedScripts++;
@@ -332,10 +332,10 @@ async function mergeHelixPackageJson(verbose = false) {
     existingPackage.description =
       'Full-stack FBCA application with UIKit frontend and AppKit backend';
 
-    // Add Helix to keywords if not present
+    // Add Bloom to keywords if not present
     if (!existingPackage.keywords) existingPackage.keywords = [];
-    if (!existingPackage.keywords.includes('helix')) {
-      existingPackage.keywords.push('helix');
+    if (!existingPackage.keywords.includes('bloom')) {
+      existingPackage.keywords.push('bloom');
     }
 
     // Write updated package.json
@@ -359,12 +359,12 @@ async function mergeHelixPackageJson(verbose = false) {
 
 if (!command) {
   console.log(`
-🔥 Helix Framework - Fullstack Apps
+🔥 Bloom Framework - Fullstack Apps
 
 Usage:
-  helix create <project-name> [template]  Create new fullstack project
-  helix create . [template]               Install in current directory
-  helix start                             Start production server (requires build)
+  bloom create <project-name> [template]  Create new fullstack project
+  bloom create . [template]               Install in current directory
+  bloom start                             Start production server (requires build)
 
 Templates:
   basicapp            Basic app with routing and features (default)
@@ -374,10 +374,10 @@ Templates:
   mobile-basicapp     Mobile app for iOS/Android with Capacitor (UI-only)
 
 Examples:
-  helix create my-app                    # Create basicapp in my-app/ directory
-  helix create my-app basicapp           # Same as above
-  helix create . basicapp                # Install basicapp in current directory
-  helix start                           # Start production server after build
+  bloom create my-app                    # Create basicapp in my-app/ directory
+  bloom create my-app basicapp           # Same as above
+  bloom create . basicapp                # Install basicapp in current directory
+  bloom start                           # Start production server after build
 `);
   process.exit(1);
 }
@@ -385,7 +385,7 @@ Examples:
 if (command === 'create') {
   if (!projectName) {
     console.error(
-      '❌ Please provide a project name or "." for current directory: helix create <project-name>'
+      '❌ Please provide a project name or "." for current directory: bloom create <project-name>'
     );
     process.exit(1);
   }
@@ -407,14 +407,14 @@ if (command === 'create') {
   const isCurrentDir = projectName === '.';
 
   if (isCurrentDir) {
-    console.log(`🚀 Installing Helix ${templateType} in current directory`);
+    console.log(`🚀 Installing Bloom ${templateType} in current directory`);
 
     // Check if current directory has package.json and warn about overwrite
     if (existsSync('./package.json')) {
-      console.log('📦 Found existing package.json - will merge with Helix configuration');
+      console.log('📦 Found existing package.json - will merge with Bloom configuration');
     }
   } else {
-    console.log(`🚀 Creating Helix ${templateType} project: ${projectName}`);
+    console.log(`🚀 Creating Bloom ${templateType} project: ${projectName}`);
 
     try {
       // Create project directory
@@ -432,8 +432,8 @@ if (command === 'create') {
   }
 
   try {
-    console.log('🚀 Creating Helix fullstack application...');
-    if (verbose) console.log('🔍 [DEBUG] Copying Helix template files...');
+    console.log('🚀 Creating Bloom fullstack application...');
+    if (verbose) console.log('🔍 [DEBUG] Copying Bloom template files...');
 
     // Generate frontend key for userapp template processing
     let extraReplacements = {};
@@ -450,8 +450,8 @@ if (command === 'create') {
       extraReplacements['{{VOILA_AUTH_SECRET}}'] = authSecret;
     }
 
-    // Copy complete Helix template (includes both frontend and backend)
-    copyHelixTemplate(templateType, verbose, extraReplacements);
+    // Copy complete Bloom template (includes both frontend and backend)
+    copyBloomTemplate(templateType, verbose, extraReplacements);
 
     // Create .env file with random values for userapp
     if (templateType === 'userapp') {
@@ -481,7 +481,7 @@ if (command === 'create') {
     if (isCurrentDir) {
       if (templateType === 'userapp') {
         console.log(`
-✅ Helix ${templateType} installed successfully!
+✅ Bloom ${templateType} installed successfully!
 
 📋 Setup steps:
   1. Edit .env with your database settings (auto-generated with secure secrets)
@@ -501,7 +501,7 @@ if (command === 'create') {
 `);
       } else if (templateType === 'desktop-basicapp') {
         console.log(`
-✅ Helix Desktop installed successfully!
+✅ Bloom Desktop installed successfully!
 
 🚀 Development:
   npm run dev          # Start Electron + Backend + Frontend
@@ -513,7 +513,7 @@ if (command === 'create') {
 `);
       } else if (templateType === 'desktop-userapp') {
         console.log(`
-✅ Helix Desktop UserApp installed successfully!
+✅ Bloom Desktop UserApp installed successfully!
 
 🔐 First Run:
   Setup wizard will appear automatically to create your admin account
@@ -533,7 +533,7 @@ if (command === 'create') {
 `);
       } else if (templateType === 'mobile-basicapp') {
         console.log(`
-✅ Helix Mobile installed successfully!
+✅ Bloom Mobile installed successfully!
 
 📱 Requirements:
   iOS: Xcode 15+ + CocoaPods (brew install cocoapods)
@@ -558,7 +558,7 @@ if (command === 'create') {
   - Cross-platform (iOS + Android)
   - Compatible with Java 21, 25, and newer versions
   - Hot reload during development
-  - Helix branding and icon
+  - Bloom branding and icon
   - Native keyboard handling
   - 5 UIKit themes
 
@@ -573,7 +573,7 @@ if (command === 'create') {
 `);
       } else {
         console.log(`
-✅ Helix ${templateType} installed successfully!
+✅ Bloom ${templateType} installed successfully!
 
 🚀 Development:
   npm run dev          # Both API (3000) + Web (5173)
@@ -590,7 +590,7 @@ if (command === 'create') {
     } else {
       if (templateType === 'userapp') {
         console.log(`
-✅ Helix ${templateType} project ${projectName} created successfully!
+✅ Bloom ${templateType} project ${projectName} created successfully!
 
 Next steps:
   cd ${projectName}
@@ -612,7 +612,7 @@ Next steps:
 `);
       } else if (templateType === 'desktop-basicapp') {
         console.log(`
-✅ Helix Desktop project ${projectName} created successfully!
+✅ Bloom Desktop project ${projectName} created successfully!
 
 Next steps:
   cd ${projectName}
@@ -628,7 +628,7 @@ Next steps:
 `);
       } else if (templateType === 'desktop-userapp') {
         console.log(`
-✅ Helix Desktop UserApp project ${projectName} created successfully!
+✅ Bloom Desktop UserApp project ${projectName} created successfully!
 
 Next steps:
   cd ${projectName}
@@ -657,7 +657,7 @@ Next steps:
 `);
       } else if (templateType === 'mobile-basicapp') {
         console.log(`
-✅ Helix Mobile project ${projectName} created successfully!
+✅ Bloom Mobile project ${projectName} created successfully!
 
 Next steps:
   cd ${projectName}
@@ -672,16 +672,16 @@ Next steps:
   npm run mobile:run:ios           # Run on iOS simulator
 
 📦 Production Build:
-  npm run android:build            # Build APK → build/helix-mobile-app.apk
-  npm run ios:build                # Build .app → build/helix-mobile-app.app
+  npm run android:build            # Build APK → build/bloom-mobile-app.apk
+  npm run ios:build                # Build .app → build/bloom-mobile-app.app
 
 💡 Complete guide: See docs/DEVELOPMENT.md
 
-🔗 Backend: This is a UI-only app. Use helix-basicapp as backend.
+🔗 Backend: This is a UI-only app. Use bloom-basicapp as backend.
 `);
       } else {
         console.log(`
-✅ Helix ${templateType} project ${projectName} created successfully!
+✅ Bloom ${templateType} project ${projectName} created successfully!
 
 Next steps:
   cd ${projectName}

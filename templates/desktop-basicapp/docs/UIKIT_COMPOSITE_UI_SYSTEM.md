@@ -59,7 +59,7 @@ All UIKit components follow consistent prop patterns for predictable behavior:
 
 #### Button Component Example
 ```jsx
-import { Button } from '@voilajsx/uikit/button';
+import { Button } from '@bloomneo/uikit/button';
 
 // Variant system - different visual styles
 <Button variant="default">Primary Action</Button>
@@ -98,12 +98,12 @@ import { Button } from '@voilajsx/uikit/button';
 ### Import Patterns
 ```jsx
 // ✅ Individual imports (recommended for tree-shaking)
-import { Button } from '@voilajsx/uikit/button';
-import { Card, CardContent, CardHeader } from '@voilajsx/uikit/card';
-import { ValidatedInput } from '@voilajsx/uikit/form';
+import { Button } from '@bloomneo/uikit/button';
+import { Card, CardContent, CardHeader } from '@bloomneo/uikit/card';
+import { ValidatedInput } from '@bloomneo/uikit/form';
 
 // ❌ Avoid barrel imports
-import { Button, Card } from '@voilajsx/uikit'; // Larger bundle size
+import { Button, Card } from '@bloomneo/uikit'; // Larger bundle size
 ```
 
 ### Complete Component Reference
@@ -242,7 +242,7 @@ Section components are **standalone layout building blocks** that bridge individ
 
 #### Standalone Header
 ```jsx
-import { Header, HeaderLogo, HeaderNav } from '@voilajsx/uikit/header';
+import { Header, HeaderLogo, HeaderNav } from '@bloomneo/uikit/header';
 
 <Header tone="clean" size="xl" position="sticky">
   <HeaderLogo>
@@ -258,7 +258,7 @@ import { Header, HeaderLogo, HeaderNav } from '@voilajsx/uikit/header';
 
 #### Standalone Footer
 ```jsx
-import { Footer } from '@voilajsx/uikit/footer';
+import { Footer } from '@bloomneo/uikit/footer';
 
 <Footer tone="contrast" size="xl" position="relative">
   <div className="text-center py-4">
@@ -269,7 +269,7 @@ import { Footer } from '@voilajsx/uikit/footer';
 
 #### Container with Sidebar
 ```jsx
-import { Container } from '@voilajsx/uikit/container';
+import { Container } from '@bloomneo/uikit/container';
 
 <Container
   tone="clean"
@@ -360,7 +360,7 @@ What are you building?
 
 #### AdminLayout (Compound Pattern)
 ```jsx
-import { AdminLayout } from '@voilajsx/uikit/admin';
+import { AdminLayout } from '@bloomneo/uikit/admin';
 
 // Compound pattern: Use child components
 <AdminLayout scheme="sidebar" tone="subtle" size="lg">
@@ -384,7 +384,7 @@ import { AdminLayout } from '@voilajsx/uikit/admin';
 
 #### PageLayout (Compound Pattern)
 ```jsx
-import { PageLayout } from '@voilajsx/uikit/page';
+import { PageLayout } from '@bloomneo/uikit/page';
 
 // Compound pattern: Use child components
 <PageLayout scheme="base" tone="clean" size="xl">
@@ -404,7 +404,7 @@ import { PageLayout } from '@voilajsx/uikit/page';
 
 #### AuthLayout (Single Pattern)
 ```jsx
-import { AuthLayout } from '@voilajsx/uikit/auth';
+import { AuthLayout } from '@bloomneo/uikit/auth';
 
 // Single pattern: Direct children
 <AuthLayout scheme="card" tone="clean" size="md">
@@ -532,8 +532,8 @@ const handleNavigation = (href, item) => {
 
 ### 1. Simple Page with Components
 ```jsx
-import { Card, CardContent, CardHeader, CardTitle } from '@voilajsx/uikit/card';
-import { Button } from '@voilajsx/uikit/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@bloomneo/uikit/card';
+import { Button } from '@bloomneo/uikit/button';
 
 function SimplePage() {
   return (
@@ -554,8 +554,8 @@ function SimplePage() {
 
 ### 2. Complete Admin Interface
 ```jsx
-import { AdminLayout } from '@voilajsx/uikit/admin';
-import { DataTable } from '@voilajsx/uikit/data-table';
+import { AdminLayout } from '@bloomneo/uikit/admin';
+import { DataTable } from '@bloomneo/uikit/data-table';
 
 function AdminDashboard() {
   return (
@@ -577,7 +577,7 @@ function AdminDashboard() {
 
 ### 3. Marketing Site
 ```jsx
-import { PageLayout } from '@voilajsx/uikit/page';
+import { PageLayout } from '@bloomneo/uikit/page';
 
 function MarketingSite() {
   return (
@@ -642,7 +642,7 @@ function MarketingSite() {
 
 - **[UIKit Theme Guide](./UIKIT_THEME_GUIDE.md)** - Custom theming and colors
 - **[UIKit LLM Guide](./UIKIT_LLM_GUIDE.md)** - Complete implementation reference
-- **[GitHub Repository](https://github.com/voilajsx/uikit)** - Source code and examples
+- **[GitHub Repository](https://github.com/bloomneo/uikit)** - Source code and examples
 
 ---
 

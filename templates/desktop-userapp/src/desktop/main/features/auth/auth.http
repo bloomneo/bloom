@@ -47,7 +47,7 @@ Content-Type: application/json
 X-Frontend-Key: {{frontendKey}}
 
 {
-  "email": "user.basic@helix-basicapp.com",
+  "email": "user.basic@bloom-basicapp.com",
   "password": "t7xszag09c",
   "rememberMe": true
 }
@@ -58,7 +58,7 @@ Content-Type: application/json
 X-Frontend-Key: {{frontendKey}}
 
 {
-  "email": "admin.system@helix-basicapp.com",
+  "email": "admin.system@bloom-basicapp.com",
   "password": "t7xszag09c",
   "rememberMe": false
 }
@@ -128,7 +128,7 @@ Content-Type: application/json
 X-Frontend-Key: {{frontendKey}}
 
 {
-  "email": "user.basic@helix-basicapp.com",
+  "email": "user.basic@bloom-basicapp.com",
   "password": "t7xszag09c"
 }
 

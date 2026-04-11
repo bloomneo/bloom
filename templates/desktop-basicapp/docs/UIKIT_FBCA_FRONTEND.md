@@ -117,27 +117,27 @@ features/docs/pages/[...slug].tsx      → /docs/*
 ```
 Need a component?
 ├── Layout/Page Structure?
-│   ├── Admin Panel → AdminLayout (from @voilajsx/uikit/admin)
-│   ├── Website → PageLayout (from @voilajsx/uikit/page)
-│   ├── Auth Pages → AuthLayout (from @voilajsx/uikit/auth)
-│   └── Simple Page → BlankLayout (from @voilajsx/uikit/blank)
+│   ├── Admin Panel → AdminLayout (from @bloomneo/uikit/admin)
+│   ├── Website → PageLayout (from @bloomneo/uikit/page)
+│   ├── Auth Pages → AuthLayout (from @bloomneo/uikit/auth)
+│   └── Simple Page → BlankLayout (from @bloomneo/uikit/blank)
 │
 ├── Form Components?
-│   ├── Validated Input → ValidatedInput (from @voilajsx/uikit/form)
-│   ├── Select → ValidatedSelect (from @voilajsx/uikit/form)
-│   ├── Checkbox → ValidatedCheckbox (from @voilajsx/uikit/form)
-│   └── Form Actions → FormActions (from @voilajsx/uikit/form)
+│   ├── Validated Input → ValidatedInput (from @bloomneo/uikit/form)
+│   ├── Select → ValidatedSelect (from @bloomneo/uikit/form)
+│   ├── Checkbox → ValidatedCheckbox (from @bloomneo/uikit/form)
+│   └── Form Actions → FormActions (from @bloomneo/uikit/form)
 │
 ├── Data Display?
-│   ├── Complex Table → DataTable (from @voilajsx/uikit/data-table)
-│   ├── Simple Table → Table (from @voilajsx/uikit/table)
-│   └── Card → Card (from @voilajsx/uikit/card)
+│   ├── Complex Table → DataTable (from @bloomneo/uikit/data-table)
+│   ├── Simple Table → Table (from @bloomneo/uikit/table)
+│   └── Card → Card (from @bloomneo/uikit/card)
 │
 ├── Animations?
-│   ├── Page Transition → Motion (from @voilajsx/uikit/motion)
-│   ├── Scroll Animation → Reveal (from @voilajsx/uikit/motion)
-│   ├── Hover Effect → Hover (from @voilajsx/uikit/motion)
-│   └── Loading → LoadingSpinner (from @voilajsx/uikit/motion)
+│   ├── Page Transition → Motion (from @bloomneo/uikit/motion)
+│   ├── Scroll Animation → Reveal (from @bloomneo/uikit/motion)
+│   ├── Hover Effect → Hover (from @bloomneo/uikit/motion)
+│   └── Loading → LoadingSpinner (from @bloomneo/uikit/motion)
 │
 └── Custom Component?
     └── ONLY if no library component exists
@@ -152,10 +152,10 @@ Need a component?
 ```tsx
 // src/web/App.tsx
 import { BrowserRouter as Router } from 'react-router-dom';
-import { ThemeProvider } from '@voilajsx/uikit/theme-provider';
+import { ThemeProvider } from '@bloomneo/uikit/theme-provider';
 import { PageRouter } from './lib/page-router';
 import { ErrorBoundary } from './shared/components';
-import '@voilajsx/uikit/styles'; // CRITICAL: Must import
+import '@bloomneo/uikit/styles'; // CRITICAL: Must import
 
 function App() {
   return (
@@ -290,9 +290,9 @@ export const PageRouter = () => {
 ```tsx
 // src/web/shared/components/ErrorBoundary.tsx
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { Alert, AlertDescription } from '@voilajsx/uikit/alert';
-import { Button } from '@voilajsx/uikit/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@voilajsx/uikit/card';
+import { Alert, AlertDescription } from '@bloomneo/uikit/alert';
+import { Button } from '@bloomneo/uikit/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@bloomneo/uikit/card';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 
 interface Props {
@@ -390,7 +390,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
 ```tsx
 // src/web/shared/components/Header.tsx
-import { PageLayout } from '@voilajsx/uikit/page';
+import { PageLayout } from '@bloomneo/uikit/page';
 
 export const Header = () => {
   return (
@@ -409,7 +409,7 @@ export const Header = () => {
 
 ```tsx
 // src/web/shared/components/Footer.tsx
-import { PageLayout } from '@voilajsx/uikit/page';
+import { PageLayout } from '@bloomneo/uikit/page';
 
 export const Footer = () => {
   return (
@@ -521,8 +521,8 @@ function setLinkTag(rel: string, href: string) {
 
 ```tsx
 // features/gallery/pages/index.tsx
-import { PageLayout } from '@voilajsx/uikit/page';
-import { Card, CardContent, CardHeader, CardTitle } from '@voilajsx/uikit/card';
+import { PageLayout } from '@bloomneo/uikit/page';
+import { Card, CardContent, CardHeader, CardTitle } from '@bloomneo/uikit/card';
 import { Header, Footer, SEO } from '../../../shared/components';
 
 export default function GalleryPage() {
@@ -560,9 +560,9 @@ export default function GalleryPage() {
 
 ```tsx
 // features/blog/pages/index.tsx
-import { PageLayout } from '@voilajsx/uikit/page';
-import { Card, CardContent, CardHeader, CardTitle } from '@voilajsx/uikit/card';
-import { Motion } from '@voilajsx/uikit/motion';
+import { PageLayout } from '@bloomneo/uikit/page';
+import { Card, CardContent, CardHeader, CardTitle } from '@bloomneo/uikit/card';
+import { Motion } from '@bloomneo/uikit/motion';
 import { Header, Footer, SEO } from '../../../shared/components';
 import { useBlog } from '../hooks/useBlog';
 
@@ -650,8 +650,8 @@ export const useBlog = () => {
 ```tsx
 // features/blog/pages/[slug].tsx
 import { useParams } from 'react-router-dom';
-import { PageLayout } from '@voilajsx/uikit/page';
-import { Card, CardContent, CardHeader, CardTitle } from '@voilajsx/uikit/card';
+import { PageLayout } from '@bloomneo/uikit/page';
+import { Card, CardContent, CardHeader, CardTitle } from '@bloomneo/uikit/card';
 import { Header, Footer, SEO } from '../../../shared/components';
 import { useBlogPost } from '../hooks/useBlogPost';
 
@@ -723,7 +723,7 @@ export default function BlogPostPage() {
 
 ```tsx
 // ✅ CORRECT - Use PageLayout from library
-import { PageLayout } from '@voilajsx/uikit/page';
+import { PageLayout } from '@bloomneo/uikit/page';
 
 <PageLayout>
   <PageLayout.Header />
@@ -734,7 +734,7 @@ import { PageLayout } from '@voilajsx/uikit/page';
 </PageLayout>
 
 // ✅ CORRECT - Use ValidatedInput for forms
-import { ValidatedInput, FormActions } from '@voilajsx/uikit/form';
+import { ValidatedInput, FormActions } from '@bloomneo/uikit/form';
 
 <ValidatedInput
   type="email"
@@ -746,7 +746,7 @@ import { ValidatedInput, FormActions } from '@voilajsx/uikit/form';
 <FormActions submitText="Submit" loading={isLoading} />
 
 // ✅ CORRECT - Use DataTable for complex data
-import { DataTable } from '@voilajsx/uikit/data-table';
+import { DataTable } from '@bloomneo/uikit/data-table';
 
 <DataTable
   data={users}
@@ -757,7 +757,7 @@ import { DataTable } from '@voilajsx/uikit/data-table';
 />
 
 // ✅ CORRECT - Use Motion for animations
-import { Motion, Reveal, Hover } from '@voilajsx/uikit/motion';
+import { Motion, Reveal, Hover } from '@bloomneo/uikit/motion';
 
 <Motion preset="fadeIn">
   <Card />
@@ -881,7 +881,7 @@ mkdir -p src/web/features/products/hooks
 
 ```tsx
 // features/products/pages/index.tsx - Route: /products
-import { PageLayout } from '@voilajsx/uikit/page';
+import { PageLayout } from '@bloomneo/uikit/page';
 import { Header, Footer, SEO } from '../../../shared/components';
 
 export default function ProductsPage() {
@@ -901,7 +901,7 @@ export default function ProductsPage() {
 ```tsx
 // features/products/pages/[id].tsx - Route: /products/:id
 import { useParams } from 'react-router-dom';
-import { PageLayout } from '@voilajsx/uikit/page';
+import { PageLayout } from '@bloomneo/uikit/page';
 import { Header, Footer, SEO } from '../../../shared/components';
 
 export default function ProductDetailPage() {
@@ -924,7 +924,7 @@ export default function ProductDetailPage() {
 
 ```tsx
 // features/products/components/ProductCard.tsx
-import { Card, CardContent, CardHeader, CardTitle } from '@voilajsx/uikit/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@bloomneo/uikit/card';
 
 interface ProductCardProps {
   product: {
@@ -1037,7 +1037,7 @@ const [page, setPage] = useState(1);
 - [ ] ThemeProvider wrapping entire app
 - [ ] ErrorBoundary wrapping app
 - [ ] React Router with future flags
-- [ ] Import '@voilajsx/uikit/styles'
+- [ ] Import '@bloomneo/uikit/styles'
 
 ### Routing
 - [ ] main/pages/index.tsx for homepage (/)
@@ -1081,4 +1081,4 @@ const [page, setPage] = useState(1);
 
 ---
 
-**Built with @voilajsx/uikit** ✨
+**Built with @bloomneo/uikit** ✨

@@ -1,11 +1,11 @@
 {
-  "name": "helix-mobile-basicapp",
+  "name": "bloom-mobile-basicapp",
   "private": true,
   "version": "1.0.0",
   "type": "module",
   "description": "Mobile FBCA application with UIKit and Capacitor - connects to external API",
   "keywords": [
-    "helix",
+    "bloom",
     "react",
     "capacitor",
     "mobile",
@@ -27,13 +27,13 @@
     "mobile:run:android": "npm run mobile:sync:android && cap run android",
     "mobile:build:android": "npm run build && npm run mobile:sync:android",
     "mobile:build:ios": "npm run build && npm run mobile:sync:ios",
-    "android:build": "npm run build && cp capacitor.config.android.ts capacitor.config.ts && cap sync android && sed -i '' '/\"url\":/d' android/app/src/main/assets/capacitor.config.json && cd android && ./gradlew assembleDebug && cd .. && mkdir -p build && cp android/app/build/outputs/apk/debug/app-debug.apk build/helix-mobile-app.apk",
-    "android:release": "npm run build && cp capacitor.config.android.ts capacitor.config.ts && cap sync android && sed -i '' '/\"url\":/d' android/app/src/main/assets/capacitor.config.json && cd android && ./gradlew assembleRelease && cd .. && mkdir -p build && cp android/app/build/outputs/apk/release/app-release.apk build/helix-mobile-app-release.apk",
-    "android:clean": "cd android && ./gradlew clean && rm -rf ../build/helix-mobile-app.apk ../build/helix-mobile-app-release.apk",
-    "android:install": "adb install build/helix-mobile-app.apk",
-    "ios:build": "npm run build && cp capacitor.config.ios.ts capacitor.config.ts && cap sync ios && sed -i '' '/\"url\":/d' ios/App/App/capacitor.config.json && cd ios/App && xcodebuild -workspace App.xcworkspace -scheme App -configuration Debug -sdk iphonesimulator -derivedDataPath ../../build/ios build && cd ../.. && cp -r build/ios/Build/Products/Debug-iphonesimulator/App.app build/helix-mobile-app.app",
+    "android:build": "npm run build && cp capacitor.config.android.ts capacitor.config.ts && cap sync android && sed -i '' '/\"url\":/d' android/app/src/main/assets/capacitor.config.json && cd android && ./gradlew assembleDebug && cd .. && mkdir -p build && cp android/app/build/outputs/apk/debug/app-debug.apk build/bloom-mobile-app.apk",
+    "android:release": "npm run build && cp capacitor.config.android.ts capacitor.config.ts && cap sync android && sed -i '' '/\"url\":/d' android/app/src/main/assets/capacitor.config.json && cd android && ./gradlew assembleRelease && cd .. && mkdir -p build && cp android/app/build/outputs/apk/release/app-release.apk build/bloom-mobile-app-release.apk",
+    "android:clean": "cd android && ./gradlew clean && rm -rf ../build/bloom-mobile-app.apk ../build/bloom-mobile-app-release.apk",
+    "android:install": "adb install build/bloom-mobile-app.apk",
+    "ios:build": "npm run build && cp capacitor.config.ios.ts capacitor.config.ts && cap sync ios && sed -i '' '/\"url\":/d' ios/App/App/capacitor.config.json && cd ios/App && xcodebuild -workspace App.xcworkspace -scheme App -configuration Debug -sdk iphonesimulator -derivedDataPath ../../build/ios build && cd ../.. && cp -r build/ios/Build/Products/Debug-iphonesimulator/App.app build/bloom-mobile-app.app",
     "ios:release": "npm run build && cp capacitor.config.ios.ts capacitor.config.ts && cap sync ios && sed -i '' '/\"url\":/d' ios/App/App/capacitor.config.json && cd ios/App && xcodebuild -workspace App.xcworkspace -scheme App -configuration Release -sdk iphoneos -derivedDataPath ../../build/ios build && cd ../.. && echo 'Release build ready - archive in Xcode for App Store'",
-    "ios:clean": "rm -rf build/ios build/helix-mobile-app.app"
+    "ios:clean": "rm -rf build/ios build/bloom-mobile-app.app"
   },
   "dependencies": {
     "@capacitor/android": "^7.4.4",
@@ -45,7 +45,7 @@
     "@capacitor/keyboard": "^7.0.3",
     "@capacitor/splash-screen": "^7.0.3",
     "@capacitor/status-bar": "^7.0.3",
-    "@voilajsx/uikit": "^1.3.0",
+    "@bloomneo/uikit": "^1.3.0",
     "lucide-react": "^0.436.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

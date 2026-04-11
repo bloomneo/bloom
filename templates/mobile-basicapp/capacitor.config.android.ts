@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.helix.mobilebasicapp',
-  appName: 'Helix Mobile',
+  appId: 'com.bloom.mobilebasicapp',
+  appName: 'Bloom Mobile',
   webDir: 'dist',
   server: {
     // Android emulator uses 10.0.2.2 to access host machine's localhost

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, CardContent } from '@voilajsx/uikit/card';
+import { Card, CardContent } from '@bloomneo/uikit/card';
 
 export const SettingsPage: React.FC = () => {
   return (

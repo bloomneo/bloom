@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Button } from '@voilajsx/uikit/button';
-import { AuthLayout } from '@voilajsx/uikit/auth';
-import { Alert, AlertTitle, AlertDescription } from '@voilajsx/uikit/alert';
+import { Button } from '@bloomneo/uikit/button';
+import { AuthLayout } from '@bloomneo/uikit/auth';
+import { Alert, AlertTitle, AlertDescription } from '@bloomneo/uikit/alert';
 import { Lock, Eye, EyeOff, CheckCircle, Loader2, AlertTriangle } from 'lucide-react';
 import { SEO } from '../../../shared/components';
 import { useAuthContext } from '../context/AuthContext';

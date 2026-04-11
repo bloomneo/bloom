@@ -15,9 +15,9 @@ import helmet from 'helmet';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
-import { loggerClass } from '@voilajsx/appkit/logger';
-import { errorClass } from '@voilajsx/appkit/error';
-import { configClass } from '@voilajsx/appkit/config';
+import { loggerClass } from '@bloomneo/appkit/logger';
+import { errorClass } from '@bloomneo/appkit/error';
+import { configClass } from '@bloomneo/appkit/config';
 import { createApiRouter } from './lib/api-router.js';
 import { settingsService } from './features/settings/settings.service.js';
 

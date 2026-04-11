@@ -5,10 +5,10 @@
 
 import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, useNavigate, useLocation } from 'react-router-dom';
-import { ThemeProvider } from '@voilajsx/uikit/theme-provider';
-import { MobileLayout } from '@voilajsx/uikit/mobile';
-import { SafeArea } from '@voilajsx/uikit/safe-area';
-import { TabBar } from '@voilajsx/uikit/tab-bar';
+import { ThemeProvider } from '@bloomneo/uikit/theme-provider';
+import { MobileLayout } from '@bloomneo/uikit/mobile';
+import { SafeArea } from '@bloomneo/uikit/safe-area';
+import { TabBar } from '@bloomneo/uikit/tab-bar';
 import { PageRouter } from './lib/page-router';
 import { Home, Settings } from 'lucide-react';
 

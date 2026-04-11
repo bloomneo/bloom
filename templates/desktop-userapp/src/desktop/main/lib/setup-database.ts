@@ -5,7 +5,7 @@
  * Handles first-run database initialization with user-provided admin credentials.
  */
 
-import { authClass } from '@voilajsx/appkit/auth';
+import { authClass } from '@bloomneo/appkit/auth';
 import { db } from './db-client.js';
 
 export interface AdminAccountData {

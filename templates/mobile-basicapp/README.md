@@ -2,7 +2,7 @@
 
 **Cross-platform Mobile UI Application for iOS and Android**
 
-Built with React + @voilajsx/uikit + Capacitor
+Built with React + @bloomneo/uikit + Capacitor
 
 ---
 
@@ -95,7 +95,7 @@ npm run build                  # Build for production
 ### iOS
 ```bash
 npm run mobile:run:ios         # Run on iOS Simulator
-npm run ios:build              # Build .app → build/helix-mobile-app.app
+npm run ios:build              # Build .app → build/bloom-mobile-app.app
 npm run ios:release            # Release build (needs Xcode for App Store)
 npm run ios:clean              # Clean iOS build artifacts
 ```
@@ -103,7 +103,7 @@ npm run ios:clean              # Clean iOS build artifacts
 ### Android
 ```bash
 npm run mobile:run:android     # Run on Android Emulator
-npm run android:build          # Build APK → build/helix-mobile-app.apk
+npm run android:build          # Build APK → build/bloom-mobile-app.apk
 npm run android:release        # Release APK (needs keystore)
 npm run android:clean          # Clean Android build artifacts
 npm run android:install        # Install APK on device
@@ -176,13 +176,13 @@ mobile-basicapp/
 
 ## Backend Requirements
 
-This app requires an external API. **Use [helix-basicapp](https://github.com/anthropics/helix-basicapp) as your backend project.**
+This app requires an external API. **Use [bloom-basicapp](https://github.com/anthropics/bloom-basicapp) as your backend project.**
 
 ### Development (Local)
 ```bash
 # Clone and run basicapp backend locally (separate project)
-git clone https://github.com/anthropics/helix-basicapp.git
-cd helix-basicapp
+git clone https://github.com/anthropics/bloom-basicapp.git
+cd bloom-basicapp
 npm install
 npm run dev:api  # Starts API on http://localhost:3000
 ```
@@ -213,7 +213,7 @@ VITE_API_URL=https://your-deployed-api.com
 - **React 18** - UI framework
 - **TypeScript** - Type safety
 - **Capacitor 7** - Native mobile runtime
-- **@voilajsx/uikit** - UI components (5 themes)
+- **@bloomneo/uikit** - UI components (5 themes)
 - **Tailwind CSS v4** - Styling
 - **Vite** - Build tool
 
@@ -235,4 +235,4 @@ MIT License
 
 ---
 
-**Part of the Helix Framework ecosystem**
+**Part of the Bloom Framework ecosystem**

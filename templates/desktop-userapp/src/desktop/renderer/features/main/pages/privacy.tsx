@@ -1,6 +1,6 @@
 import React from 'react';
-import { PageLayout } from '@voilajsx/uikit/page';
-import { Card, CardContent } from '@voilajsx/uikit/card';
+import { PageLayout } from '@bloomneo/uikit/page';
+import { Card, CardContent } from '@bloomneo/uikit/card';
 import { Shield } from 'lucide-react';
 import { Header, Footer, SEO } from '../../../shared/components';
 

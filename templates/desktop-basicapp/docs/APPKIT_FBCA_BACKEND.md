@@ -66,10 +66,10 @@ src/desktop/main/
 ```
 Need functionality?
 ├── Safe object access?
-│   └── util.get() (from @voilajsx/appkit/util)
+│   └── util.get() (from @bloomneo/appkit/util)
 │
 ├── Environment variables?
-│   └── config.get() (from @voilajsx/appkit/config)
+│   └── config.get() (from @bloomneo/appkit/config)
 │
 ├── Authentication?
 │   ├── JWT tokens → auth.generateLoginToken()
@@ -91,7 +91,7 @@ Need functionality?
 │   └── Encryption → security.encrypt()
 │
 ├── Logging?
-│   └── logger.info/warn/error() (from @voilajsx/appkit/logger)
+│   └── logger.info/warn/error() (from @bloomneo/appkit/logger)
 │
 └── Custom implementation?
     └── ONLY if no library module exists
@@ -105,18 +105,18 @@ Need functionality?
 
 | Module | Import | Usage | When to Use |
 |--------|--------|-------|-------------|
-| **util** | `import { utilClass } from '@voilajsx/appkit/util'` | `const util = utilClass.get()` | Safe access, validation, formatting |
-| **config** | `import { configClass } from '@voilajsx/appkit/config'` | `const config = configClass.get()` | Environment variables |
-| **auth** | `import { authClass } from '@voilajsx/appkit/auth'` | `const auth = authClass.get()` | JWT, passwords, roles |
-| **logger** | `import { loggerClass } from '@voilajsx/appkit/logger'` | `const logger = loggerClass.get('component')` | Structured logging |
-| **error** | `import { errorClass } from '@voilajsx/appkit/error'` | `const error = errorClass.get()` | HTTP error handling |
-| **security** | `import { securityClass } from '@voilajsx/appkit/security'` | `const security = securityClass.get()` | CSRF, rate limiting, encryption |
-| **database** | `import { databaseClass } from '@voilajsx/appkit/database'` | `const database = await databaseClass.get()` | Database operations |
-| **cache** | `import { cacheClass } from '@voilajsx/appkit/cache'` | `const cache = cacheClass.get('namespace')` | Caching with namespaces |
-| **storage** | `import { storageClass } from '@voilajsx/appkit/storage'` | `const storage = storageClass.get()` | File storage |
-| **queue** | `import { queueClass } from '@voilajsx/appkit/queue'` | `const queue = queueClass.get()` | Background jobs |
-| **email** | `import { emailClass } from '@voilajsx/appkit/email'` | `const email = emailClass.get()` | Sending emails |
-| **event** | `import { eventClass } from '@voilajsx/appkit/event'` | `const event = eventClass.get('namespace')` | Event emission |
+| **util** | `import { utilClass } from '@bloomneo/appkit/util'` | `const util = utilClass.get()` | Safe access, validation, formatting |
+| **config** | `import { configClass } from '@bloomneo/appkit/config'` | `const config = configClass.get()` | Environment variables |
+| **auth** | `import { authClass } from '@bloomneo/appkit/auth'` | `const auth = authClass.get()` | JWT, passwords, roles |
+| **logger** | `import { loggerClass } from '@bloomneo/appkit/logger'` | `const logger = loggerClass.get('component')` | Structured logging |
+| **error** | `import { errorClass } from '@bloomneo/appkit/error'` | `const error = errorClass.get()` | HTTP error handling |
+| **security** | `import { securityClass } from '@bloomneo/appkit/security'` | `const security = securityClass.get()` | CSRF, rate limiting, encryption |
+| **database** | `import { databaseClass } from '@bloomneo/appkit/database'` | `const database = await databaseClass.get()` | Database operations |
+| **cache** | `import { cacheClass } from '@bloomneo/appkit/cache'` | `const cache = cacheClass.get('namespace')` | Caching with namespaces |
+| **storage** | `import { storageClass } from '@bloomneo/appkit/storage'` | `const storage = storageClass.get()` | File storage |
+| **queue** | `import { queueClass } from '@bloomneo/appkit/queue'` | `const queue = queueClass.get()` | Background jobs |
+| **email** | `import { emailClass } from '@bloomneo/appkit/email'` | `const email = emailClass.get()` | Sending emails |
+| **event** | `import { eventClass } from '@bloomneo/appkit/event'` | `const event = eventClass.get('namespace')` | Event emission |
 
 ---
 
@@ -129,9 +129,9 @@ Need functionality?
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
-import { configClass } from '@voilajsx/appkit/config';
-import { loggerClass } from '@voilajsx/appkit/logger';
-import { errorClass } from '@voilajsx/appkit/error';
+import { configClass } from '@bloomneo/appkit/config';
+import { loggerClass } from '@bloomneo/appkit/logger';
+import { errorClass } from '@bloomneo/appkit/error';
 import { router } from './routes';
 
 const app = express();
@@ -184,7 +184,7 @@ process.on('SIGINT', () => {
 ```typescript
 // src/desktop/main/routes/index.ts
 import { Router } from 'express';
-import { loggerClass } from '@voilajsx/appkit/logger';
+import { loggerClass } from '@bloomneo/appkit/logger';
 
 const logger = loggerClass.get('router');
 
@@ -215,12 +215,12 @@ export { router };
 ```typescript
 // src/desktop/main/routes/auth/auth.routes.ts
 import { Router } from 'express';
-import { utilClass } from '@voilajsx/appkit/util';
-import { authClass } from '@voilajsx/appkit/auth';
-import { errorClass } from '@voilajsx/appkit/error';
-import { loggerClass } from '@voilajsx/appkit/logger';
-import { securityClass } from '@voilajsx/appkit/security';
-import { databaseClass } from '@voilajsx/appkit/database';
+import { utilClass } from '@bloomneo/appkit/util';
+import { authClass } from '@bloomneo/appkit/auth';
+import { errorClass } from '@bloomneo/appkit/error';
+import { loggerClass } from '@bloomneo/appkit/logger';
+import { securityClass } from '@bloomneo/appkit/security';
+import { databaseClass } from '@bloomneo/appkit/database';
 
 const router = Router();
 const util = utilClass.get();
@@ -880,4 +880,4 @@ app.use(error.handleErrors()); // MUST be last
 
 ---
 
-**Built with @voilajsx/appkit** ✨
+**Built with @bloomneo/appkit** ✨

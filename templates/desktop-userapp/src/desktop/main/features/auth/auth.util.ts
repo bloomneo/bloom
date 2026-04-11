@@ -8,7 +8,7 @@
  */
 
 import crypto from 'crypto';
-import { emailClass } from '@voilajsx/appkit/email';
+import { emailClass } from '@bloomneo/appkit/email';
 
 export interface TokenData {
   token: string;

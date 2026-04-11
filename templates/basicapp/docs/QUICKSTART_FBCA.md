@@ -17,7 +17,7 @@ FBCA (Feature-Based Component Architecture) organizes code by business features 
 
 ### Step 1: Install UIKit CLI Globally
 ```bash
-npm install -g @voilajsx/uikit
+npm install -g @bloomneo/uikit
 ```
 
 ### Step 2: Create FBCA Project
@@ -140,7 +140,7 @@ const pageFiles = import.meta.glob('../features/*/pages/**/*.{tsx,jsx}', { eager
 
 ```jsx
 // features/gallery/pages/index.tsx
-import { PageLayout } from '@voilajsx/uikit/page';
+import { PageLayout } from '@bloomneo/uikit/page';
 import { Header, Footer, SEO } from '../../../shared/components';
 import { useGallery } from '../hooks/useGallery';
 
@@ -365,4 +365,4 @@ export const BlogCard = ({ post }) => {
 
 ---
 
-**Built with @voilajsx/uikit** ✨
+**Built with @bloomneo/uikit** ✨

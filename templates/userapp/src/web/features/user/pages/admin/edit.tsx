@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { PageLayout } from '@voilajsx/uikit/page';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@voilajsx/uikit/card';
-import { Button } from '@voilajsx/uikit/button';
-import { Input } from '@voilajsx/uikit/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@voilajsx/uikit/select';
-import { Alert, AlertDescription, AlertTitle } from '@voilajsx/uikit/alert';
+import { PageLayout } from '@bloomneo/uikit/page';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@bloomneo/uikit/card';
+import { Button } from '@bloomneo/uikit/button';
+import { Input } from '@bloomneo/uikit/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@bloomneo/uikit/select';
+import { Alert, AlertDescription, AlertTitle } from '@bloomneo/uikit/alert';
 import { Edit, ArrowLeft, AlertTriangle, CheckCircle, RefreshCw } from 'lucide-react';
 import { Header, Footer, SEO } from '../../../../shared/components';
 import { useAuth } from '../../../auth';

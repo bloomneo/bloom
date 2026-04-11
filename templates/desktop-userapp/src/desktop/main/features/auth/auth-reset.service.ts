@@ -7,9 +7,9 @@
  */
 
 import { db } from '../../lib/db-client.js';
-import { loggerClass } from '@voilajsx/appkit/logger';
-import { errorClass } from '@voilajsx/appkit/error';
-import { authClass } from '@voilajsx/appkit/auth';
+import { loggerClass } from '@bloomneo/appkit/logger';
+import { errorClass } from '@bloomneo/appkit/error';
+import { authClass } from '@bloomneo/appkit/auth';
 
 const logger = loggerClass.get('auth-reset');
 const error = errorClass.get();

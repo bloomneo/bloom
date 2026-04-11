@@ -37,8 +37,8 @@
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.main.json"
   },
   "dependencies": {
-    "@voilajsx/appkit": "latest",
-    "@voilajsx/uikit": "latest",
+    "@bloomneo/appkit": "latest",
+    "@bloomneo/uikit": "latest",
     "bcrypt": "^5.1.1",
     "better-sqlite3": "^12.4.1",
     "cors": "^2.8.5",

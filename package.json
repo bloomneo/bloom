@@ -1,11 +1,11 @@
 {
-  "name": "@voilajsx/helix",
-  "version": "1.2.0",
-  "description": "A modern fullstack framework combining UIKit (React) and AppKit (Express) with Feature-Based Component Architecture (FBCA)",
+  "name": "@bloomneo/bloom",
+  "version": "1.5.0",
+  "description": "Bloom — modern fullstack framework combining @bloomneo/uikit (React) and @bloomneo/appkit (Express) with Feature-Based Component Architecture (FBCA). Scaffolds full-stack web/desktop/mobile apps from one CLI. Previously published as @voilajsx/helix.",
   "type": "module",
-  "main": "./bin/helix.js",
+  "main": "./bin/bloom.js",
   "bin": {
-    "helix": "./bin/helix.js"
+    "bloom": "./bin/bloom.js"
   },
   "files": [
     "bin",
@@ -18,11 +18,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/voilajsx/helix.git"
+    "url": "https://github.com/bloomneo/bloom.git"
   },
-  "homepage": "https://github.com/voilajsx/helix#readme",
+  "homepage": "https://github.com/bloomneo/bloom#readme",
   "bugs": {
-    "url": "https://github.com/voilajsx/helix/issues"
+    "url": "https://github.com/bloomneo/bloom/issues"
   },
   "keywords": [
     "fullstack",
@@ -49,18 +49,29 @@
     "desktop"
   ],
   "author": {
-    "name": "VoilaJSX",
-    "url": "https://voilajsx.com"
+    "name": "Bloomneo",
+    "url": "https://bloomneo.com"
   },
+  "contributors": [
+    {
+      "name": "Krishna Teja GS",
+      "email": "kt@voilacode.com",
+      "url": "https://bloomneo.com"
+    }
+  ],
   "license": "MIT",
   "publishConfig": {
     "access": "public"
+  },
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/bloomneo"
   },
   "dependencies": {
     "fs-extra": "^11.2.0"
   },
   "peerDependencies": {
-    "@voilajsx/appkit": ">=1.0.0",
-    "@voilajsx/uikit": "^1.3.0"
+    "@bloomneo/uikit": "^1.5.0",
+    "@bloomneo/appkit": "^1.2.9"
   }
 }

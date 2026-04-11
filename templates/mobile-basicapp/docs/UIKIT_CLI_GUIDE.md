@@ -514,7 +514,7 @@ uikit deploy --github              # Consistent, repeatable process
 **"Command not found: uikit"**
 ```bash
 # Install UIKit CLI globally
-npm install -g @voilajsx/uikit
+npm install -g @bloomneo/uikit
 
 # Verify installation
 uikit --version
@@ -567,7 +567,7 @@ uikit build
 - **[UIKit Theme Guide](./UIKIT_THEME_GUIDE.md)** - Custom theming and colors
 - **[UIKit Composite UI System](./UIKIT_COMPOSITE_UI_SYSTEM.md)** - Components and layouts
 - **[UIKit LLM Guide](./UIKIT_LLM_GUIDE.md)** - Complete implementation reference
-- **[GitHub Repository](https://github.com/voilajsx/uikit)** - Source code and examples
+- **[GitHub Repository](https://github.com/bloomneo/uikit)** - Source code and examples
 
 ---
 

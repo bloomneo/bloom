@@ -258,14 +258,14 @@ Use the provided `auth.http` file for comprehensive testing:
 All seeded accounts use password: `t7xszag09c`
 
 **User Accounts:**
-- `user.basic@helix-basicapp.com` (role: user.basic)
-- `user.pro@helix-basicapp.com` (role: user.pro)
-- `user.max@helix-basicapp.com` (role: user.max)
+- `user.basic@bloom-basicapp.com` (role: user.basic)
+- `user.pro@bloom-basicapp.com` (role: user.pro)
+- `user.max@bloom-basicapp.com` (role: user.max)
 
 **Admin Accounts:**
-- `admin.tenant@helix-basicapp.com` (role: admin.tenant)
-- `admin.org@helix-basicapp.com` (role: admin.org)
-- `admin.system@helix-basicapp.com` (role: admin.system)
+- `admin.tenant@bloom-basicapp.com` (role: admin.tenant)
+- `admin.org@bloom-basicapp.com` (role: admin.org)
+- `admin.system@bloom-basicapp.com` (role: admin.system)
 
 ## Frontend Integration
 

@@ -1,6 +1,6 @@
 # {{PROJECT_NAME}}
 
-**A modern React FBCA Application built with @voilajsx/uikit**
+**A modern React FBCA Application built with @bloomneo/uikit**
 
 ## 🚀 Quick Start
 
@@ -20,7 +20,7 @@ npm run preview
 
 ## 🎨 UIKit FBCA Features
 
-This Feature-Based Component Architecture application is built with [@voilajsx/uikit](https://github.com/voilajsx/uikit) featuring:
+This Feature-Based Component Architecture application is built with [@bloomneo/uikit](https://github.com/bloomneo/uikit) featuring:
 
 - **37 UI Components** - Forms, tables, navigation, overlays, and more
 - **5 Professional Themes** - Base, Elegant, Metro, Studio, Vivid
@@ -93,7 +93,7 @@ Available modes: `light` | `dark`
 - **[TypeScript](https://typescriptlang.org)** - Type safety
 - **[Vite](https://vitejs.dev)** - Build tool and dev server
 - **[Tailwind CSS v4+](https://tailwindcss.com)** - Utility-first CSS framework
-- **[@voilajsx/uikit](https://github.com/voilajsx/uikit)** - UI components and layouts
+- **[@bloomneo/uikit](https://github.com/bloomneo/uikit)** - UI components and layouts
 - **[Lucide React](https://lucide.dev)** - Icon library
 
 ## 🏗️ FBCA Architecture
@@ -127,4 +127,4 @@ import { asset } from '../utils/asset';
 
 ---
 
-**Built with ❤️ using [@voilajsx/uikit](https://github.com/voilajsx/uikit)** ✨
+**Built with ❤️ using [@bloomneo/uikit](https://github.com/bloomneo/uikit)** ✨

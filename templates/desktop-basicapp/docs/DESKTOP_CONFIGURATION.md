@@ -1,6 +1,6 @@
 # Desktop App Configuration Guide 🖥️
 
-> **Quick reference for configuring Helix Desktop App - icons, metadata, and build settings**
+> **Quick reference for configuring Bloom Desktop App - icons, metadata, and build settings**
 
 ## 📝 Overview
 
@@ -80,11 +80,11 @@ electron-icon-maker --input=public/app.png --output=build
 
 ```json
 {
-  "name": "helix-desktop-app",
-  "productName": "Helix",
+  "name": "bloom-desktop-app",
+  "productName": "Bloom",
   "version": "1.0.0",
-  "description": "Helix Desktop App - Modern Electron application",
-  "appId": "com.helix.app"
+  "description": "Bloom Desktop App - Modern Electron application",
+  "appId": "com.bloom.app"
 }
 ```
 
@@ -92,18 +92,18 @@ electron-icon-maker --input=public/app.png --output=build
 
 | Field | Purpose | Example |
 |-------|---------|---------|
-| `name` | NPM package name (internal) | `helix-desktop-app` |
-| `productName` | Display name shown to users | `Helix` |
+| `name` | NPM package name (internal) | `bloom-desktop-app` |
+| `productName` | Display name shown to users | `Bloom` |
 | `version` | App version (semantic) | `1.0.0`, `1.2.3` |
-| `description` | App description | `Helix Desktop App` |
-| `appId` | Unique identifier (reverse domain) | `com.helix.app` |
+| `description` | App description | `Bloom Desktop App` |
+| `appId` | Unique identifier (reverse domain) | `com.bloom.app` |
 
 ### Customization
 
 ```json
 {
-  "name": "helix-desktop-app",           // Keep this (internal)
-  "productName": "Helix Pro",            // ✏️ Change display name
+  "name": "bloom-desktop-app",           // Keep this (internal)
+  "productName": "Bloom Pro",            // ✏️ Change display name
   "version": "1.0.0",                    // ✏️ Update on releases
   "description": "Your custom description", // ✏️ Describe your app
   "author": "Your Name <email@example.com>", // ✏️ Add author
@@ -119,8 +119,8 @@ electron-icon-maker --input=public/app.png --output=build
 
 ```json
 "build": {
-  "appId": "com.helix.app",
-  "productName": "Helix",
+  "appId": "com.bloom.app",
+  "productName": "Bloom",
   "directories": {
     "output": "release"  // Built apps go here
   },
@@ -216,7 +216,7 @@ mainWindow = new BrowserWindow({
 **Window Style:**
 ```javascript
 {
-  title: 'Helix',           // Window title
+  title: 'Bloom',           // Window title
   frame: true,              // Show title bar (false = frameless)
   titleBarStyle: 'default', // macOS: 'default', 'hidden', 'hiddenInset'
   backgroundColor: '#ffffff', // Background color
@@ -248,8 +248,8 @@ mainWindow.once('ready-to-show', () => {
 
 ### Minimal Setup (Current - Works fine!)
 - ✅ App icon (`public/app.png`)
-- ✅ Product name (`Helix`)
-- ✅ App ID (`com.helix.app`)
+- ✅ Product name (`Bloom`)
+- ✅ App ID (`com.bloom.app`)
 - ✅ Window size (1400×900)
 - ✅ Build targets (DMG, NSIS, AppImage)
 

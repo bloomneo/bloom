@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { PageLayout } from '@voilajsx/uikit/page';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@voilajsx/uikit/card';
-import { Button } from '@voilajsx/uikit/button';
-import { Alert, AlertTitle, AlertDescription } from '@voilajsx/uikit/alert';
+import { PageLayout } from '@bloomneo/uikit/page';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@bloomneo/uikit/card';
+import { Button } from '@bloomneo/uikit/button';
+import { Alert, AlertTitle, AlertDescription } from '@bloomneo/uikit/alert';
 import { User, Mail, Shield, Settings, Phone, Edit3, Save, X, AlertTriangle, CheckCircle, Key, Lock, Eye, EyeOff } from 'lucide-react';
 import { Header, Footer, SEO } from '../../../shared/components';
 import { AuthGuard } from '../../auth';

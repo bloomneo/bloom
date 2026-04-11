@@ -1,9 +1,19 @@
-# 🔥 Helix Framework
+# 🌸 Bloom Framework
 
-A modern fullstack framework that combines **UIKit** (React frontend) and **AppKit** (Express backend) with Feature-Based Component Architecture (FBCA).
+> Previously published as `@voilajsx/helix`. Same code, new home, new namespace, new CLI command. See the [migration note](#scope-change) below.
 
-[![npm version](https://badge.fury.io/js/helix.svg)](https://badge.fury.io/js/helix)
+A modern fullstack framework that combines **@bloomneo/uikit** (React frontend) and **@bloomneo/appkit** (Express backend) with Feature-Based Component Architecture (FBCA). One CLI scaffolds web, desktop (Electron), and mobile (Capacitor) apps from the same project.
+
+[![npm version](https://img.shields.io/npm/v/@bloomneo/bloom.svg)](https://www.npmjs.com/package/@bloomneo/bloom)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+```bash
+npm install -g @bloomneo/bloom
+bloom create my-app                # basicapp template
+bloom create my-app userapp        # auth + user management
+bloom create my-app mobile-basicapp  # iOS + Android via Capacitor
+bloom create my-app desktop-basicapp # desktop via Electron
+```
 
 ## ✨ Features
 
@@ -30,31 +40,31 @@ A modern fullstack framework that combines **UIKit** (React frontend) and **AppK
 ### Installation
 
 ```bash
-npm install -g @voilajsx/helix
+npm install -g @bloomneo/bloom
 ```
 
 ### Create New Project
 
 ```bash
 # Basic app (default)
-helix create my-app
+bloom create my-app
 cd my-app
 npm run dev
 
 # User management app
-helix create my-userapp userapp
+bloom create my-userapp userapp
 cd my-userapp
 npx prisma db push
 npm run db:seed
 npm run dev
 
 # Desktop app (Electron)
-helix create my-desktop-app desktop-basicapp
+bloom create my-desktop-app desktop-basicapp
 cd my-desktop-app
 npm run dev
 
 # Mobile app (iOS + Android)
-helix create my-mobile-app mobile-basicapp
+bloom create my-mobile-app mobile-basicapp
 cd my-mobile-app
 npm install
 npm run dev                      # Start dev server
@@ -123,7 +133,7 @@ my-desktop-app/
 
 ### Convention-Based Routing
 
-Helix uses file-based routing where file paths automatically become routes:
+Bloom uses file-based routing where file paths automatically become routes:
 
 ```
 src/web/features/main/pages/index.tsx     → /
@@ -146,7 +156,7 @@ mkdir -p src/web/features/products/pages
 ```tsx
 // src/web/features/products/pages/index.tsx
 import React from 'react';
-import { PageLayout } from '@voilajsx/uikit/page';
+import { PageLayout } from '@bloomneo/uikit/page';
 
 const ProductsPage: React.FC = () => {
   return (
@@ -168,10 +178,10 @@ export default ProductsPage;
 
 ### Built-in API Hooks
 
-Helix includes generic API hooks that auto-detect your environment:
+Bloom includes generic API hooks that auto-detect your environment:
 
 ```tsx
-import { useApi } from '@voilajsx/uikit/hooks';
+import { useApi } from '@bloomneo/uikit/hooks';
 
 const MyComponent = () => {
   const { loading, error, get, post } = useApi();
@@ -192,7 +202,7 @@ const MyComponent = () => {
 ### Backend Status Checking
 
 ```tsx
-import { useBackendStatus } from '@voilajsx/uikit/hooks';
+import { useBackendStatus } from '@bloomneo/uikit/hooks';
 
 const StatusCheck = () => {
   const { isConnected, loading, checkStatus } = useBackendStatus();
@@ -250,7 +260,7 @@ npm run db:seed     # Seed with sample data
 
 ## 🎨 Themes
 
-Helix includes 5 built-in themes:
+Bloom includes 5 built-in themes:
 
 - **base** - Clean default configuration
 - **elegant** - Fresh sky blue theme with clean design
@@ -261,7 +271,7 @@ Helix includes 5 built-in themes:
 Change theme in your components:
 
 ```tsx
-import { useTheme } from '@voilajsx/uikit/theme-provider';
+import { useTheme } from '@bloomneo/uikit/theme-provider';
 
 const { theme, setTheme } = useTheme();
 setTheme('elegant');
@@ -285,7 +295,7 @@ VITE_API_URL=http://localhost:3000
 
 ### TypeScript Configuration
 
-Helix includes optimized TypeScript configurations:
+Bloom includes optimized TypeScript configurations:
 
 - `tsconfig.json` - Frontend configuration
 - `tsconfig.api.json` - Backend configuration
@@ -297,8 +307,8 @@ Helix includes optimized TypeScript configurations:
 ```typescript
 // src/api/features/products/products.route.ts
 import express from 'express';
-import { errorClass } from '@voilajsx/appkit/error';
-import { loggerClass } from '@voilajsx/appkit/logger';
+import { errorClass } from '@bloomneo/appkit/error';
+import { loggerClass } from '@bloomneo/appkit/logger';
 
 const router = express.Router();
 const error = errorClass.get();
@@ -321,9 +331,9 @@ export default router;
 ```tsx
 // src/web/features/products/pages/index.tsx
 import React, { useEffect, useState } from 'react';
-import { useApi } from '@voilajsx/uikit/hooks';
-import { Button } from '@voilajsx/uikit/button';
-import { Card } from '@voilajsx/uikit/card';
+import { useApi } from '@bloomneo/uikit/hooks';
+import { Button } from '@bloomneo/uikit/button';
+import { Card } from '@bloomneo/uikit/card';
 
 const ProductsPage = () => {
   const [products, setProducts] = useState([]);
@@ -361,8 +371,8 @@ export default ProductsPage;
 
 ### Core Dependencies (Web Apps)
 
-- `@voilajsx/uikit` - React component library with FBCA support
-- `@voilajsx/appkit` - Express backend framework with structured logging
+- `@bloomneo/uikit` - React component library with FBCA support
+- `@bloomneo/appkit` - Express backend framework with structured logging
 - `react` & `react-dom` - React framework
 - `react-router-dom` - Client-side routing
 - `express` - Backend framework
@@ -402,13 +412,48 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🔗 Links
 
-- [UIKit Documentation](https://github.com/voilajsx/uikit)
-- [AppKit Documentation](https://github.com/voilajsx/appkit)
-- [FBCA Guide](https://docs.voilajsx.com/fbca)
+- [UIKit Documentation](https://github.com/bloomneo/uikit)
+- [AppKit Documentation](https://github.com/bloomneo/appkit)
+- [FBCA Guide](https://docs.bloomneo.com/fbca)
+
+<a id="scope-change"></a>
+
+## 🔁 Scope change (1.5.0)
+
+This package was previously published as **`@voilajsx/helix`** with a **`helix`** CLI command. Starting with `1.5.0` it lives at **`@bloomneo/bloom`** with a **`bloom`** CLI command. The old package on npm is frozen at `1.2.0` and will not receive further updates.
+
+**What changed:**
+
+- **Package name** — `@voilajsx/helix` → `@bloomneo/bloom`
+- **CLI command** — `helix create` → `bloom create`
+- **Brand** — Helix Framework → Bloom Framework
+- **GitHub home** — `voilajsx/helix` → `bloomneo/bloom`
+- **Sister packages** — templates now reference `@bloomneo/uikit` and `@bloomneo/appkit` (formerly `@voilajsx/uikit` and `@voilajsx/appkit`)
+
+**Migration:**
+
+```diff
+- npm install -g @voilajsx/helix
++ npm install -g @bloomneo/bloom
+```
+
+```diff
+- helix create my-app
++ bloom create my-app
+```
+
+In any project that has Bloom installed locally:
+
+```diff
+- npx helix create my-app
++ npx bloom create my-app
+```
+
+A project-wide find-and-replace of `@voilajsx/helix` → `@bloomneo/bloom`, `@voilajsx/uikit` → `@bloomneo/uikit`, and `@voilajsx/appkit` → `@bloomneo/appkit` is sufficient. The CLI flags, template names, and FBCA conventions are identical between the two scopes — only the namespace and the CLI command word changed.
 
 ## 💖 Support
 
-If you like Helix Framework, please consider:
+If you like Bloom Framework, please consider:
 
 - ⭐ Starring the repository
 - 🐛 Reporting bugs and issues
@@ -417,4 +462,4 @@ If you like Helix Framework, please consider:
 
 ---
 
-Made with ❤️ by the VoilaJSX team
+Made with ❤️ by the Bloomneo team

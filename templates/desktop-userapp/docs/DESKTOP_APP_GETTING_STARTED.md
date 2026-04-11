@@ -470,15 +470,15 @@ File: features/blog/pages/[slug].tsx     → Route: /blog/:slug
 ```
 
 **UIKit Components:**
-- Use library components from `@voilajsx/uikit`
+- Use library components from `@bloomneo/uikit`
 - Semantic colors: `bg-background`, `text-foreground`, `border-border`
 - Never hardcode colors: avoid `bg-white`, `text-black`
 
 **Page Structure:**
 ```tsx
 // features/gallery/pages/index.tsx
-import { PageLayout } from '@voilajsx/uikit/page';
-import { Card } from '@voilajsx/uikit/card';
+import { PageLayout } from '@bloomneo/uikit/page';
+import { Card } from '@bloomneo/uikit/card';
 import { Header, Footer, SEO } from '../../../shared/components';
 
 export default function GalleryPage() {
@@ -514,7 +514,7 @@ mkdir -p src/desktop/renderer/features/products/hooks
 
 ```tsx
 // features/products/pages/index.tsx
-import { PageLayout } from '@voilajsx/uikit/page';
+import { PageLayout } from '@bloomneo/uikit/page';
 import { Header, Footer, SEO } from '../../../shared/components';
 
 export default function ProductsPage() {
@@ -556,10 +556,10 @@ File: routes/products/products.routes.ts → Mounts: /api/products
 ```typescript
 // routes/auth/auth.routes.ts
 import { Router } from 'express';
-import { utilClass } from '@voilajsx/appkit/util';
-import { authClass } from '@voilajsx/appkit/auth';
-import { errorClass } from '@voilajsx/appkit/error';
-import { loggerClass } from '@voilajsx/appkit/logger';
+import { utilClass } from '@bloomneo/appkit/util';
+import { authClass } from '@bloomneo/appkit/auth';
+import { errorClass } from '@bloomneo/appkit/error';
+import { loggerClass } from '@bloomneo/appkit/logger';
 
 const router = Router();
 const util = utilClass.get();
@@ -599,8 +599,8 @@ touch src/desktop/main/routes/products/products.routes.ts
 ```typescript
 // routes/products/products.routes.ts
 import { Router } from 'express';
-import { errorClass } from '@voilajsx/appkit/error';
-import { loggerClass } from '@voilajsx/appkit/logger';
+import { errorClass } from '@bloomneo/appkit/error';
+import { loggerClass } from '@bloomneo/appkit/logger';
 
 const router = Router();
 const error = errorClass.get();

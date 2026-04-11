@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@voilajsx/uikit/card';
-import { Badge } from '@voilajsx/uikit/badge';
-import { Alert, AlertDescription } from '@voilajsx/uikit/alert';
-import { Button } from '@voilajsx/uikit/button';
-import { Input } from '@voilajsx/uikit/input';
-import { useBackendStatus, useApi } from '@voilajsx/uikit/hooks';
-import { useTheme } from '@voilajsx/uikit/theme-provider';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@bloomneo/uikit/card';
+import { Badge } from '@bloomneo/uikit/badge';
+import { Alert, AlertDescription } from '@bloomneo/uikit/alert';
+import { Button } from '@bloomneo/uikit/button';
+import { Input } from '@bloomneo/uikit/input';
+import { useBackendStatus, useApi } from '@bloomneo/uikit/hooks';
+import { useTheme } from '@bloomneo/uikit/theme-provider';
 import { Server, CheckCircle, XCircle, Loader2, RefreshCw, Palette, Code2, Database } from 'lucide-react';
 
 export const HomePage: React.FC = () => {
@@ -38,7 +38,7 @@ export const HomePage: React.FC = () => {
           <div className="text-center space-y-6">
             <div className="space-y-4">
               <h1 className="text-5xl md:text-6xl font-bold text-primary">
-                Hola Helix!
+                Hola Bloom!
               </h1>
               <Badge variant="default" className="text-sm">
                 Basic App

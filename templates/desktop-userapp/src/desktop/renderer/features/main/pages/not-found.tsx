@@ -1,8 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PageLayout } from '@voilajsx/uikit/page';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@voilajsx/uikit/card';
-import { Button } from '@voilajsx/uikit/button';
+import { PageLayout } from '@bloomneo/uikit/page';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@bloomneo/uikit/card';
+import { Button } from '@bloomneo/uikit/button';
 import { AlertCircle, Home, ArrowLeft } from 'lucide-react';
 import { Header, Footer, SEO } from '../../../shared/components';
 

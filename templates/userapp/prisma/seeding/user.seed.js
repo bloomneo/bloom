@@ -13,8 +13,8 @@
  */
 
 import dotenv from 'dotenv';
-import { databaseClass } from '@voilajsx/appkit/database';
-import { authClass } from '@voilajsx/appkit/auth';
+import { databaseClass } from '@bloomneo/appkit/database';
+import { authClass } from '@bloomneo/appkit/auth';
 
 // Load environment variables
 dotenv.config();
@@ -48,7 +48,7 @@ export async function seedUsers() {
     const userData = [
       // User roles (3 levels)
       {
-        email: 'user.basic@helix-basicapp.com',
+        email: 'user.basic@bloom-basicapp.com',
         password: hashedPassword,
         name: 'Basic User',
         phone: '+1-555-0001',
@@ -58,7 +58,7 @@ export async function seedUsers() {
         isActive: true,
       },
       {
-        email: 'user.pro@helix-basicapp.com',
+        email: 'user.pro@bloom-basicapp.com',
         password: hashedPassword,
         name: 'Pro User',
         phone: '+1-555-0002',
@@ -68,7 +68,7 @@ export async function seedUsers() {
         isActive: true,
       },
       {
-        email: 'user.max@helix-basicapp.com',
+        email: 'user.max@bloom-basicapp.com',
         password: hashedPassword,
         name: 'Max User',
         phone: '+1-555-0003',
@@ -80,7 +80,7 @@ export async function seedUsers() {
 
       // Moderator roles (3 levels - matching AppKit hierarchy)
       {
-        email: 'moderator.review@helix-basicapp.com',
+        email: 'moderator.review@bloom-basicapp.com',
         password: hashedPassword,
         name: 'Review Moderator',
         phone: '+1-555-0004',
@@ -90,7 +90,7 @@ export async function seedUsers() {
         isActive: true,
       },
       {
-        email: 'moderator.approve@helix-basicapp.com',
+        email: 'moderator.approve@bloom-basicapp.com',
         password: hashedPassword,
         name: 'Approve Moderator',
         phone: '+1-555-0005',
@@ -100,7 +100,7 @@ export async function seedUsers() {
         isActive: true,
       },
       {
-        email: 'moderator.manage@helix-basicapp.com',
+        email: 'moderator.manage@bloom-basicapp.com',
         password: hashedPassword,
         name: 'Manage Moderator',
         phone: '+1-555-0006',
@@ -112,7 +112,7 @@ export async function seedUsers() {
 
       // Admin roles (3 levels)
       {
-        email: 'admin.tenant@helix-basicapp.com',
+        email: 'admin.tenant@bloom-basicapp.com',
         password: hashedPassword,
         name: 'Tenant Admin',
         phone: '+1-555-0007',
@@ -122,7 +122,7 @@ export async function seedUsers() {
         isActive: true,
       },
       {
-        email: 'admin.org@helix-basicapp.com',
+        email: 'admin.org@bloom-basicapp.com',
         password: hashedPassword,
         name: 'Organization Admin',
         phone: '+1-555-0008',
@@ -132,7 +132,7 @@ export async function seedUsers() {
         isActive: true,
       },
       {
-        email: 'admin.system@helix-basicapp.com',
+        email: 'admin.system@bloom-basicapp.com',
         password: hashedPassword,
         name: 'System Admin',
         phone: '+1-555-0009',
@@ -152,19 +152,19 @@ export async function seedUsers() {
     console.log(`   Default password for all accounts: ${defaultPassword}`);
     console.log(`
 👤 USER ACCOUNTS:
-   • user.basic@helix-basicapp.com (role: user.basic)
-   • user.pro@helix-basicapp.com (role: user.pro)
-   • user.max@helix-basicapp.com (role: user.max)
+   • user.basic@bloom-basicapp.com (role: user.basic)
+   • user.pro@bloom-basicapp.com (role: user.pro)
+   • user.max@bloom-basicapp.com (role: user.max)
 
 🛡️ MODERATOR ACCOUNTS:
-   • moderator.review@helix-basicapp.com (role: moderator.review)
-   • moderator.approve@helix-basicapp.com (role: moderator.approve)
-   • moderator.manage@helix-basicapp.com (role: moderator.manage)
+   • moderator.review@bloom-basicapp.com (role: moderator.review)
+   • moderator.approve@bloom-basicapp.com (role: moderator.approve)
+   • moderator.manage@bloom-basicapp.com (role: moderator.manage)
 
 🔑 ADMIN ACCOUNTS:
-   • admin.tenant@helix-basicapp.com (role: admin.tenant)
-   • admin.org@helix-basicapp.com (role: admin.org)
-   • admin.system@helix-basicapp.com (role: admin.system)`);
+   • admin.tenant@bloom-basicapp.com (role: admin.tenant)
+   • admin.org@bloom-basicapp.com (role: admin.org)
+   • admin.system@bloom-basicapp.com (role: admin.system)`);
 
     return { seeded: true, count: result.count };
 

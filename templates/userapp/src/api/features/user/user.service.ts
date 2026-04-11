@@ -7,8 +7,8 @@
  * @llm-rule NOTE: Implements profile management with AppKit database, logger, and error patterns
  */
 
-import { loggerClass } from '@voilajsx/appkit/logger';
-import { errorClass } from '@voilajsx/appkit/error';
+import { loggerClass } from '@bloomneo/appkit/logger';
+import { errorClass } from '@bloomneo/appkit/error';
 import { model } from './user.model.js';
 import type {
   UserResponse,

@@ -1,6 +1,6 @@
 # {{PROJECT_NAME}}
 
-**A modern Full-Stack React FBCA Application with User Management built with @voilajsx/uikit and @voilajsx/appkit**
+**A modern Full-Stack React FBCA Application with User Management built with @bloomneo/uikit and @bloomneo/appkit**
 
 ## 🚀 Quick Start
 
@@ -163,8 +163,8 @@ After running `npm run db:seed`, you can login with:
 - **Backend**: Express.js, Node.js, TypeScript
 - **Database**: PostgreSQL with Prisma ORM
 - **Authentication**: JWT tokens with bcrypt
-- **UI Framework**: @voilajsx/uikit (37+ components)
-- **Backend Framework**: @voilajsx/appkit (FBCA architecture)
+- **UI Framework**: @bloomneo/uikit (37+ components)
+- **Backend Framework**: @bloomneo/appkit (FBCA architecture)
 - **Development**: tsx, ESLint, concurrent development
 
 ## 🔗 Key Features
@@ -176,4 +176,4 @@ After running `npm run db:seed`, you can login with:
 5. **Production Ready** - TypeScript, error handling, security best practices
 6. **FBCA Architecture** - Scalable, maintainable feature-based structure
 
-Built with ❤️ using Helix Framework
+Built with ❤️ using Bloom Framework

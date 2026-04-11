@@ -1,9 +1,9 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Header as UIHeader, HeaderLogo, HeaderNav } from '@voilajsx/uikit/header';
-import { Button } from '@voilajsx/uikit/button';
-import { useTheme } from '@voilajsx/uikit/theme-provider';
-import type { NavigationItem } from '@voilajsx/uikit';
+import { Header as UIHeader, HeaderLogo, HeaderNav } from '@bloomneo/uikit/header';
+import { Button } from '@bloomneo/uikit/button';
+import { useTheme } from '@bloomneo/uikit/theme-provider';
+import type { NavigationItem } from '@bloomneo/uikit';
 import {
   Home,
   Images,
@@ -26,11 +26,11 @@ const Logo: React.FC = () => (
   <div className="flex items-center gap-3">
     <img
       src="https://i.ibb.co/BV3NKLtT/helix.png"
-      alt="Helix"
+      alt="Bloom"
       className="w-8 h-8 object-contain"
     />
     <div>
-      <h3 className="voila-brand-logo text-xl font-bold">Helix Mobile</h3>
+      <h3 className="voila-brand-logo text-xl font-bold">Bloom Mobile</h3>
       <p className="text-xs text-background">UIKit + Capacitor</p>
     </div>
   </div>

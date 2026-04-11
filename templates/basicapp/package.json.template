@@ -1,10 +1,10 @@
 {
-  "name": "helix-basicapp",
+  "name": "bloom-basicapp",
   "private": true,
   "version": "1.0.0",
   "type": "module",
   "description": "Full-stack FBCA application with UIKit frontend and AppKit backend",
-  "keywords": ["helix", "react", "express", "fullstack", "fbca"],
+  "keywords": ["bloom", "react", "express", "fullstack", "fbca"],
   "scripts": {
     "dev": "concurrently \"npm run dev:api\" \"npm run dev:web\"",
     "dev:web": "vite",
@@ -22,8 +22,8 @@
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.api.json"
   },
   "dependencies": {
-    "@voilajsx/uikit": "latest",
-    "@voilajsx/appkit": "latest",
+    "@bloomneo/uikit": "latest",
+    "@bloomneo/appkit": "latest",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.26.0",

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Button } from '@voilajsx/uikit/button';
-import { AuthLayout } from '@voilajsx/uikit/auth';
-import { Alert, AlertTitle, AlertDescription } from '@voilajsx/uikit/alert';
+import { Button } from '@bloomneo/uikit/button';
+import { AuthLayout } from '@bloomneo/uikit/auth';
+import { Alert, AlertTitle, AlertDescription } from '@bloomneo/uikit/alert';
 import { Mail, ArrowRight, Loader2, AlertTriangle, CheckCircle } from 'lucide-react';
 import { SEO } from '../../../shared/components';
 import { useAuthContext } from '../context/AuthContext';

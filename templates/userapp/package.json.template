@@ -5,7 +5,7 @@
   "type": "module",
   "description": "Full-stack FBCA application with UIKit frontend and AppKit backend",
   "keywords": [
-    "helix",
+    "bloom",
     "react",
     "express",
     "fullstack",
@@ -35,8 +35,8 @@
   "dependencies": {
     "@prisma/client": "^6.16.2",
     "@types/pg": "^8.15.5",
-    "@voilajsx/appkit": "latest",
-    "@voilajsx/uikit": "latest",
+    "@bloomneo/appkit": "latest",
+    "@bloomneo/uikit": "latest",
     "bcrypt": "^5.1.1",
     "concurrently": "^8.2.2",
     "cors": "^2.8.5",

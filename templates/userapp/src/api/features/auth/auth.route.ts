@@ -4,8 +4,8 @@
  */
 
 import { Router, Request, Response } from 'express';
-import { errorClass } from '@voilajsx/appkit/error';
-import { securityClass } from '@voilajsx/appkit/security';
+import { errorClass } from '@bloomneo/appkit/error';
+import { securityClass } from '@bloomneo/appkit/security';
 import { authService } from './auth.service.js';
 
 // Initialize AppKit modules

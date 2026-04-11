@@ -6,8 +6,8 @@
  */
 
 import { db } from '../../lib/db-client.js';
-import { loggerClass } from '@voilajsx/appkit/logger';
-import { authClass } from '@voilajsx/appkit/auth';
+import { loggerClass } from '@bloomneo/appkit/logger';
+import { authClass } from '@bloomneo/appkit/auth';
 import type { UserUpdateRequest } from './user.types.js';
 
 const logger = loggerClass.get('user-model');

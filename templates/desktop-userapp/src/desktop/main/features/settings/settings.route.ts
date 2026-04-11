@@ -4,8 +4,8 @@
  */
 
 import express from 'express';
-import { errorClass } from '@voilajsx/appkit/error';
-import { authClass } from '@voilajsx/appkit/auth';
+import { errorClass } from '@bloomneo/appkit/error';
+import { authClass } from '@bloomneo/appkit/auth';
 import { settingsService } from './settings.service.js';
 
 const router = express.Router();

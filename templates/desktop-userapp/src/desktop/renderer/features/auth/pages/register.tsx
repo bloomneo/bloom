@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button } from '@voilajsx/uikit/button';
-import { AuthLayout } from '@voilajsx/uikit/auth';
-import { Alert, AlertTitle, AlertDescription } from '@voilajsx/uikit/alert';
+import { Button } from '@bloomneo/uikit/button';
+import { AuthLayout } from '@bloomneo/uikit/auth';
+import { Alert, AlertTitle, AlertDescription } from '@bloomneo/uikit/alert';
 import { User, Mail, Lock, ArrowRight, Loader2, AlertTriangle, Eye, EyeOff, CheckCircle, Phone } from 'lucide-react';
 import { SEO } from '../../../shared/components';
 import { useAuth } from '../hooks';

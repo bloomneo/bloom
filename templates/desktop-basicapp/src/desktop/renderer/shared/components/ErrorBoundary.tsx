@@ -4,9 +4,9 @@
  */
 
 import { Component, ErrorInfo, ReactNode } from 'react';
-import { Alert, AlertDescription } from '@voilajsx/uikit/alert';
-import { Button } from '@voilajsx/uikit/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@voilajsx/uikit/card';
+import { Alert, AlertDescription } from '@bloomneo/uikit/alert';
+import { Button } from '@bloomneo/uikit/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@bloomneo/uikit/card';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 
 interface Props {

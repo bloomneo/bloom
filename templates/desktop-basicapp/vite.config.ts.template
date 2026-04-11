@@ -35,7 +35,7 @@ export default defineConfig({
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom'],
-          uikit: ['@voilajsx/uikit']
+          uikit: ['@bloomneo/uikit']
         },
         entryFileNames: 'assets/[name]-[hash].js',
         chunkFileNames: 'assets/[name]-[hash].js',

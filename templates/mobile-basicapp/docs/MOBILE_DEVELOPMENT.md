@@ -1,6 +1,6 @@
 # Development Guide
 
-Complete guide for developing, building, and testing the Helix Mobile app on iOS and Android.
+Complete guide for developing, building, and testing the Bloom Mobile app on iOS and Android.
 
 ---
 
@@ -204,14 +204,14 @@ npm run android:build
 3. Syncs with Android platform
 4. Removes `server.url` from config (loads from bundled assets)
 5. Builds APK using Gradle
-6. Outputs: `build/helix-mobile-app.apk`
+6. Outputs: `build/bloom-mobile-app.apk`
 
 **Release Build (for Play Store):**
 ```bash
 npm run android:release
 ```
 
-Outputs: `build/helix-mobile-app-release.apk`
+Outputs: `build/bloom-mobile-app-release.apk`
 
 ### iOS Production Build
 
@@ -226,7 +226,7 @@ npm run ios:build
 3. Syncs with iOS platform
 4. Removes `server.url` from config (loads from bundled assets)
 5. Builds using Xcode
-6. Outputs: `build/helix-mobile-app.app`
+6. Outputs: `build/bloom-mobile-app.app`
 
 **Release Build (for App Store):**
 ```bash
@@ -243,7 +243,7 @@ Opens archive in Xcode for App Store submission.
 npm run android:install
 
 # Method 2: Manual install
-adb install build/helix-mobile-app.apk
+adb install build/bloom-mobile-app.apk
 
 # Method 3: Build and run in one command
 npx cap run android --target Pixel_8_API_35
@@ -268,8 +268,8 @@ open -a Simulator
 # Drag and drop the .app file
 
 # Method 3: Using simctl
-xcrun simctl install booted build/helix-mobile-app.app
-xcrun simctl launch booted com.helix.mobilebasicapp
+xcrun simctl install booted build/bloom-mobile-app.app
+xcrun simctl launch booted com.bloom.mobilebasicapp
 ```
 
 ### Production vs Development
@@ -289,7 +289,7 @@ xcrun simctl launch booted com.helix.mobilebasicapp
 
 ### Customizing App Icon
 
-The app uses the Helix logo as the icon. To change it:
+The app uses the Bloom logo as the icon. To change it:
 
 1. **Replace the source icon:**
    ```bash
@@ -438,7 +438,7 @@ This app requires a backend API. Configure in development:
 - Use environment variables: `VITE_API_URL=https://your-api.com`
 - Or update platform-aware detection in `src/mobile/features/main/pages/index.tsx`
 
-See [helix-basicapp](https://github.com/voilajsx/helix-basicapp) for a compatible backend.
+See [bloom-basicapp](https://github.com/bloomneo/bloom-basicapp) for a compatible backend.
 
 ---
 

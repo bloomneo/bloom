@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@voilajsx/uikit/card';
-import { Badge } from '@voilajsx/uikit/badge';
-import { Alert, AlertDescription } from '@voilajsx/uikit/alert';
-import { Button } from '@voilajsx/uikit/button';
-import { Input } from '@voilajsx/uikit/input';
-import { useApi } from '@voilajsx/uikit/hooks';
-import { useTheme } from '@voilajsx/uikit/theme-provider';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@bloomneo/uikit/card';
+import { Badge } from '@bloomneo/uikit/badge';
+import { Alert, AlertDescription } from '@bloomneo/uikit/alert';
+import { Button } from '@bloomneo/uikit/button';
+import { Input } from '@bloomneo/uikit/input';
+import { useApi } from '@bloomneo/uikit/hooks';
+import { useTheme } from '@bloomneo/uikit/theme-provider';
 import { Server, CheckCircle, XCircle, Loader2, RefreshCw, Palette } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
 
@@ -81,11 +81,11 @@ export const HomePage: React.FC = () => {
           <div className="flex flex-col items-center gap-3 pt-4">
             <img
               src="https://i.ibb.co/BV3NKLtT/helix.png"
-              alt="Helix"
+              alt="Bloom"
               className="w-16 h-16 object-contain"
             />
             <h1 className="text-3xl font-bold text-primary">
-              Hola Helix!
+              Hola Bloom!
             </h1>
           </div>
           <Badge variant="default" className="text-sm">

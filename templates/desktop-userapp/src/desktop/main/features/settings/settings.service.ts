@@ -4,7 +4,7 @@
  */
 
 import { db } from '../../lib/db-client.js';
-import { loggerClass } from '@voilajsx/appkit/logger';
+import { loggerClass } from '@bloomneo/appkit/logger';
 
 const logger = loggerClass.get('settings-service');
 

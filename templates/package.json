@@ -1,5 +1,5 @@
 {
-  "name": "helixapp",
+  "name": "bloomapp",
   "version": "1.0.0",
   "description": "Full-stack FBCA application with UIKit frontend and AppKit backend",
   "type": "module",
@@ -27,12 +27,12 @@
     "fbca",
     "uikit",
     "appkit",
-    "helix"
+    "bloom"
   ],
   "dependencies": {
-    "@voilajsx/uikit": "latest",
-    "@voilajsx/appkit": "latest",
-    "@voilajsx/helix": "latest",
+    "@bloomneo/uikit": "latest",
+    "@bloomneo/appkit": "latest",
+    "@bloomneo/bloom": "latest",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.28.1",

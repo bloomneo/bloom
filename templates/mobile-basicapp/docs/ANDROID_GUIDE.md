@@ -1,6 +1,6 @@
 # Android Development Guide
 
-Complete guide for developing, testing, and building the Helix Mobile app for Android.
+Complete guide for developing, testing, and building the Bloom Mobile app for Android.
 
 ---
 
@@ -222,7 +222,7 @@ Then click **Run** (▶) button.
 npm run android:build
 ```
 
-**Output:** `build/helix-mobile-app.apk`
+**Output:** `build/bloom-mobile-app.apk`
 
 ### Release Build (Signed APK)
 
@@ -243,7 +243,7 @@ npm run android:clean
 ```bash
 npm run android:install
 # or
-adb install build/helix-mobile-app.apk
+adb install build/bloom-mobile-app.apk
 ```
 
 ---
@@ -253,7 +253,7 @@ adb install build/helix-mobile-app.apk
 ### Create Keystore
 
 ```bash
-keytool -genkey -v -keystore helix-release.keystore -alias helix -keyalg RSA -keysize 2048 -validity 10000
+keytool -genkey -v -keystore bloom-release.keystore -alias bloom -keyalg RSA -keysize 2048 -validity 10000
 ```
 
 ### Configure Signing
@@ -264,9 +264,9 @@ Edit `android/app/build.gradle`:
 android {
     signingConfigs {
         release {
-            storeFile file('helix-release.keystore')
+            storeFile file('bloom-release.keystore')
             storePassword 'your-store-password'
-            keyAlias 'helix'
+            keyAlias 'bloom'
             keyPassword 'your-key-password'
         }
     }
@@ -429,13 +429,13 @@ adb devices
 adb install path/to/app.apk
 
 # Uninstall app
-adb uninstall com.helix.mobilebasicapp
+adb uninstall com.bloom.mobilebasicapp
 
 # View logs
-adb logcat | grep -i helix
+adb logcat | grep -i bloom
 
 # Clear app data
-adb shell pm clear com.helix.mobilebasicapp
+adb shell pm clear com.bloom.mobilebasicapp
 
 # Take screenshot
 adb shell screencap -p /sdcard/screenshot.png
@@ -448,7 +448,7 @@ emulator -avd Pixel_8_API_35
 adb -s emulator-5554 emu kill
 
 # List installed packages
-adb shell pm list packages | grep helix
+adb shell pm list packages | grep bloom
 ```
 
 ---

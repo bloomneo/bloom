@@ -7,10 +7,10 @@
  * @llm-rule NOTE: Implements complete authentication flow with AppKit auth, email, database, logger, and error patterns
  */
 
-import { databaseClass } from '@voilajsx/appkit/database';
-import { loggerClass } from '@voilajsx/appkit/logger';
-import { errorClass } from '@voilajsx/appkit/error';
-import { authClass } from '@voilajsx/appkit/auth';
+import { databaseClass } from '@bloomneo/appkit/database';
+import { loggerClass } from '@bloomneo/appkit/logger';
+import { errorClass } from '@bloomneo/appkit/error';
+import { authClass } from '@bloomneo/appkit/auth';
 import { generateVerificationToken, sendVerificationEmail, generatePasswordResetToken, sendPasswordResetEmail, isTokenExpired } from './auth.util.js';
 import type { AuthLoginRequest, AuthRegisterRequest, AuthLoginResponse, AuthRegisterResponse } from './auth.types.js';
 

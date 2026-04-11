@@ -5,7 +5,7 @@
   "type": "module",
   "description": "{{PROJECT_NAME}} - Modern Electron desktop application with FBCA, UIKit, and AppKit",
   "author": "",
-  "keywords": ["electron", "react", "express", "desktop", "fbca", "uikit", "appkit", "helix"],
+  "keywords": ["electron", "react", "express", "desktop", "fbca", "uikit", "appkit", "bloom"],
   "engines": {
     "node": ">=18.0.0",
     "npm": ">=9.0.0"
@@ -25,8 +25,8 @@
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.main.json"
   },
   "dependencies": {
-    "@voilajsx/uikit": "latest",
-    "@voilajsx/appkit": "latest",
+    "@bloomneo/uikit": "latest",
+    "@bloomneo/appkit": "latest",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.28.1",

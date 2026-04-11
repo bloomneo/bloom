@@ -1,6 +1,6 @@
 # iOS Development Guide
 
-Complete guide for developing, testing, and building the Helix Mobile app for iOS.
+Complete guide for developing, testing, and building the Bloom Mobile app for iOS.
 
 ---
 
@@ -158,7 +158,7 @@ Then in Xcode:
 npm run ios:build
 ```
 
-**Output:** `build/helix-mobile-app.app`
+**Output:** `build/bloom-mobile-app.app`
 
 This `.app` file can be installed on any iOS Simulator.
 
@@ -193,8 +193,8 @@ npm run ios:clean
 
 ```typescript
 const config: CapacitorConfig = {
-  appId: 'com.helix.mobilebasicapp',
-  appName: 'Helix Mobile',
+  appId: 'com.bloom.mobilebasicapp',
+  appName: 'Bloom Mobile',
   webDir: 'dist',
   server: {
     url: 'http://localhost:5173',  // Dev server URL
@@ -319,13 +319,13 @@ xcrun simctl shutdown "iPhone 15 Pro Max"
 xcrun simctl io booted screenshot ~/Desktop/screenshot.png
 
 # Install app on running simulator
-xcrun simctl install booted build/helix-mobile-app.app
+xcrun simctl install booted build/bloom-mobile-app.app
 
 # Launch app
-xcrun simctl launch booted com.helix.mobilebasicapp
+xcrun simctl launch booted com.bloom.mobilebasicapp
 
 # Uninstall app
-xcrun simctl uninstall booted com.helix.mobilebasicapp
+xcrun simctl uninstall booted com.bloom.mobilebasicapp
 
 # Erase all simulator data
 xcrun simctl erase all

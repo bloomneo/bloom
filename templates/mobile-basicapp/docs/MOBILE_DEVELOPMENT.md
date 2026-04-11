@@ -446,5 +446,5 @@ See [bloom-basicapp](https://github.com/bloomneo/bloom-basicapp) for a compatibl
 
 - **Android Setup**: See [ANDROID_GUIDE.md](./ANDROID_GUIDE.md)
 - **iOS Setup**: See [IOS_GUIDE.md](./IOS_GUIDE.md)
-- **UIKit Components**: See [UIKIT_LLM_GUIDE.md](./UIKIT_LLM_GUIDE.md)
+- **UIKit Components**: See [uikit.md](./uikit.md)
 - **FBCA Architecture**: See [QUICKSTART_FBCA.md](./QUICKSTART_FBCA.md)

@@ -1,11 +1,11 @@
-# @bloomneo/uikit - COMPLETE LLM Usage Guide v2.1
+# @voilajsx/uikit - COMPLETE LLM Usage Guide v2.1
 
 ## 🎯 QUICK START (30 SECONDS)
 
 ### STEP 1: Required Setup (COPY-PASTE EVERY PROJECT)
 ```jsx
-import { ThemeProvider } from '@bloomneo/uikit/theme-provider';
-import '@bloomneo/uikit/styles'; // ← CRITICAL: Must import this
+import { ThemeProvider } from '@voilajsx/uikit/theme-provider';
+import '@voilajsx/uikit/styles'; // ← CRITICAL: Must import this
 
 function App() {
   return (
@@ -186,21 +186,21 @@ tone = 'contrast'; // Dark/bold backgrounds (footers, high contrast areas)
 
 ### Form & Input Components
 ```jsx
-import { Button } from '@bloomneo/uikit/button';
-import { Input } from '@bloomneo/uikit/input';
-import { Textarea } from '@bloomneo/uikit/textarea';
-import { Label } from '@bloomneo/uikit/label';
-import { Checkbox } from '@bloomneo/uikit/checkbox';
-import { RadioGroup, RadioGroupItem } from '@bloomneo/uikit/radio-group';
-import { Switch } from '@bloomneo/uikit/switch';
-import { Slider } from '@bloomneo/uikit/slider';
+import { Button } from '@voilajsx/uikit/button';
+import { Input } from '@voilajsx/uikit/input';
+import { Textarea } from '@voilajsx/uikit/textarea';
+import { Label } from '@voilajsx/uikit/label';
+import { Checkbox } from '@voilajsx/uikit/checkbox';
+import { RadioGroup, RadioGroupItem } from '@voilajsx/uikit/radio-group';
+import { Switch } from '@voilajsx/uikit/switch';
+import { Slider } from '@voilajsx/uikit/slider';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@bloomneo/uikit/select';
+} from '@voilajsx/uikit/select';
 
 // NEW: Enhanced Form Components (Recommended for 90% of use cases)
 import {
@@ -208,7 +208,7 @@ import {
   ValidatedSelect,
   ValidatedCheckbox,
   FormActions,
-} from '@bloomneo/uikit/form';
+} from '@voilajsx/uikit/form';
 
 // Advanced React Hook Form Integration (10% of cases)
 import {
@@ -218,7 +218,7 @@ import {
   FormLabel,
   FormControl,
   FormMessage,
-} from '@bloomneo/uikit/form';
+} from '@voilajsx/uikit/form';
 
 // Usage Examples
 <div className="space-y-4">
@@ -274,31 +274,31 @@ import {
   CardTitle,
   CardContent,
   CardFooter,
-} from '@bloomneo/uikit/card';
-import { Badge } from '@bloomneo/uikit/badge';
-import { Avatar, AvatarImage, AvatarFallback } from '@bloomneo/uikit/avatar';
-import { Separator } from '@bloomneo/uikit/separator';
-import { Progress } from '@bloomneo/uikit/progress';
-import { Skeleton } from '@bloomneo/uikit/skeleton';
-import { Alert, AlertTitle, AlertDescription } from '@bloomneo/uikit/alert';
+} from '@voilajsx/uikit/card';
+import { Badge } from '@voilajsx/uikit/badge';
+import { Avatar, AvatarImage, AvatarFallback } from '@voilajsx/uikit/avatar';
+import { Separator } from '@voilajsx/uikit/separator';
+import { Progress } from '@voilajsx/uikit/progress';
+import { Skeleton } from '@voilajsx/uikit/skeleton';
+import { Alert, AlertTitle, AlertDescription } from '@voilajsx/uikit/alert';
 import {
   Breadcrumb,
   BreadcrumbList,
   BreadcrumbItem,
   BreadcrumbLink,
-} from '@bloomneo/uikit/breadcrumb';
+} from '@voilajsx/uikit/breadcrumb';
 import {
   Tabs,
   TabsList,
   TabsTrigger,
   TabsContent,
-} from '@bloomneo/uikit/tabs';
+} from '@voilajsx/uikit/tabs';
 import {
   Accordion,
   AccordionItem,
   AccordionTrigger,
   AccordionContent,
-} from '@bloomneo/uikit/accordion';
+} from '@voilajsx/uikit/accordion';
 
 // Usage
 <Card className="bg-card border-border">
@@ -316,32 +316,32 @@ import {
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
-} from '@bloomneo/uikit/dropdown-menu';
+} from '@voilajsx/uikit/dropdown-menu';
 import {
   Menubar,
   MenubarMenu,
   MenubarTrigger,
   MenubarContent,
   MenubarItem,
-} from '@bloomneo/uikit/menubar';
+} from '@voilajsx/uikit/menubar';
 import {
   Pagination,
   PaginationContent,
   PaginationItem,
   PaginationLink,
-} from '@bloomneo/uikit/pagination';
+} from '@voilajsx/uikit/pagination';
 import {
   Command,
   CommandInput,
   CommandList,
   CommandItem,
-} from '@bloomneo/uikit/command';
+} from '@voilajsx/uikit/command';
 import {
   Collapsible,
   CollapsibleTrigger,
   CollapsibleContent,
-} from '@bloomneo/uikit/collapsible';
-import { Toggle } from '@bloomneo/uikit/toggle';
+} from '@voilajsx/uikit/collapsible';
+import { Toggle } from '@voilajsx/uikit/toggle';
 
 // Usage
 <DropdownMenu>
@@ -362,30 +362,30 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '@bloomneo/uikit/dialog';
+} from '@voilajsx/uikit/dialog';
 import {
   Sheet,
   SheetTrigger,
   SheetContent,
   SheetHeader,
   SheetTitle,
-} from '@bloomneo/uikit/sheet';
+} from '@voilajsx/uikit/sheet';
 import {
   Popover,
   PopoverTrigger,
   PopoverContent,
-} from '@bloomneo/uikit/popover';
+} from '@voilajsx/uikit/popover';
 import {
   HoverCard,
   HoverCardTrigger,
   HoverCardContent,
-} from '@bloomneo/uikit/hover-card';
+} from '@voilajsx/uikit/hover-card';
 import {
   Tooltip,
   TooltipProvider,
   TooltipTrigger,
   TooltipContent,
-} from '@bloomneo/uikit/tooltip';
+} from '@voilajsx/uikit/tooltip';
 
 // Usage
 <Dialog>
@@ -410,10 +410,10 @@ import {
   TableRow,
   TableHead,
   TableCell,
-} from '@bloomneo/uikit/table';
-import { DataTable } from '@bloomneo/uikit/data-table';
-import { Calendar } from '@bloomneo/uikit/calendar';
-import { Toaster } from '@bloomneo/uikit/sonner';
+} from '@voilajsx/uikit/table';
+import { DataTable } from '@voilajsx/uikit/data-table';
+import { Calendar } from '@voilajsx/uikit/calendar';
+import { Toaster } from '@voilajsx/uikit/sonner';
 
 // Basic Table Usage
 <Table className="bg-background">
@@ -491,7 +491,7 @@ import {
   LoadingSpinner,
   Reveal,
   Hover,
-} from '@bloomneo/uikit/motion';
+} from '@voilajsx/uikit/motion';
 
 // Simple CSS-based animations
 <Motion preset="fadeIn" duration="normal">
@@ -693,7 +693,7 @@ className = 'text-green-600';
 ## 🎯 ENHANCED THEME SYSTEM (ZERO-TOUCH MAGIC)
 
 ### 🪄 Automatic Enhancement Features
-The power of `@bloomneo/uikit` is that standard shadcn components automatically become beautiful without changing your code:
+The power of `@voilajsx/uikit` is that standard shadcn components automatically become beautiful without changing your code:
 ```jsx
 // ✨ This standard code:
 <Button className="bg-primary text-primary-foreground">Click Me</Button>
@@ -714,7 +714,7 @@ What happens automatically:
 - **Borders**: Theme-adjusted rounded corners
 
 ### Theme Migration Note
-Previous versions of `@bloomneo/uikit` used themes named `aurora`, `default`, `ruby`, and `neon`. These have been replaced:
+Previous versions of `@voilajsx/uikit` used themes named `aurora`, `default`, `ruby`, and `neon`. These have been replaced:
 - `aurora` → `vivid` (luxurious purple with slight orange)
 - `default` → `base` (metallic black)
 - `ruby` → `elegant` (professional blue)
@@ -742,7 +742,7 @@ mode = 'dark';  // Dark color scheme with enhanced contrast
 
 ### 🎨 Theme Switching (Dynamic Changes)
 ```jsx
-import { useTheme } from '@bloomneo/uikit';
+import { useTheme } from '@voilajsx/uikit';
 
 function ThemeControls() {
   const { theme, setTheme, mode, setMode } = useTheme();
@@ -826,15 +826,15 @@ tone="contrast"  // High emphasis, dark/bold backgrounds
 
 ### 1. Enhanced Login Form (NEW Form Components)
 ```jsx
-import { AuthLayout } from '@bloomneo/uikit/auth';
+import { AuthLayout } from '@voilajsx/uikit/auth';
 import {
   ValidatedInput,
   ValidatedCheckbox,
   FormActions,
-} from '@bloomneo/uikit/form';
-import { ThemeProvider } from '@bloomneo/uikit/theme-provider';
+} from '@voilajsx/uikit/form';
+import { ThemeProvider } from '@voilajsx/uikit/theme-provider';
 import { useState } from 'react';
-import '@bloomneo/uikit/styles';
+import '@voilajsx/uikit/styles';
 
 function EnhancedLoginPage() {
   const [formData, setFormData] = useState({
@@ -916,15 +916,15 @@ function EnhancedLoginPage() {
 
 ### 2. Interactive Dashboard with Motion (NEW Motion Components)
 ```jsx
-import { AdminLayout } from '@bloomneo/uikit/admin';
-import { Card, CardHeader, CardTitle, CardContent } from '@bloomneo/uikit/card';
-import { Button } from '@bloomneo/uikit/button';
-import { Badge } from '@bloomneo/uikit/badge';
-import { Motion, Reveal, Hover, LoadingSpinner } from '@bloomneo/uikit/motion';
-import { ThemeProvider } from '@bloomneo/uikit/theme-provider';
+import { AdminLayout } from '@voilajsx/uikit/admin';
+import { Card, CardHeader, CardTitle, CardContent } from '@voilajsx/uikit/card';
+import { Button } from '@voilajsx/uikit/button';
+import { Badge } from '@voilajsx/uikit/badge';
+import { Motion, Reveal, Hover, LoadingSpinner } from '@voilajsx/uikit/motion';
+import { ThemeProvider } from '@voilajsx/uikit/theme-provider';
 import { Home, Users, BarChart3 } from 'lucide-react';
 import { useState } from 'react';
-import '@bloomneo/uikit/styles';
+import '@voilajsx/uikit/styles';
 
 const navigation = [
   {
@@ -1066,15 +1066,15 @@ function AnimatedDashboard() {
 
 ### 3. Advanced Data Table with Full Features (NEW DataTable)
 ```jsx
-import { PageLayout } from '@bloomneo/uikit/page';
-import { DataTable } from '@bloomneo/uikit/data-table';
-import { Badge } from '@bloomneo/uikit/badge';
-import { Button } from '@bloomneo/uikit/button';
-import { Avatar, AvatarImage, AvatarFallback } from '@bloomneo/uikit/avatar';
-import { ThemeProvider } from '@bloomneo/uikit/theme-provider';
+import { PageLayout } from '@voilajsx/uikit/page';
+import { DataTable } from '@voilajsx/uikit/data-table';
+import { Badge } from '@voilajsx/uikit/badge';
+import { Button } from '@voilajsx/uikit/button';
+import { Avatar, AvatarImage, AvatarFallback } from '@voilajsx/uikit/avatar';
+import { ThemeProvider } from '@voilajsx/uikit/theme-provider';
 import { Edit, Trash2, Eye, Download } from 'lucide-react';
 import { useState } from 'react';
-import '@bloomneo/uikit/styles';
+import '@voilajsx/uikit/styles';
 
 function UserManagementPage() {
   const [users] = useState([
@@ -1289,7 +1289,7 @@ const [formData, setFormData] = useState({ email: '', password: '' });
 
 // ✅ ADVANCED: Use React Hook Form for complex forms
 import { useForm } from 'react-hook-form';
-import { Form, FormField, FormItem, FormControl } from '@bloomneo/uikit/form';
+import { Form, FormField, FormItem, FormControl } from '@voilajsx/uikit/form';
 
 const form = useForm();
 
@@ -1363,7 +1363,7 @@ const form = useForm();
 
 ### Header Component (Standalone)
 ```jsx
-import { Header, HeaderLogo, HeaderNav } from '@bloomneo/uikit/header';
+import { Header, HeaderLogo, HeaderNav } from '@voilajsx/uikit/header';
 
 <Header tone="clean" size="xl" position="sticky">
   <HeaderLogo>
@@ -1379,7 +1379,7 @@ import { Header, HeaderLogo, HeaderNav } from '@bloomneo/uikit/header';
 
 ### Footer Component (Standalone)
 ```jsx
-import { Footer } from '@bloomneo/uikit/footer';
+import { Footer } from '@voilajsx/uikit/footer';
 
 <Footer tone="contrast" size="xl" position="relative">
   <div className="text-center py-4">
@@ -1390,7 +1390,7 @@ import { Footer } from '@bloomneo/uikit/footer';
 
 ### Container Component (Content with Sidebar)
 ```jsx
-import { Container } from '@bloomneo/uikit/container';
+import { Container } from '@voilajsx/uikit/container';
 
 <Container
   tone="clean"
@@ -1981,10 +1981,10 @@ const columns = [
 ## 🚨 CRITICAL REMINDERS (UPDATED)
 
 ### 🎯 **Core Rules** (Never Break These)
-1. **✅ ALWAYS** import styles: `import '@bloomneo/uikit/styles'`
+1. **✅ ALWAYS** import styles: `import '@voilajsx/uikit/styles'`
 2. **✅ ALWAYS** wrap in ThemeProvider: `<ThemeProvider theme="base">`
 3. **✅ ALWAYS** use semantic colors: `bg-background text-foreground`
-4. **✅ ALWAYS** use individual imports: `import { Button } from '@bloomneo/uikit/button'` (avoid barrel imports for tree-shaking)
+4. **✅ ALWAYS** use individual imports: `import { Button } from '@voilajsx/uikit/button'` (avoid barrel imports for tree-shaking)
 5. **✅ NEVER** use hardcoded colors: `bg-white text-black`
 6. **✅ COMPOUND** layouts need child components: `<AdminLayout><AdminLayout.Header/></AdminLayout>`
 7. **✅ SINGLE** layouts take direct children: `<AuthLayout><LoginForm/></AuthLayout>`
@@ -2018,7 +2018,7 @@ const columns = [
 ## ✅ SUCCESS CHECKLIST (UPDATED)
 
 ### Required Setup
-- [ ] `import '@bloomneo/uikit/styles'` in root file
+- [ ] `import '@voilajsx/uikit/styles'` in root file
 - [ ] ThemeProvider setup in `main.tsx` (automatically included in templates)
 - [ ] Choose correct layout: AdminLayout/PageLayout/AuthLayout/BlankLayout/PopupLayout
 

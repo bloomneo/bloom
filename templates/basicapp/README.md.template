@@ -120,7 +120,7 @@ import { asset } from '../utils/asset';
 ## 📚 Resources
 
 - **[UIKit Documentation](https://docs.anthropic.com/en/docs/claude-code/claude_code_docs_map.md)** - Complete component reference
-- **[UIKit LLM Guide](./docs/UIKIT_LLM_GUIDE.md)** - Comprehensive usage guide
+- **[UIKit LLM Guide](./docs/uikit.md)** - Comprehensive usage guide
 - **[React Documentation](https://react.dev)** - React framework guide
 - **[Vite Documentation](https://vitejs.dev)** - Build tool documentation
 - **[FBCA Guide](./docs/QUICKSTART_FBCA.md)** - Feature-based architecture guide

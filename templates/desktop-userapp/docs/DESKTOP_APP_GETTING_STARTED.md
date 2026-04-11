@@ -146,10 +146,10 @@ desktop-userapp/
 │
 ├── docs/                          # Documentation
 │   ├── DESKTOP_APP_GETTING_STARTED.md  # This file
-│   ├── UIKIT_FBCA_FRONTEND.md         # Frontend guide
-│   ├── APPKIT_FBCA_BACKEND.md         # Backend guide
-│   ├── UIKIT_LLM_GUIDE.md             # UIKit reference
-│   ├── APPKIT_LLM_GUIDE.md            # AppKit reference
+│   ├── uikit.md         # Frontend guide
+│   ├── appkit.md         # Backend guide
+│   ├── uikit.md             # UIKit reference
+│   ├── appkit.md            # AppKit reference
 │   ├── UIKIT_THEME_GUIDE.md           # Theming guide
 │   └── UIKIT_COMPOSITE_UI_SYSTEM.md   # Component reference
 │
@@ -533,7 +533,7 @@ export default function ProductsPage() {
 
 **Done!** Route `/products` is automatically available.
 
-**Read more:** [UIKIT_FBCA_FRONTEND.md](./UIKIT_FBCA_FRONTEND.md)
+**Read more:** [uikit.md](./uikit.md)
 
 ---
 
@@ -629,7 +629,7 @@ export default router;
 
 **Done!** Endpoints `/api/products` are automatically available.
 
-**Read more:** [APPKIT_FBCA_BACKEND.md](./APPKIT_FBCA_BACKEND.md)
+**Read more:** [appkit.md](./appkit.md)
 
 ---
 
@@ -846,14 +846,14 @@ export const ProductCard = ({ product }: ProductCardProps) => {
 - [DESKTOP_CONFIGURATION.md](./DESKTOP_CONFIGURATION.md) - App icons, build settings, window configuration
 
 **For Frontend Development:**
-- [UIKIT_FBCA_FRONTEND.md](./UIKIT_FBCA_FRONTEND.md) - Frontend architecture patterns
-- [UIKIT_LLM_GUIDE.md](./UIKIT_LLM_GUIDE.md) - Complete UIKit reference
+- [uikit.md](./uikit.md) - Frontend architecture patterns
+- [uikit.md](./uikit.md) - Complete UIKit reference
 - [UIKIT_COMPOSITE_UI_SYSTEM.md](./UIKIT_COMPOSITE_UI_SYSTEM.md) - Component guide
 - [UIKIT_THEME_GUIDE.md](./UIKIT_THEME_GUIDE.md) - Theming and colors
 
 **For Backend Development:**
-- [APPKIT_FBCA_BACKEND.md](./APPKIT_FBCA_BACKEND.md) - Backend architecture patterns
-- [APPKIT_LLM_GUIDE.md](./APPKIT_LLM_GUIDE.md) - Complete AppKit reference
+- [appkit.md](./appkit.md) - Backend architecture patterns
+- [appkit.md](./appkit.md) - Complete AppKit reference
 
 ### When to Read Each Guide
 
@@ -861,10 +861,10 @@ export const ProductCard = ({ product }: ProductCardProps) => {
 → Read [DESKTOP_CONFIGURATION.md](./DESKTOP_CONFIGURATION.md)
 
 **Starting a new frontend feature?**
-→ Read [UIKIT_FBCA_FRONTEND.md](./UIKIT_FBCA_FRONTEND.md)
+→ Read [uikit.md](./uikit.md)
 
 **Starting a new backend endpoint?**
-→ Read [APPKIT_FBCA_BACKEND.md](./APPKIT_FBCA_BACKEND.md)
+→ Read [appkit.md](./appkit.md)
 
 **Need a specific component?**
 → Check [UIKIT_COMPOSITE_UI_SYSTEM.md](./UIKIT_COMPOSITE_UI_SYSTEM.md)
@@ -873,7 +873,7 @@ export const ProductCard = ({ product }: ProductCardProps) => {
 → Read [UIKIT_THEME_GUIDE.md](./UIKIT_THEME_GUIDE.md)
 
 **Need module details?**
-→ Check [UIKIT_LLM_GUIDE.md](./UIKIT_LLM_GUIDE.md) or [APPKIT_LLM_GUIDE.md](./APPKIT_LLM_GUIDE.md)
+→ Check [uikit.md](./uikit.md) or [appkit.md](./appkit.md)
 
 ---
 
@@ -1008,8 +1008,8 @@ The admin menu only appears for users with admin roles (`admin.tenant`, `admin.o
 
 1. **Read this guide** to understand the architecture
 2. **Start development** with `npm run dev`
-3. **Add a frontend feature** using [UIKIT_FBCA_FRONTEND.md](./UIKIT_FBCA_FRONTEND.md)
-4. **Add a backend endpoint** using [APPKIT_FBCA_BACKEND.md](./APPKIT_FBCA_BACKEND.md)
+3. **Add a frontend feature** using [uikit.md](./uikit.md)
+4. **Add a backend endpoint** using [appkit.md](./appkit.md)
 5. **Customize the theme** using [UIKIT_THEME_GUIDE.md](./UIKIT_THEME_GUIDE.md)
 6. **Build for production** with `npm run electron:build`
 

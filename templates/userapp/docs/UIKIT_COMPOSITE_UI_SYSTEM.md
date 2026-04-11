@@ -641,7 +641,7 @@ function MarketingSite() {
 ## 📚 Related Guides
 
 - **[UIKit Theme Guide](./UIKIT_THEME_GUIDE.md)** - Custom theming and colors
-- **[UIKit LLM Guide](./UIKIT_LLM_GUIDE.md)** - Complete implementation reference
+- **[UIKit LLM Guide](./uikit.md)** - Complete implementation reference
 - **[GitHub Repository](https://github.com/bloomneo/uikit)** - Source code and examples
 
 ---

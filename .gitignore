@@ -44,6 +44,9 @@ Thumbs.db
 # Build files
 build/
 scripts/
+# Allow template scripts (they ship as part of scaffolded projects)
+!templates/*/scripts/
+!templates/*/scripts/**
 
 # Temporary files
 temp/

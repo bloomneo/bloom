@@ -22,7 +22,8 @@
     "start": "electron .",
     "preview": "vite preview",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.main.json"
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.main.json",
+    "postinstall": "node scripts/copy-agent-docs.js"
   },
   "dependencies": {
     "@bloomneo/uikit": "^1.5.1",

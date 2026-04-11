@@ -30,7 +30,8 @@
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:reset": "prisma db push --force-reset",
-    "db:seed": "node prisma/seeding/user.seed.js"
+    "db:seed": "node prisma/seeding/user.seed.js",
+    "postinstall": "node scripts/copy-agent-docs.js"
   },
   "dependencies": {
     "@prisma/client": "^6.16.2",

@@ -19,6 +19,7 @@
     "preview": "vite preview",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "typecheck": "tsc --noEmit",
+    "postinstall": "node scripts/copy-agent-docs.js",
     "mobile:sync:android": "cp capacitor.config.android.ts capacitor.config.ts && cap sync android",
     "mobile:sync:ios": "cp capacitor.config.ios.ts capacitor.config.ts && cap sync ios",
     "mobile:ios": "cap open ios",

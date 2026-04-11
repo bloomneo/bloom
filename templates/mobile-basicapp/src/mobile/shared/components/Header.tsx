@@ -22,7 +22,7 @@ const navigationItems: NavigationItem[] = [
 const Logo: React.FC = () => (
   <div className="flex items-center gap-3">
     <img
-      src="https://i.ibb.co/BV3NKLtT/helix.png"
+      src="/bloom.png"
       alt="Bloom"
       className="w-8 h-8 object-contain"
     />

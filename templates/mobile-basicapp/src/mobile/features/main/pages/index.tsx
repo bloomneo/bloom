@@ -74,7 +74,7 @@ export const HomePage: React.FC = () => {
         <div className="text-center space-y-4">
           <div className="flex flex-col items-center gap-3 pt-4">
             <img
-              src="https://i.ibb.co/BV3NKLtT/helix.png"
+              src="/bloom.png"
               alt="Bloom"
               className="w-16 h-16 object-contain"
             />

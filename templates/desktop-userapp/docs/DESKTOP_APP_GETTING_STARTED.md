@@ -746,7 +746,7 @@ The built application includes:
 ```typescript
 /**
  * Brief description of what this file does
- * @module @voilajsx/package/module (if using external library)
+ * @module @bloomneo/package/module (if using external library)
  * @file src/path/to/file.ts
  *
  * @llm-rule WHEN: Specific use case when this should be used

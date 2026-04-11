@@ -121,8 +121,8 @@ SMTP_PORT=2525
 SMTP_USER=noreply@mg.live.ai.in
 SMTP_PASS=your-mailgun-password
 SMTP_SECURE=false
-VOILA_EMAIL_FROM_EMAIL=noreply@demotest.in
-VOILA_EMAIL_FROM_NAME=Demo
+BLOOM_EMAIL_FROM_EMAIL=noreply@demotest.in
+BLOOM_EMAIL_FROM_NAME=Demo
 ```
 
 ### Email Templates

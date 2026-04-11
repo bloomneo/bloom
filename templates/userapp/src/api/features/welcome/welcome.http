@@ -7,7 +7,7 @@
 ###
 
 @baseUrl = http://localhost:3000
-@frontendKey = voila_rpqek3wa3mamvtdkiv378
+@frontendKey = bloom_rpqek3wa3mamvtdkiv378
 
 ### 1. Basic welcome message
 GET {{baseUrl}}/api/welcome

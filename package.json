@@ -1,6 +1,6 @@
 {
   "name": "@bloomneo/bloom",
-  "version": "1.5.2",
+  "version": "1.5.3",
   "description": "Bloom — modern fullstack framework combining @bloomneo/uikit (React) and @bloomneo/appkit (Express) with Feature-Based Component Architecture (FBCA). Scaffolds full-stack web/desktop/mobile apps from one CLI. Previously published as @voilajsx/helix.",
   "type": "module",
   "main": "./bin/bloom.js",

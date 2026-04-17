@@ -30,13 +30,13 @@
     "bloom"
   ],
   "dependencies": {
-    "@bloomneo/uikit": "latest",
-    "@bloomneo/appkit": "latest",
-    "@bloomneo/bloom": "latest",
+    "@bloomneo/uikit": "^1.5.1",
+    "@bloomneo/appkit": "^1.5.1",
+    "@bloomneo/bloom": "^1.5.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.28.1",
-    "lucide-react": "latest",
+    "lucide-react": "^0.541.0",
     "cors": "^2.8.5",
     "express": "^4.21.1",
     "dotenv": "^16.4.7"

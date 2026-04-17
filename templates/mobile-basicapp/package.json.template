@@ -1,5 +1,5 @@
 {
-  "name": "bloom-mobile-basicapp",
+  "name": "{{PROJECT_NAME}}",
   "private": true,
   "version": "1.0.0",
   "type": "module",

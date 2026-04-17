@@ -1,0 +1,136 @@
+# @bloomneo/bloom v1.6.0
+
+Scaffolding CLI for full-stack apps combining `@bloomneo/appkit` (Express
+backend) and `@bloomneo/uikit` (React frontend) with Feature-Based
+Component Architecture (FBCA). Cross-surface: web, desktop (Electron),
+mobile (Capacitor).
+
+This file is the canonical machine-readable reference for the bloom CLI.
+Agents working in a scaffolded project should read the project's own
+`docs/appkit.md` + `docs/uikit.md` for library APIs — this file is only
+about `bloom create` and `bloom start`.
+
+---
+
+## Commands
+
+### `bloom create <project-name> [template]`
+
+Scaffolds a new project at `./<project-name>/` from a template.
+
+```
+bloom create my-app                    # Default: basicapp
+bloom create my-app userapp            # Named template
+bloom create . userapp                 # Scaffold into current dir
+bloom create my-app userapp --skip-install   # Scaffold files only, no npm install
+bloom create my-app userapp --verbose        # Debug logging
+```
+
+Refuses to overwrite an existing directory (except `.`). Exits 1 on
+conflict.
+
+### `bloom start`
+
+Runs a scaffolded project's production server. Requires a prior
+`npm run build` — exits 1 with an actionable message if dist/ is absent.
+
+Equivalent to running `npm run start:api` inside the project.
+
+### `bloom --help | -h | help`
+
+Prints usage. Exits 0.
+
+### `bloom --version | -v | version`
+
+Prints the installed bloom version. Exits 0.
+
+---
+
+## Templates
+
+| Name | Surface | Backend | Data | First-run command |
+|---|---|---|---|---|
+| `basicapp` | Web | Express (appkit) | — | `npm run dev` |
+| `userapp` | Web | Express + Prisma + auth | Prisma (Postgres/SQLite) | `npx prisma db push && npm run dev` |
+| `desktop-basicapp` | Desktop (Electron) | Embedded Express | — | `npm run dev` |
+| `desktop-userapp` | Desktop (Electron) | Embedded Express | better-sqlite3 | `npm run dev` |
+| `mobile-basicapp` | Mobile (Capacitor) | **None (UI-only)** | — | `npx cap sync ios\|android` + native build |
+
+### Template picker
+
+- **Plain fullstack web app** → `basicapp`
+- **Fullstack + auth + users** → `userapp`
+- **Cross-platform desktop** → `desktop-basicapp` or `desktop-userapp`
+- **Native mobile (no backend)** → `mobile-basicapp` (needs a `basicapp` / `userapp` deployed separately)
+
+---
+
+## What scaffold produces
+
+Every template includes:
+
+- `AGENTS.md` — project-level agent rules (placeholders replaced at
+  scaffold + re-filled by postinstall)
+- `package.json` — pins `@bloomneo/uikit@^1.5.1` + (where applicable)
+  `@bloomneo/appkit@^1.5.1`, plus a `postinstall` hook
+- `scripts/copy-agent-docs.js` — postinstall script that populates:
+  - `docs/appkit.md`, `docs/appkit-agents.md`
+  - `docs/uikit.md`, `docs/uikit-agents.md`
+  - `.claude/skills/` (every appkit + uikit skill)
+- `src/web/` (or `src/mobile/`) with FBCA feature structure
+- `src/api/` (web + desktop templates) with appkit + feature routes
+- Language: TypeScript; bundler: Vite; router: FBCA auto-discovery
+
+---
+
+## Flags
+
+```
+--verbose           Debug logging during scaffold (stdio: inherit for npm install)
+--skip-install      Scaffold files only; skip npm install (CI / dry-run)
+--no-install        Alias for --skip-install
+```
+
+---
+
+## Exit codes
+
+```
+0    Success (scaffold complete, help printed, version printed, start succeeded)
+1    Usage error (no command, unknown command, invalid template name,
+     directory conflict, missing build, npm install failure)
+```
+
+---
+
+## FBCA in scaffolded projects
+
+Features live under `src/web/features/<name>/pages/`. Each `.tsx` file
+becomes a route. Auto-discovery via `import.meta.glob` — no manual
+route registration. Dynamic segments use `[param]`; catch-all uses
+`[...path]`.
+
+Adding a new page = creating a file. Don't edit the page-router.
+
+---
+
+## Migration — 1.5.1 → 1.6.0
+
+Additive. 1.6.0 adds:
+
+- Root `AGENTS.md` + `llms.txt` (this file)
+- `scripts/check-doc-drift.ts` + `tests/scaffold-smoke.test.ts`
+- `.github/workflows/ci.yml`
+- `--help` / `-h` / `help` handler
+- `--version` / `-v` / `version` handler
+- `--skip-install` / `--no-install` flag
+- Unified `scripts/copy-agent-docs.js` across all 5 templates
+- Postinstall now copies uikit's `AGENTS.md` (was only `llms.txt`) and
+  both packages' skill trees into `.claude/skills/`
+- Postinstall replaces `{{PROJECT_NAME}}` placeholders in the
+  scaffolded `AGENTS.md`
+- Dead `mergeBloomPackageJson()` function removed
+
+No breaking changes. Scaffolded apps keep working. Re-run `npm install`
+in any 1.5.x-scaffolded project to pick up the postinstall improvements
+once you `npm i -g @bloomneo/bloom@1.6.0` and scaffold fresh.

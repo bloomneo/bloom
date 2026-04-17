@@ -2,6 +2,145 @@
 
 All notable changes to Bloom Framework will be documented in this file.
 
+## [1.6.0] - 2026-04-17
+
+Governance pass mirroring the shape applied to `@bloomneo/appkit@4.0.0`
+and `@bloomneo/uikit@2.0.1`. Pure additive — no breaking changes, no
+migration needed.
+
+Also reconciles the phantom 1.5.3 release: `package.json` carried `1.5.3`
+but `CHANGELOG.md` had no entry for it. No code actually shipped under
+1.5.3 beyond the already-documented 1.5.2 fixes, so 1.5.3 is rolled into
+1.6.0 rather than inventing retroactive release notes.
+
+### Added — CLI ergonomics
+
+- **`bloom --help` / `-h` / `help`** now prints the usage screen and exits 0.
+  Pre-1.6.0, `bloom --help` fell through to the "Unknown command" branch
+  and exited 1 — confusing for agents that expected a standard help flag.
+- **`bloom --version` / `-v` / `version`** prints the installed bloom
+  version and exits 0.
+- **`--skip-install` / `--no-install`** flag on `bloom create` scaffolds
+  files only, skipping `npm install`. Useful for CI / dry-run testing
+  and for the new scaffold-smoke tests.
+
+### Added — agent artifacts at the repo root
+
+- **`AGENTS.md`** — prescriptive rules for agents using the bloom CLI:
+  what bloom IS (scaffolding CLI), what it is NOT (runtime library,
+  generator framework), canonical commands, template decision tree,
+  always/never rules, FBCA architecture, expected scaffold shape.
+- **`llms.txt`** — machine-readable CLI reference (commands, templates,
+  flags, exit codes, FBCA conventions). Matches the appkit / uikit
+  pattern.
+- `files:` manifest now includes `AGENTS.md`, `llms.txt`, and
+  `CHANGELOG.md` so agents installing `@bloomneo/bloom` find them
+  under `node_modules`.
+
+### Added — drift gates + CI
+
+- **`scripts/check-doc-drift.mjs`** scans `README.md`, `AGENTS.md`,
+  `llms.txt`, every `templates/**/*`, and `bin/bloom.js` for stale
+  scope refs (`@voilajsx/helix`, `@voilajsx/uikit`, `@voilajsx/appkit`),
+  `"latest"` pins on ecosystem deps, hallucinated template names
+  (webapp/fullstack/admin/blog/shop/…), and any
+  `import … from '@bloomneo/bloom'` attempts (bloom is a CLI, not a
+  library). Honors migration-arrow and ❌-pair teaching conventions
+  to avoid self-failing on legitimate contexts.
+- **`tests/scaffold-smoke.test.mjs`** uses Node's built-in `node:test`
+  runner (no vitest dep). Shells `bloom create <name> <tpl> --skip-install`
+  into a tmp dir for each of the 5 templates and asserts:
+  `package.json.name === project-name` (via `{{PROJECT_NAME}}` replacement),
+  appkit + uikit pins are caret ranges (not `"latest"`), `postinstall`
+  runs `copy-agent-docs`, `AGENTS.md` is placeholder-free, and the
+  template-specific directory structure exists (`src/web`, `src/api`,
+  `prisma/`, `electron/`, `src/mobile`). Plus CLI surface checks:
+  `--help` exits 0, `--version` prints semver, no-args / unknown-command
+  / invalid-template exit 1. 10 tests, ~550 ms total.
+- **`.github/workflows/ci.yml`** runs `node --check bin/bloom.js` +
+  `check:docs` + `test:smoke` on Node 18/20/22 for every push and PR.
+- `npm test` now runs `check:docs` then `test:smoke`.
+- `prepublishOnly` now runs `npm test`.
+
+### Added — postinstall hydration
+
+`scripts/copy-agent-docs.js` is now unified across all 5 templates (one
+canonical version, synced). It copies:
+
+- `node_modules/@bloomneo/appkit/llms.txt` → `docs/appkit.md`
+- `node_modules/@bloomneo/appkit/AGENTS.md` → `docs/appkit-agents.md`
+- `node_modules/@bloomneo/uikit/llms.txt` → `docs/uikit.md`
+- `node_modules/@bloomneo/uikit/AGENTS.md` → `docs/uikit-agents.md` (new)
+- `node_modules/@bloomneo/appkit/.claude/skills/*` → `.claude/skills/` (new)
+- `node_modules/@bloomneo/uikit/skills/*` → `.claude/skills/` (new)
+
+It also now fills remaining `{{PROJECT_NAME}}` placeholders in the
+scaffolded `AGENTS.md` with the real package name — belt-and-braces for
+any placeholder bloom's scaffold-time processor missed.
+
+Survives gracefully when a package isn't installed (mobile-basicapp
+template has no appkit, for example).
+
+### Changed
+
+- Every template's `package.json.template` now uses `"name": "{{PROJECT_NAME}}"`
+  instead of the hard-coded `"bloom-<template>"`. Scaffolded projects
+  now get the user-provided name.
+- Every template's `AGENTS.md` is now `AGENTS.md.template` so bloom's
+  scaffold-time placeholder processor replaces `{{PROJECT_NAME}}` at
+  create time.
+- `templates/package.json` — `@bloomneo/uikit` and `@bloomneo/appkit`
+  pinned to `^1.5.1` instead of `"latest"`. This was the legacy shared
+  template config; not on the scaffold path but a drift waiting to
+  happen.
+- `package.json` description rewritten to be honest about what bloom is
+  (a scaffolding CLI) rather than what it stitches together.
+
+### Fixed
+
+- **Hallucinated doc references in CLI output.** `bin/bloom.js` told
+  users *"See docs/MOBILE_DEVELOPMENT.md"* and *"See docs/DEVELOPMENT.md"*
+  — files that don't exist in any template. Replaced with references
+  to the real docs the postinstall copies in (`docs/appkit.md`,
+  `docs/uikit.md`) and a direct Capacitor link.
+- **Dead code** in `bin/bloom.js` — `mergeBloomPackageJson()` was
+  declared `async` at line 282 but never called. Removed.
+
+### Removed
+
+- **`docs/` nested vite subproject.** 274MB of local-only docs-site
+  code that still referenced `@voilajsx/uikit` (the old scope) and was
+  never shipped in the npm tarball. Same situation uikit had with its
+  old `pages/` directory.
+
+### Not done (explicitly)
+
+Three observations from the review that are real but NOT actionable in
+this release:
+
+- **No `bloom add feature <name>` generator.** Kept deliberately out of
+  scope. FBCA is already self-serving — `import.meta.glob` auto-discovers
+  new feature files without tooling help. A generator would multiply
+  the maintenance surface every time appkit or uikit adds a primitive.
+- **No per-component behavior tests for templates.** Consumer-level
+  tests belong in scaffolded apps. Bloom's test surface is the
+  scaffold-smoke assertion that every template produces a valid
+  project; behavioral correctness is appkit/uikit's responsibility.
+- **Version-pin strategy for the eventual appkit 4.x / uikit 2.x
+  on-npm landing.** When appkit cuts its real 4.0.0 publish (currently
+  on main at 4.0.0 but npm `latest` is 2.0.0) and uikit cuts 2.1.0
+  (main at 2.0.1 but npm `latest` is 1.5.1), bloom will need a
+  coordinated major that bumps every template's `^1.5.1` pins. That
+  work waits until those packages actually publish.
+
+### Migration from 1.5.x
+
+None. Existing scaffolded apps keep working — their `^1.5.1` pins
+still resolve. To pick up the 1.6.0 postinstall improvements (unified
+skill copying + `{{PROJECT_NAME}}` replacement), scaffold a fresh
+project with `bloom@1.6.0` or manually run the upgraded
+`scripts/copy-agent-docs.js` in an existing project.
+
 ## [1.5.2] - 2026-04-11
 
 A patch release that ships the page-router production-reliability fixes that

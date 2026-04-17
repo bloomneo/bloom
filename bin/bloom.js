@@ -25,6 +25,21 @@ const command = process.argv[2];
 const projectName = process.argv[3];
 const templateType = process.argv[4] || 'basicapp'; // Default to basicapp
 const verbose = process.argv.includes('--verbose');
+const skipInstall = process.argv.includes('--skip-install') || process.argv.includes('--no-install');
+
+// Normalize help flags so `bloom --help`, `bloom -h`, and `bloom help`
+// all print the usage screen + exit 0 (success, not an error).
+const isHelpFlag = command === '--help' || command === '-h' || command === 'help';
+
+// Normalize version flags.
+const isVersionFlag = command === '--version' || command === '-v' || command === 'version';
+if (isVersionFlag) {
+  const pkg = JSON.parse(
+    readFileSync(join(__dirname, '..', 'package.json'), 'utf8'),
+  );
+  console.log(pkg.version);
+  process.exit(0);
+}
 
 /**
  * Process template file with placeholder replacement
@@ -261,103 +276,8 @@ function addViteApiUrl() {
   }
 }
 
-/**
- * Merge Bloom fullstack package.json template with existing package.json
- */
-async function mergeBloomPackageJson(verbose = false) {
-  try {
-    if (verbose) console.log('🔍 [DEBUG] Starting package.json merge...');
 
-    // Read existing package.json (created by UIKit/AppKit)
-    if (verbose) console.log('🔍 [DEBUG] Reading existing package.json...');
-    let existingPackage = JSON.parse(readFileSync('./package.json', 'utf8'));
-    if (verbose) console.log('🔍 [DEBUG] Existing package name:', existingPackage.name);
-    if (verbose) console.log('🔍 [DEBUG] Existing scripts:', Object.keys(existingPackage.scripts || {}));
-
-    // Convert to ESM if needed
-    existingPackage = convertToESM(existingPackage);
-    if (verbose) console.log('🔍 [DEBUG] ESM conversion completed, type:', existingPackage.type);
-
-    // Read Bloom template package.json
-    const templatePath = join(__dirname, '../templates/package.json');
-    if (verbose) console.log('🔍 [DEBUG] Reading Bloom template from:', templatePath);
-    const bloomTemplate = JSON.parse(readFileSync(templatePath, 'utf8'));
-    if (verbose) console.log('🔍 [DEBUG] Template scripts:', Object.keys(bloomTemplate.scripts || {}));
-    if (verbose) console.log('🔍 [DEBUG] Template dependencies:', Object.keys(bloomTemplate.dependencies || {}));
-
-    // Ensure dependencies object exists
-    if (!existingPackage.dependencies) existingPackage.dependencies = {};
-    if (!existingPackage.devDependencies) existingPackage.devDependencies = {};
-
-    // Merge missing dependencies
-    let addedDeps = 0;
-    for (const [dep, version] of Object.entries(
-      bloomTemplate.dependencies || {}
-    )) {
-      if (!existingPackage.dependencies[dep]) {
-        existingPackage.dependencies[dep] = version;
-        addedDeps++;
-        if (verbose) console.log(`🔍 [DEBUG] Added dependency: ${dep}@${version}`);
-      }
-    }
-    if (verbose) console.log(`🔍 [DEBUG] Added ${addedDeps} new dependencies`);
-
-    // Merge missing devDependencies
-    let addedDevDeps = 0;
-    for (const [dep, version] of Object.entries(
-      bloomTemplate.devDependencies || {}
-    )) {
-      if (!existingPackage.devDependencies[dep]) {
-        existingPackage.devDependencies[dep] = version;
-        addedDevDeps++;
-        if (verbose) console.log(`🔍 [DEBUG] Added devDependency: ${dep}@${version}`);
-      }
-    }
-    if (verbose) console.log(`🔍 [DEBUG] Added ${addedDevDeps} new devDependencies`);
-
-    // Ensure scripts object exists
-    if (!existingPackage.scripts) existingPackage.scripts = {};
-
-    // Add/override Bloom scripts from template
-    let addedScripts = 0;
-    for (const [script, command] of Object.entries(bloomTemplate.scripts || {})) {
-      const wasOverride = !!existingPackage.scripts[script];
-      existingPackage.scripts[script] = command;
-      addedScripts++;
-      if (verbose) console.log(`🔍 [DEBUG] ${wasOverride ? 'Overrode' : 'Added'} script: ${script}`);
-    }
-    if (verbose) console.log(`🔍 [DEBUG] Processed ${addedScripts} scripts`);
-
-    // Update description to reflect fullstack nature
-    existingPackage.description =
-      'Full-stack FBCA application with UIKit frontend and AppKit backend';
-
-    // Add Bloom to keywords if not present
-    if (!existingPackage.keywords) existingPackage.keywords = [];
-    if (!existingPackage.keywords.includes('bloom')) {
-      existingPackage.keywords.push('bloom');
-    }
-
-    // Write updated package.json
-    if (verbose) console.log('🔍 [DEBUG] Writing updated package.json...');
-    writeFileSync(
-      './package.json',
-      JSON.stringify(existingPackage, null, 2) + '\n'
-    );
-    if (verbose) console.log('🔍 [DEBUG] Package.json merge completed successfully');
-
-    // Success is implied by the "Configuring fullstack integration" message
-  } catch (error) {
-    console.error(
-      '❌ Error configuring fullstack integration:',
-      error.message
-    );
-    if (verbose) console.error('🔍 [DEBUG] Full error:', error);
-    throw error; // Re-throw to be caught by main try-catch
-  }
-}
-
-if (!command) {
+if (!command || isHelpFlag) {
   console.log(`
 🔥 Bloom Framework - Fullstack Apps
 
@@ -365,6 +285,8 @@ Usage:
   bloom create <project-name> [template]  Create new fullstack project
   bloom create . [template]               Install in current directory
   bloom start                             Start production server (requires build)
+  bloom --help | -h | help                Show this help
+  bloom --version | -v | version          Print the installed bloom version
 
 Templates:
   basicapp            Basic app with routing and features (default)
@@ -373,13 +295,20 @@ Templates:
   desktop-userapp     Desktop user management with SQLite and PIN recovery
   mobile-basicapp     Mobile app for iOS/Android with Capacitor (UI-only)
 
+Flags:
+  --verbose           Verbose logging during scaffold
+  --skip-install      Scaffold files only; skip npm install (for CI / dry-run)
+
 Examples:
   bloom create my-app                    # Create basicapp in my-app/ directory
   bloom create my-app basicapp           # Same as above
   bloom create . basicapp                # Install basicapp in current directory
-  bloom start                           # Start production server after build
+  bloom create my-app --skip-install     # Scaffold without running npm install
+  bloom start                            # Start production server after build
 `);
-  process.exit(1);
+  // Running with no args is usage-as-error (exit 1); explicit help flags
+  // are success (exit 0) so shell pipelines handle them normally.
+  process.exit(isHelpFlag ? 0 : 1);
 }
 
 if (command === 'create') {
@@ -459,10 +388,14 @@ if (command === 'create') {
       createUserappEnvFile(actualProjectName, verbose);
     }
 
-    console.log('🎉 Installing dependencies...');
-    if (verbose) console.log('🔍 [DEBUG] Running: npm install');
-    execSync('npm install', { stdio: verbose ? 'inherit' : 'pipe' });
-    if (verbose) console.log('🔍 [DEBUG] Dependencies installed');
+    if (skipInstall) {
+      console.log('⏭️  Skipping npm install (--skip-install). Run `npm install` manually in the project dir.');
+    } else {
+      console.log('🎉 Installing dependencies...');
+      if (verbose) console.log('🔍 [DEBUG] Running: npm install');
+      execSync('npm install', { stdio: verbose ? 'inherit' : 'pipe' });
+      if (verbose) console.log('🔍 [DEBUG] Dependencies installed');
+    }
 
     // Clean up unnecessary directories for basicapp
     if (templateType === 'basicapp') {
@@ -563,8 +496,10 @@ if (command === 'create') {
   - 5 UIKit themes
 
 📚 Documentation:
-  See docs/MOBILE_DEVELOPMENT.md for complete setup guide
-  Includes Java 21+ and CocoaPods installation instructions
+  • UIKit reference (for components/hooks): ./docs/uikit.md — copied by postinstall
+  • Mobile platform setup: https://capacitorjs.com/docs/getting-started
+  • iOS: Xcode 15+, CocoaPods (\`pod install\` in ios/App/)
+  • Android: Android Studio, Java 21+
 
 ⚠️  IMPORTANT:
   - Android: Requires Java 21+ (NOT Java 17)
@@ -675,7 +610,7 @@ Next steps:
   npm run android:build            # Build APK → build/bloom-mobile-app.apk
   npm run ios:build                # Build .app → build/bloom-mobile-app.app
 
-💡 Complete guide: See docs/DEVELOPMENT.md
+💡 Backend + UIKit conventions: ./docs/appkit.md, ./docs/uikit.md — copied by postinstall
 
 🔗 Backend: This is a UI-only app. Use bloom-basicapp as backend.
 `);

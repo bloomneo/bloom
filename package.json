@@ -1,7 +1,7 @@
 {
   "name": "@bloomneo/bloom",
-  "version": "1.5.3",
-  "description": "Bloom — modern fullstack framework combining @bloomneo/uikit (React) and @bloomneo/appkit (Express) with Feature-Based Component Architecture (FBCA). Scaffolds full-stack web/desktop/mobile apps from one CLI. Previously published as @voilajsx/helix.",
+  "version": "1.6.0",
+  "description": "Scaffolding CLI that combines @bloomneo/uikit (React) and @bloomneo/appkit (Express) with Feature-Based Component Architecture (FBCA) into full-stack web/desktop/mobile apps. Previously published as @voilajsx/helix.",
   "type": "module",
   "main": "./bin/bloom.js",
   "bin": {
@@ -10,9 +10,18 @@
   "files": [
     "bin",
     "templates",
+    "AGENTS.md",
+    "llms.txt",
     "README.md",
+    "CHANGELOG.md",
     "LICENSE"
   ],
+  "scripts": {
+    "test": "npm run check:docs && npm run test:smoke",
+    "test:smoke": "node --test tests/scaffold-smoke.test.mjs",
+    "check:docs": "node scripts/check-doc-drift.mjs",
+    "prepublishOnly": "npm test"
+  },
   "engines": {
     "node": ">=18.0.0"
   },

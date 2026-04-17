@@ -1,4 +1,4 @@
-# @bloomneo/bloom v3.0.2
+# @bloomneo/bloom v4.0.0
 
 Scaffolding CLI for full-stack apps combining `@bloomneo/appkit` (Express
 backend) and `@bloomneo/uikit` (React frontend) with Feature-Based
@@ -72,7 +72,7 @@ Every template includes:
 - `AGENTS.md` — project-level agent rules (placeholders replaced at
   scaffold + re-filled by postinstall)
 - `package.json` — pins `@bloomneo/uikit@^2.0.1` + (where applicable)
-  `@bloomneo/appkit@^2.0.0`, plus a `postinstall` hook
+  `@bloomneo/appkit@^4.0.0`, plus a `postinstall` hook
 - `scripts/copy-agent-docs.js` — postinstall script that populates:
   - `docs/appkit.md`, `docs/appkit-agents.md`
   - `docs/uikit.md`, `docs/uikit-agents.md`
@@ -116,15 +116,15 @@ Adding a new page = creating a file. Don't edit the page-router.
 
 ## Migration
 
-Current release: **3.0.2**. Jumping from any pre-3 version needs the
+Current release: **4.0.0**. Jumping from any pre-4 version needs the
 breaking ecosystem-pin bumps below. Existing scaffolded projects keep
 working against their pinned versions — nothing auto-upgrades.
 
-### From `@bloomneo/bloom@1.5.x` → `3.0.2`
+### From `@bloomneo/bloom@1.5.x` / 2.x / 3.x → `4.0.0`
 
 1. Re-scaffold (preferred — `bloom create` on a fresh project) or apply
    manual changes:
-   - `@bloomneo/appkit` pin: `^1.5.1` → `^2.0.0`
+   - `@bloomneo/appkit` pin: `^1.5.1` / `^2.0.0` → `^4.0.0`
    - `@bloomneo/uikit` pin: `^1.5.1` → `^2.0.1`
 2. Source changes for the appkit 2.0 rename:
    - `auth.user(req)` → `auth.getUser(req)`
@@ -141,7 +141,7 @@ working against their pinned versions — nothing auto-upgrades.
 
 ### Why three majors in one day
 
-`bloom@2.0.0` bumped the appkit pin (`^1.5.1` → `^2.0.0`) because
+`bloom@2.0.0` bumped the appkit pin (`^1.5.1` / `^2.0.0` → `^4.0.0`) because
 appkit 2.0 was on npm `latest` and templates needed the modern API.
 `bloom@3.0.0` bumped the uikit pin (`^1.5.1` → `^2.0.1`) because
 uikit 2.0.1 also reached npm `latest`. Both peer-dependency major

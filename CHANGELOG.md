@@ -2,6 +2,102 @@
 
 All notable changes to Bloom Framework will be documented in this file.
 
+## [4.0.0] - 2026-04-17
+
+Maps bloom templates to `@bloomneo/appkit@4.0.0` now that appkit 4.0
+is on npm `latest`. Fourth major in a day — each ecosystem publish
+triggers a coordinated bloom major because peer-dependency major
+bumps are breaking per semver.
+
+### Breaking — scaffolded apps now require appkit 4.x
+
+Every template's `package.json.template` + the shared
+`templates/package.json` + bloom's own `peerDependencies` now pin
+`@bloomneo/appkit: "^4.0.0"` (was `^2.0.0`). New scaffolds install
+appkit 4.x.
+
+### Why appkit 4.x matters
+
+Appkit 4.0 unified the teardown verb across every stateful module —
+`shutdown`, class-level `clear`, `flushAll`, and `databaseClass.disconnect`
+are all gone; every module exposes `disconnectAll()`. It also added
+typed error subclasses (`CacheError`, `TokenError`, `AppError`,
+`SecurityError`, `DatabaseError`, `EmailError`, `EventError`,
+`QueueError`, `LoggerError`, `StorageError`) all extending a new
+`AppKitError` base.
+
+### Templates audited — zero code churn needed
+
+The pin bump is **zero-churn on template source**. Audit confirmed
+templates use none of the appkit 4.0-renamed methods:
+
+- No `cacheClass.flushAll` / `shutdown` / `clearAll`
+- No `queueClass.clear` / `disconnectAll`
+- No `emailClass.clear` / `shutdown` / `disconnectAll`
+- No `eventClass.clear` / `shutdown` / `disconnectAll`
+- No `storageClass.clear` / `shutdown` / `disconnectAll`
+- No `loggerClass.clear`
+- No `databaseClass.disconnect` / `disconnectAll`
+- No `StorageClass` default-import (changed to `storageClass` singleton in 4.0)
+- No typed error subclass usage (consumers catch plain errors)
+
+The only templates-to-appkit touchpoints are the primary API methods
+(`auth.getUser`, `auth.hashPassword`, `auth.generateLoginToken`,
+`auth.requireLoginToken`, `error.asyncRoute`, etc.) — all unchanged
+between appkit 2.0 and 4.0.
+
+### Ecosystem status after this release
+
+| | npm `latest` | bloom pin |
+|---|---|---|
+| appkit | **4.0.0** | `^4.0.0` ✓ aligned |
+| uikit | **2.0.1** | `^2.0.1` ✓ aligned |
+
+Both pins now match `latest` on npm. Agents reading the
+postinstall-copied `docs/appkit-agents.md` see appkit 4.0's modern
+teardown verb + typed error hierarchy.
+
+### Migration for bloom consumers
+
+New project → use bloom 4.0.0, nothing to do.
+
+Existing bloom-3.x-scaffolded project upgrading to appkit 4.x:
+
+```bash
+npm install @bloomneo/appkit@^4.0.0
+
+# If your code uses any appkit teardown method, rename:
+#   cacheClass.flushAll()     → cacheClass.clearAll()
+#   cacheClass.shutdown()     → cacheClass.disconnectAll()
+#   queueClass.clear()        → queueClass.disconnectAll()
+#   emailClass.shutdown()     → emailClass.disconnectAll()
+#   emailClass.clear()        → emailClass.disconnectAll()
+#   eventClass.shutdown()     → eventClass.disconnectAll()
+#   eventClass.clear()        → eventClass.disconnectAll()
+#   storageClass.shutdown()   → storageClass.disconnectAll()
+#   storageClass.clear()      → storageClass.disconnectAll()
+#   loggerClass.clear()       → loggerClass.disconnectAll()
+#   databaseClass.disconnect( → databaseClass.disconnectAll(
+
+# If you caught typed errors:
+#   catch (err instanceof CacheError) still works (subclass)
+#   BUT prefer: catch (err instanceof AppKitError) for all appkit errors
+
+# Re-run postinstall to refresh docs/ + .claude/skills/:
+npm run postinstall
+```
+
+Templates don't use any of these, so template code upgrades are
+automatic via caret semver.
+
+### Fixed — AGENTS.md restored
+
+A sed-chain bug in the 3.0.2 commit had accidentally zeroed `AGENTS.md`
+(the commit landed with an empty file). Restored from the previous
+known-good commit (`c8ba806` at 1.6.0) and re-applied the 3.x / 4.x
+doc updates. The drift-check's new version-string alignment rule would
+catch this in future if CI runs on every commit.
+
 ## [3.0.2] - 2026-04-17
 
 Doc-alignment sweep. Reviewer caught that `AGENTS.md` and `llms.txt`

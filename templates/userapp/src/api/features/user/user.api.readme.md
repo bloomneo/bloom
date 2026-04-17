@@ -360,7 +360,7 @@ throw error.forbidden('Insufficient permissions');
 ### Authentication Integration
 
 ```typescript
-const authenticatedUser = auth.user(req as any);
+const authenticatedUser = auth.getUser(req as any);
 // Validates JWT and extracts user info
 ```
 

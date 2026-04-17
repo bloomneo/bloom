@@ -38,7 +38,7 @@
     "postinstall": "node scripts/copy-agent-docs.js"
   },
   "dependencies": {
-    "@bloomneo/appkit": "^1.5.1",
+    "@bloomneo/appkit": "^2.0.0",
     "@bloomneo/uikit": "^1.5.1",
     "bcrypt": "^5.1.1",
     "better-sqlite3": "^12.4.1",

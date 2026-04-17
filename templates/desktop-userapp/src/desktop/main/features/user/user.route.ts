@@ -22,7 +22,7 @@ router.get('/profile',
     const requestId = req.requestMetadata?.requestId || 'unknown';
 
     try {
-      const authenticatedUser = auth.user(req as any);
+      const authenticatedUser = auth.getUser(req as any);
 
       if (!authenticatedUser) {
         throw error.serverError('Authentication failed - user not found in request');
@@ -63,7 +63,7 @@ router.put('/profile',
     const { name, phone } = req.body;
 
     try {
-      const authenticatedUser = auth.user(req as any);
+      const authenticatedUser = auth.getUser(req as any);
 
       if (!authenticatedUser) {
         throw error.serverError('Authentication failed - user not found in request');
@@ -99,7 +99,7 @@ router.post('/change-password',
     const { currentPassword, newPassword } = req.body;
 
     try {
-      const authenticatedUser = auth.user(req as any);
+      const authenticatedUser = auth.getUser(req as any);
 
       if (!authenticatedUser) {
         throw error.serverError('Authentication failed - user not found in request');
@@ -326,7 +326,7 @@ router.delete('/admin/users/:id',
     const userId = parseInt(req.params.id);
 
     try {
-      const authenticatedUser = auth.user(req as any);
+      const authenticatedUser = auth.getUser(req as any);
 
       // Prevent self-deletion
       if (authenticatedUser?.userId === userId) {

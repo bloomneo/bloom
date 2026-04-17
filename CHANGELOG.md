@@ -2,6 +2,104 @@
 
 All notable changes to Bloom Framework will be documented in this file.
 
+## [2.0.0] - 2026-04-17
+
+Aligns bloom templates with the appkit API shape on npm `latest` (2.0.0).
+Pre-2.0 `auth.user()` calls in template source now use the canonical
+`auth.getUser()`, and the appkit pin moves from `^1.5.1` to `^2.0.0` so
+scaffolded apps install a version that actually has the methods the
+templates + agent docs teach.
+
+### Breaking — scaffolded apps now require appkit 2.x
+
+Every template's `package.json.template` + the shared
+`templates/package.json` + bloom's own `peerDependencies` now pin
+`@bloomneo/appkit: "^2.0.0"` (was `^1.5.1`).
+
+Why this is breaking for bloom consumers: an app scaffolded with
+bloom 2.0.0 cannot run against appkit 1.5.x. Existing scaffolded
+projects already on 1.5.x keep working — nothing auto-upgrades them.
+But anyone using bloom 2.0.0 to create a new project, or running
+`npm update @bloomneo/appkit` in a bloom-1.x-scaffolded app, now
+needs appkit 2.0.0+.
+
+### Breaking — template source uses appkit 2.0 auth API
+
+`auth.user(req)` was renamed to `auth.getUser(req)` in appkit 2.0.0
+(no alias kept). Previously bloom templates taught the pre-2.0 name
+in 5 files while the AGENTS.md.template taught the modern names —
+internal contradiction that confused agents. Fixed:
+
+```
+auth.user(req)   →   auth.getUser(req)
+```
+
+Files updated:
+
+- `templates/userapp/src/api/features/user/user.route.ts`
+- `templates/userapp/src/api/features/user/user.api.readme.md`
+- `templates/desktop-userapp/src/desktop/main/features/settings/settings.route.ts`
+- `templates/desktop-userapp/src/desktop/main/features/user/user.route.ts`
+- `templates/desktop-userapp/src/desktop/main/features/user/user.api.readme.md`
+
+### Added — drift-check extended with appkit-2.0 rename bans
+
+`scripts/check-doc-drift.mjs` now also bans these pre-2.0 patterns so
+they can't be reintroduced into any template, README, AGENTS.md, or
+llms.txt:
+
+- `auth.user(` → use `auth.getUser(req)`
+- `auth.can(` → use `auth.hasPermission(user, permission)`
+- `security.csrf(` → use `security.forms()`
+- `handleErrors({ includeStack ... })` → use `handleErrors({ showStack, logErrors })`
+- `auth.requireLogin(` / `auth.requireRole(` — these never existed in real
+  appkit; docs that reference them are hallucinated. Use
+  `requireLoginToken()` / `requireUserRoles([...])`.
+
+### Not changed (audited and clean)
+
+The comprehensive audit confirmed every OTHER appkit + uikit rename
+is absent from templates:
+
+- No `cacheClass.flushAll`, `shutdown`, `queueClass.clear`, class-level
+  `clear` on email/event/storage/logger, `databaseClass.disconnect` (all
+  renamed in appkit 4.0.0, but bloom pins appkit 2.0.0 where these
+  names still work — and templates don't use any of them regardless)
+- No `<Combobox onChange>` (uikit 2.0 rename). Templates don't use
+  Combobox yet.
+- No `@voilajsx/*` refs. Purged in 1.5.0.
+
+### Uikit pin unchanged
+
+`@bloomneo/uikit: "^1.5.1"` — uikit 2.x is on the uikit main branch
+but not yet on npm, so the pin stays at the latest published version.
+When uikit 2.x publishes, bloom will cut another coordinated major
+that bumps the uikit pin + updates any templates that use renamed
+uikit APIs (principally `<Combobox onValueChange>`).
+
+### Migration for bloom consumers
+
+If you're scaffolding a new project, nothing to do — use bloom 2.0.0
+as normal.
+
+If you have an existing bloom-1.x-scaffolded project that you want to
+upgrade:
+
+```bash
+# 1. Bump appkit pin in your project's package.json
+npm install @bloomneo/appkit@^2.0.0
+
+# 2. Rename any auth.user() calls in your codebase:
+#    sed -i 's/auth\.user(/auth.getUser(/g' src/**/*.ts
+
+# 3. Re-run the postinstall to refresh docs/ and .claude/skills/
+npm run postinstall
+```
+
+That's it — no other code changes unless you used the other renamed
+appkit 2.0 APIs (auth.can, security.csrf, handleErrors' includeStack
+option).
+
 ## [1.6.0] - 2026-04-17
 
 Governance pass mirroring the shape applied to `@bloomneo/appkit@4.0.0`

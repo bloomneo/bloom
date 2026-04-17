@@ -23,7 +23,7 @@ router.get('/', error.asyncRoute(async (req, res) => {
     const settings = settingsService.getAllSettings();
 
     // Filter out sensitive settings for non-authenticated users
-    const authenticatedUser = auth.user(req as any);
+    const authenticatedUser = auth.getUser(req as any);
     if (!authenticatedUser) {
       // Public settings only
       const publicSettings = {
@@ -95,7 +95,7 @@ router.put('/',
     const { settings } = req.body;
 
     try {
-      const authenticatedUser = auth.user(req as any);
+      const authenticatedUser = auth.getUser(req as any);
 
       if (!settings || typeof settings !== 'object') {
         return res.status(400).json({
@@ -135,7 +135,7 @@ router.put('/:key',
     const { value } = req.body;
 
     try {
-      const authenticatedUser = auth.user(req as any);
+      const authenticatedUser = auth.getUser(req as any);
 
       if (value === undefined) {
         return res.status(400).json({

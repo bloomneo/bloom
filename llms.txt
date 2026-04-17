@@ -1,4 +1,4 @@
-# @bloomneo/bloom v1.6.0
+# @bloomneo/bloom v3.0.2
 
 Scaffolding CLI for full-stack apps combining `@bloomneo/appkit` (Express
 backend) and `@bloomneo/uikit` (React frontend) with Feature-Based
@@ -71,8 +71,8 @@ Every template includes:
 
 - `AGENTS.md` — project-level agent rules (placeholders replaced at
   scaffold + re-filled by postinstall)
-- `package.json` — pins `@bloomneo/uikit@^1.5.1` + (where applicable)
-  `@bloomneo/appkit@^1.5.1`, plus a `postinstall` hook
+- `package.json` — pins `@bloomneo/uikit@^2.0.1` + (where applicable)
+  `@bloomneo/appkit@^2.0.0`, plus a `postinstall` hook
 - `scripts/copy-agent-docs.js` — postinstall script that populates:
   - `docs/appkit.md`, `docs/appkit-agents.md`
   - `docs/uikit.md`, `docs/uikit-agents.md`
@@ -114,23 +114,72 @@ Adding a new page = creating a file. Don't edit the page-router.
 
 ---
 
-## Migration — 1.5.1 → 1.6.0
+## Migration
 
-Additive. 1.6.0 adds:
+Current release: **3.0.2**. Jumping from any pre-3 version needs the
+breaking ecosystem-pin bumps below. Existing scaffolded projects keep
+working against their pinned versions — nothing auto-upgrades.
 
-- Root `AGENTS.md` + `llms.txt` (this file)
-- `scripts/check-doc-drift.ts` + `tests/scaffold-smoke.test.ts`
-- `.github/workflows/ci.yml`
-- `--help` / `-h` / `help` handler
-- `--version` / `-v` / `version` handler
-- `--skip-install` / `--no-install` flag
-- Unified `scripts/copy-agent-docs.js` across all 5 templates
-- Postinstall now copies uikit's `AGENTS.md` (was only `llms.txt`) and
-  both packages' skill trees into `.claude/skills/`
-- Postinstall replaces `{{PROJECT_NAME}}` placeholders in the
-  scaffolded `AGENTS.md`
-- Dead `mergeBloomPackageJson()` function removed
+### From `@bloomneo/bloom@1.5.x` → `3.0.2`
 
-No breaking changes. Scaffolded apps keep working. Re-run `npm install`
-in any 1.5.x-scaffolded project to pick up the postinstall improvements
-once you `npm i -g @bloomneo/bloom@1.6.0` and scaffold fresh.
+1. Re-scaffold (preferred — `bloom create` on a fresh project) or apply
+   manual changes:
+   - `@bloomneo/appkit` pin: `^1.5.1` → `^2.0.0`
+   - `@bloomneo/uikit` pin: `^1.5.1` → `^2.0.1`
+2. Source changes for the appkit 2.0 rename:
+   - `auth.user(req)` → `auth.getUser(req)`
+   - `auth.can(user, perm)` → `auth.hasPermission(user, perm)` (if you
+     used it — templates didn't)
+   - `security.csrf()` → `security.forms()` (if you used it)
+   - `handleErrors({ includeStack })` → `handleErrors({ showStack })`
+3. Source changes for the uikit 2.0 rename:
+   - `<Combobox onChange={fn}>` → `<Combobox onValueChange={fn}>` (if
+     you used it — templates didn't)
+4. Re-run `npm install` — the 3.x postinstall copies appkit's and
+   uikit's `AGENTS.md` + `llms.txt` + skill trees into the scaffolded
+   `docs/` and `.claude/skills/`.
+
+### Why three majors in one day
+
+`bloom@2.0.0` bumped the appkit pin (`^1.5.1` → `^2.0.0`) because
+appkit 2.0 was on npm `latest` and templates needed the modern API.
+`bloom@3.0.0` bumped the uikit pin (`^1.5.1` → `^2.0.1`) because
+uikit 2.0.1 also reached npm `latest`. Both peer-dependency major
+bumps are breaking per semver, so each gets its own major.
+
+### What 1.6.0 through 3.0.0 added (cumulative, since they were all
+### unpublished until 3.0.1 on npm, then 3.0.2 for doc alignment)
+
+- Root `AGENTS.md` (this doc's sibling) + `llms.txt` (this file)
+- `scripts/check-doc-drift.mjs` + `scripts/scaffold-smoke.test.mjs`
+- `.github/workflows/ci.yml` (Node 18/20/22 matrix)
+- `--help` / `-h` / `help`, `--version` / `-v` / `version`,
+  `--skip-install` flags on the CLI
+- Unified `scripts/copy-agent-docs.js` across all 5 templates:
+  copies appkit + uikit `llms.txt`, `AGENTS.md`, and skill trees into
+  the scaffolded project's `docs/` and `.claude/skills/`; fills
+  `{{PROJECT_NAME}}` placeholders; survives gracefully when a package
+  (e.g. appkit for the mobile template) isn't installed.
+- Templates use `"name": "{{PROJECT_NAME}}"` (was hard-coded
+  `bloom-<template>`), so scaffolded projects get the user's actual
+  name.
+- Deleted stale `docs/UIKIT_*.md` template docs (deep imports +
+  hallucinated `ValidatedInput` + nonexistent "UIKit CLI" — all
+  inherited from the `@voilajsx/uikit` era).
+- Dead code removed from `bin/bloom.js`.
+- Deleted 274MB `docs/` nested vite subproject (not shipped, no
+  references).
+- Fixed hallucinated doc refs in CLI output (`docs/DEVELOPMENT.md`,
+  `docs/MOBILE_DEVELOPMENT.md`) — those files never existed.
+
+### Not ready yet (ecosystem state, 2026-04-17)
+
+- `@bloomneo/appkit@4.0.0` exists on appkit's main branch but is NOT
+  on npm. npm `latest` is 2.0.0. Bloom's `^2.0.0` pin correctly
+  targets what's available.
+- When appkit 4.0.0 publishes, bloom will cut another major that
+  bumps the pin to `^4.0.0` + rewrites any template code using APIs
+  renamed between 2.0 and 4.0 (principally the teardown verb
+  unification: `shutdown` / class-level `clear` → `disconnectAll`).
+  Templates don't currently call teardown methods so that bump is
+  expected to be low-churn.

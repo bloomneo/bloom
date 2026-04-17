@@ -2,6 +2,65 @@
 
 All notable changes to Bloom Framework will be documented in this file.
 
+## [3.0.2] - 2026-04-17
+
+Doc-alignment sweep. Reviewer caught that `AGENTS.md` and `llms.txt`
+still carried `v1.6.0` headers and referenced `^1.5.1` pins despite
+the package being at 3.0.1 and templates pinning `^2.0.0 / ^2.0.1`.
+No code changes.
+
+### Fixed — version-string drift
+
+- `AGENTS.md:3` header — `v1.6.0` → `v3.0.2`. Inline references to
+  `@bloomneo/appkit` / `@bloomneo/uikit` pins updated to what
+  templates actually ship (`^2.0.0` and `^2.0.1`).
+- `llms.txt:1` H1 header aligned with `package.json.version`.
+- `llms.txt` "What scaffold produces" section — pin references
+  updated from `^1.5.1` to the current `^2.0.0 / ^2.0.1`.
+- `llms.txt` "Migration" section rewritten. Was a 1.5.1 → 1.6.0
+  note; now covers the full 1.5.x → 3.x path with the appkit 2.0
+  (`auth.user → auth.getUser`, `security.csrf → security.forms`,
+  `handleErrors includeStack → showStack`) and uikit 2.0 (`<Combobox
+  onChange> → onValueChange>`) breaking renames, why there were three
+  majors in one day, and the pending appkit 4.0 story.
+
+### Added — drift-check gains version-string alignment
+
+`scripts/check-doc-drift.mjs` now verifies that `AGENTS.md` and
+`llms.txt` version strings match `package.json.version` on every CI
+run. Closes the regression class the review caught — silent version
+drift across AGENTS.md / llms.txt / package.json can't recur.
+
+### Reviewer findings explicitly NOT acted on
+
+- **"Bump appkit pin from `^2.0.0` to `^4.0.0`."** appkit 4.0 is on
+  appkit's main branch but NOT on npm. npm `latest` for appkit is
+  2.0.0. Bumping the pin would break `npm install` for every new
+  scaffolded app (caret can't resolve a version that doesn't exist).
+  The reviewer's corollary — "postinstall copies the 4.0 AGENTS.md
+  so the scaffolded doc teaches `disconnectAll()` but the installed
+  2.x doesn't have it" — is factually wrong. The postinstall copies
+  from `node_modules/@bloomneo/appkit/AGENTS.md`, which is whatever
+  version was installed (2.0.0). The 2.0.0 AGENTS.md teaches 2.0.0
+  patterns. No contradiction. When appkit 4.0.0 actually publishes,
+  bloom will cut a coordinated major to bump the pin.
+- **"Add `bloom update` / `bloom diff` / migration helper."** Kept
+  deliberately out of scope (see bloom's "What bloom is NOT" rule in
+  AGENTS.md). The postinstall already re-hydrates `docs/` and
+  `.claude/skills/` on every `npm install`, so existing scaffolded
+  apps pick up agent-doc improvements when they upgrade the
+  ecosystem packages.
+- **"CLI thinness vs framework ambition."** Design choice. `bloom
+  dev` / `bloom build` wrappers would couple bloom to the scaffolded
+  app's package.json shape and multiply maintenance surface.
+- **"FBCA has no validator / linter."** Deferred. File-based routing
+  is enforced at runtime by `import.meta.glob`; a missed
+  `pages/index.tsx` produces a visible route-not-found. Worth
+  adding if users report silent misses.
+- **"Docs site landing page (bloomneo.github.io/bloom) is 3 majors
+  behind."** Separate repo / external site; not fixable from inside
+  this repo.
+
 ## [3.0.1] - 2026-04-17
 
 Deep pre-publish audit. Deletes stale template docs that taught

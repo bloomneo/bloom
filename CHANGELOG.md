@@ -2,6 +2,78 @@
 
 All notable changes to Bloom Framework will be documented in this file.
 
+## [3.0.1] - 2026-04-17
+
+Deep pre-publish audit. Deletes stale template docs that taught
+pre-2.0 uikit patterns (deep imports, hallucinated `ValidatedInput`,
+the never-existing "UIKit CLI"). No code behavior changes, no API
+changes — the templates' source code was already correct.
+
+### Fixed — stale template docs deleted
+
+Every template shipped a `docs/UIKIT_*.md` folder with content
+inherited from the `@voilajsx/uikit` era. Deleted across all 5
+templates (11 files):
+
+- `UIKIT_THEME_GUIDE.md` — superseded by uikit 2.0.1's own llms.txt
+  (copied in by postinstall as `docs/uikit.md`) + the themeing
+  sub-rule that ships inside `skills/bloomneo-uikit/rules/theming.md`
+  (also copied in).
+- `UIKIT_COMPOSITE_UI_SYSTEM.md` — taught `@bloomneo/uikit/button`,
+  `@bloomneo/uikit/card` deep imports (non-canonical per uikit
+  AGENTS.md "Never deep-import as primary") and referenced
+  `ValidatedInput` which isn't exported from uikit 2.0.1.
+- `UIKIT_CLI_GUIDE.md` (mobile-basicapp only) — documented a "UIKit
+  CLI" that doesn't exist. Uikit has never shipped a CLI.
+
+### Fixed — flattened remaining deep-import examples
+
+Surviving doc files (`QUICKSTART_FBCA.md`, `DESKTOP_APP_GETTING_STARTED.md`)
+had `from '@bloomneo/uikit/page' / /card / /button / /form / /header /
+/footer / /container`. All rewritten to the canonical flat import
+`from '@bloomneo/uikit'`.
+
+### Fixed — flat-import violations in root README
+
+`bloom`'s own README had `from '@bloomneo/uikit/hooks'`,
+`from '@bloomneo/uikit/page'`, `from '@bloomneo/uikit/theme-provider'`.
+All now use `from '@bloomneo/uikit'`.
+
+### Added — drift-check gains uikit-specific bans
+
+`scripts/check-doc-drift.mjs` now catches:
+
+- Any deep import into `@bloomneo/uikit/*` except the two legit ones
+  (`/styles` for CSS, `/fouc` for the FOUC script helper)
+- `ValidatedInput` references (not in uikit 2.0.1)
+- `<Combobox onChange=` and `<Select onChange=` — value-not-event
+  pickers must use `onValueChange` in uikit 2.0+
+
+So future drift from these patterns fails CI.
+
+### Audited and verified correct
+
+- appkit method usage across templates: every call site
+  (`auth.hashPassword`, `auth.comparePassword`, `auth.generateLoginToken`,
+  `auth.getUser`, `auth.requireLoginToken`, `auth.requireUserRoles`,
+  `config.get`, `error.asyncRoute` / `.badRequest` / `.forbidden` /
+  `.notFound` / `.serverError` / `.handleErrors`, `logger.info/warn/error`,
+  `security.requests`, `util.isEmpty`) verified against appkit 2.0.0's
+  installed API.
+- uikit imports across templates: only `Alert`, `AlertDescription`,
+  `AlertTitle`, `AuthLayout`, `Badge`, `Button`, `Card`, `CardContent`,
+  `CardDescription`, `CardFooter`, `CardHeader`, `CardTitle`,
+  `Container`, `Dialog*`, `Footer`, `Header*`, `Input`, `Label`,
+  `PageLayout`, `Select*`, `Switch`, `Table*`, `useApi`,
+  `useBackendStatus`, `useTheme` — all exported from uikit 2.0.1's
+  flat index.
+- Postinstall source paths verified against what
+  `@bloomneo/appkit@2.0.0` and `@bloomneo/uikit@2.0.1` actually ship
+  on npm: appkit ships `AGENTS.md` + `llms.txt` (no `.claude/skills`
+  yet — that's in the unpublished 4.0); uikit ships `AGENTS.md` +
+  `llms.txt` + `skills/bloomneo-uikit/`. Postinstall handles the
+  missing `.claude/skills` gracefully (logs a skip).
+
 ## [3.0.0] - 2026-04-17
 
 Maps bloom templates to `@bloomneo/uikit@2.0.1` now that uikit 2.x is on

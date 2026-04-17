@@ -140,7 +140,7 @@ const pageFiles = import.meta.glob('../features/*/pages/**/*.{tsx,jsx}', { eager
 
 ```jsx
 // features/gallery/pages/index.tsx
-import { PageLayout } from '@bloomneo/uikit/page';
+import { PageLayout } from '@bloomneo/uikit';
 import { Header, Footer, SEO } from '../../../shared/components';
 import { useGallery } from '../hooks/useGallery';
 

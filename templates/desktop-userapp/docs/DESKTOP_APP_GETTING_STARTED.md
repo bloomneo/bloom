@@ -477,8 +477,8 @@ File: features/blog/pages/[slug].tsx     → Route: /blog/:slug
 **Page Structure:**
 ```tsx
 // features/gallery/pages/index.tsx
-import { PageLayout } from '@bloomneo/uikit/page';
-import { Card } from '@bloomneo/uikit/card';
+import { PageLayout } from '@bloomneo/uikit';
+import { Card } from '@bloomneo/uikit';
 import { Header, Footer, SEO } from '../../../shared/components';
 
 export default function GalleryPage() {
@@ -514,7 +514,7 @@ mkdir -p src/desktop/renderer/features/products/hooks
 
 ```tsx
 // features/products/pages/index.tsx
-import { PageLayout } from '@bloomneo/uikit/page';
+import { PageLayout } from '@bloomneo/uikit';
 import { Header, Footer, SEO } from '../../../shared/components';
 
 export default function ProductsPage() {

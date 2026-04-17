@@ -156,7 +156,7 @@ mkdir -p src/web/features/products/pages
 ```tsx
 // src/web/features/products/pages/index.tsx
 import React from 'react';
-import { PageLayout } from '@bloomneo/uikit/page';
+import { PageLayout } from '@bloomneo/uikit';
 
 const ProductsPage: React.FC = () => {
   return (
@@ -181,7 +181,7 @@ export default ProductsPage;
 Bloom includes generic API hooks that auto-detect your environment:
 
 ```tsx
-import { useApi } from '@bloomneo/uikit/hooks';
+import { useApi } from '@bloomneo/uikit';
 
 const MyComponent = () => {
   const { loading, error, get, post } = useApi();
@@ -202,7 +202,7 @@ const MyComponent = () => {
 ### Backend Status Checking
 
 ```tsx
-import { useBackendStatus } from '@bloomneo/uikit/hooks';
+import { useBackendStatus } from '@bloomneo/uikit';
 
 const StatusCheck = () => {
   const { isConnected, loading, checkStatus } = useBackendStatus();
@@ -271,7 +271,7 @@ Bloom includes 5 built-in themes:
 Change theme in your components:
 
 ```tsx
-import { useTheme } from '@bloomneo/uikit/theme-provider';
+import { useTheme } from '@bloomneo/uikit';
 
 const { theme, setTheme } = useTheme();
 setTheme('elegant');
@@ -331,9 +331,7 @@ export default router;
 ```tsx
 // src/web/features/products/pages/index.tsx
 import React, { useEffect, useState } from 'react';
-import { useApi } from '@bloomneo/uikit/hooks';
-import { Button } from '@bloomneo/uikit/button';
-import { Card } from '@bloomneo/uikit/card';
+import { useApi, Button, Card } from '@bloomneo/uikit';
 
 const ProductsPage = () => {
   const [products, setProducts] = useState([]);

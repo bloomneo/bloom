@@ -2,6 +2,99 @@
 
 All notable changes to Bloom Framework will be documented in this file.
 
+## [3.0.0] - 2026-04-17
+
+Maps bloom templates to `@bloomneo/uikit@2.0.1` now that uikit 2.x is on
+npm. Second back-to-back major because peer-dependency major bumps are
+breaking per semver — bloom consumers who relied on the `^1.5.1` uikit
+range can't use bloom 3 with uikit 1.x.
+
+Bloom 2.0.0 (just shipped minutes earlier) bumped appkit to `^2.0.0`.
+3.0.0 does the uikit half. After this, both ecosystem pins match what's
+actually `latest` on npm.
+
+### Breaking — scaffolded apps now require uikit 2.x
+
+Every template's `package.json.template` + the shared
+`templates/package.json` + bloom's own `peerDependencies` now pin
+`@bloomneo/uikit: "^2.0.1"` (was `^1.5.1`). New scaffolds install
+uikit 2.x.
+
+### Why uikit 2.x
+
+Uikit 2.0 renamed `<Combobox onChange>` to `<Combobox onValueChange>`
+for consistency with every other value-not-event picker (Select,
+Slider, Tabs, Accordion). It also added 6 typed error subclasses
+(`DataTableError`, `FormFieldError`, etc.) and `'use client';` on all
+44 components for Next.js 13+ App Router compatibility.
+
+Bloom templates don't use Combobox in any scaffolded code, so the
+Combobox rename produces zero template churn. The audit confirmed
+this with a grep across all 5 templates — no `<Combobox>` references
+anywhere.
+
+### Not changed (audited clean)
+
+- **No `<Combobox>` in any template** — the uikit 2.0 Combobox rename
+  (`onChange` → `onValueChange`) has no template-level impact. If
+  consumers add Combobox to their scaffolded app, they get the 2.x
+  API with `onValueChange`; the postinstall-copied uikit AGENTS.md +
+  llms.txt teach the correct name.
+- **No pre-2.0 uikit patterns detected** — templates already use
+  `onValueChange` for Select (correct in both 1.x and 2.x) and
+  `onChange(e)` for Input/Textarea (unchanged).
+- **`'use client';` directive on uikit components** — not a template
+  concern; the consumer-project code just imports components. Next.js
+  App Router handling is automatic now in uikit 2.x.
+
+### Added — drift-check extended with uikit 2.0 rename bans
+
+`scripts/check-doc-drift.mjs` gains one new pattern:
+
+- `<Combobox … onChange=` → use `<Combobox … onValueChange=`
+
+Plus the Select ban that was already there stays correct:
+`<Select … onChange=` → use `<Select … onValueChange=`.
+
+### Added — smoke test uikit-pin assertion
+
+`tests/scaffold-smoke.test.mjs` already asserted uikit is pinned to a
+caret range. That assertion now matches `^2.0.1` instead of `^1.5.1` —
+no test rewrite needed (the pattern check is range-agnostic).
+
+### Ecosystem status after this release
+
+|  | npm `latest` | bloom pin |
+|---|---|---|
+| appkit | 2.0.0 | `^2.0.0` ✓ aligned |
+| uikit | 2.0.1 | `^2.0.1` ✓ aligned |
+
+Both pins now match what npm actually serves. Agents reading the
+postinstall-copied `docs/appkit-agents.md` and `docs/uikit-agents.md`
+will see the same patterns the scaffolded code uses.
+
+### Migration for bloom consumers
+
+If you're scaffolding a new project: use bloom 3.0.0 — nothing to do.
+
+If you have an existing bloom-2.0.0-scaffolded project (which already
+had appkit 2.x) and want to pick up uikit 2.x:
+
+```bash
+npm install @bloomneo/uikit@^2.0.1
+
+# If your code uses Combobox, update the callback prop:
+#   <Combobox onChange={setX}>   →   <Combobox onValueChange={setX}>
+# Drift-check in your scaffolded project (if you wired one) catches this.
+
+# Re-run postinstall to refresh docs/ + .claude/skills/ from the new version:
+npm run postinstall
+```
+
+If you skipped bloom 2.0.0 and are jumping from bloom 1.x directly to
+3.0.0, apply BOTH the appkit and uikit migrations — see the 2.0.0
+entry below for `auth.user() → auth.getUser()`.
+
 ## [2.0.0] - 2026-04-17
 
 Aligns bloom templates with the appkit API shape on npm `latest` (2.0.0).

@@ -30,7 +30,7 @@
     "bloom"
   ],
   "dependencies": {
-    "@bloomneo/uikit": "^1.5.1",
+    "@bloomneo/uikit": "^2.0.1",
     "@bloomneo/appkit": "^2.0.0",
     "@bloomneo/bloom": "^1.5.3",
     "react": "^18.3.1",

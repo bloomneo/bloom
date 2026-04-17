@@ -1,6 +1,6 @@
 {
   "name": "@bloomneo/bloom",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "Scaffolding CLI that combines @bloomneo/uikit (React) and @bloomneo/appkit (Express) with Feature-Based Component Architecture (FBCA) into full-stack web/desktop/mobile apps. Previously published as @voilajsx/helix.",
   "type": "module",
   "main": "./bin/bloom.js",
@@ -80,7 +80,7 @@
     "fs-extra": "^11.2.0"
   },
   "peerDependencies": {
-    "@bloomneo/uikit": "^1.5.1",
+    "@bloomneo/uikit": "^2.0.1",
     "@bloomneo/appkit": "^2.0.0"
   }
 }

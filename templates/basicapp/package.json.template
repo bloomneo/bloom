@@ -23,7 +23,7 @@
     "postinstall": "node scripts/copy-agent-docs.js"
   },
   "dependencies": {
-    "@bloomneo/uikit": "^1.5.1",
+    "@bloomneo/uikit": "^2.0.1",
     "@bloomneo/appkit": "^2.0.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

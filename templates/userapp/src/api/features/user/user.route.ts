@@ -28,7 +28,7 @@ router.get('/profile',
         throw error.serverError('Authentication failed - user not found in request');
       }
 
-      const user = await userService.getProfile(authenticatedUser.userId as number);
+      const user = await userService.getProfile(authenticatedUser.userId as string);
 
       res.json({
         message: 'Profile retrieved successfully',
@@ -69,7 +69,7 @@ router.put('/profile',
         throw error.serverError('Authentication failed - user not found in request');
       }
 
-      const user = await userService.updateProfile(authenticatedUser.userId as number, { name, phone });
+      const user = await userService.updateProfile(authenticatedUser.userId as string, { name, phone });
 
       res.json({
         message: 'Profile updated successfully',
@@ -105,7 +105,7 @@ router.post('/change-password',
         throw error.serverError('Authentication failed - user not found in request');
       }
 
-      await userService.changePassword(authenticatedUser.userId as number, currentPassword, newPassword);
+      await userService.changePassword(authenticatedUser.userId as string, currentPassword, newPassword);
 
       res.json({
         message: 'Password changed successfully',
@@ -253,7 +253,7 @@ router.get('/admin/users/:id',
   auth.requireUserRoles(['moderator.review', 'moderator.approve', 'moderator.manage', 'admin.tenant', 'admin.org', 'admin.system']),
   error.asyncRoute(async (req, res) => {
     const requestId = req.requestMetadata?.requestId || 'unknown';
-    const userId = parseInt(req.params.id);
+    const userId = req.params.id;
 
     try {
       if (isNaN(userId)) {
@@ -300,7 +300,7 @@ router.put('/admin/users/:id',
   auth.requireUserRoles(['admin.tenant', 'admin.org', 'admin.system']),
   error.asyncRoute(async (req, res) => {
     const requestId = req.requestMetadata?.requestId || 'unknown';
-    const userId = parseInt(req.params.id);
+    const userId = req.params.id;
 
     try {
       const user = await userService.updateUser(userId, req.body);
@@ -331,7 +331,7 @@ router.delete('/admin/users/:id',
   auth.requireUserRoles(['admin.tenant', 'admin.org', 'admin.system']),
   error.asyncRoute(async (req, res) => {
     const requestId = req.requestMetadata?.requestId || 'unknown';
-    const userId = parseInt(req.params.id);
+    const userId = req.params.id;
 
     try {
       const authenticatedUser = auth.getUser(req as any);
@@ -372,7 +372,7 @@ router.put('/admin/users/:id/password',
   auth.requireUserRoles(['admin.tenant', 'admin.org', 'admin.system']),
   error.asyncRoute(async (req, res) => {
     const requestId = req.requestMetadata?.requestId || 'unknown';
-    const userId = parseInt(req.params.id);
+    const userId = req.params.id;
     const { newPassword } = req.body;
 
     try {

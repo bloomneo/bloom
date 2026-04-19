@@ -35,10 +35,13 @@ export const config = {
       auth: 'Authorization',
     },
 
-    // Redirect configuration - environment configurable
+    // Redirect configuration - environment configurable.
+    // Defaults match the actual FBCA auto-discovered routes: pages under
+    // `features/auth/pages/` resolve to `/auth/*`, not `/*`. Override via
+    // env if you relocate the pages.
     redirects: {
       // Where to send unauthenticated users
-      loginPage: import.meta.env.VITE_LOGIN_PAGE || '/login',
+      loginPage: import.meta.env.VITE_LOGIN_PAGE || '/auth/login',
 
       // Where to send authenticated users after login
       afterLogin: import.meta.env.VITE_AFTER_LOGIN || '/dashboard',
@@ -53,8 +56,12 @@ export const config = {
 
   // Route Access Control
   routes: {
-    // Auth-only routes (redirect to dashboard if authenticated)
-    authOnly: ['/', '/login', '/register', '/forgot-password', '/reset-password', '/auth/login', '/auth/register'],
+    // Auth-only routes (redirect to dashboard if authenticated). These
+    // paths must NOT include public marketing pages (/, /about, etc.) —
+    // listing them here would bounce signed-in users away from the
+    // homepage, which is the opposite of what you want on a marketing
+    // site.
+    authOnly: ['/auth/login', '/auth/register', '/auth/forgot-password', '/auth/reset-password'],
 
     // Public routes (accessible to everyone regardless of auth state)
     public: ['/about', '/help', '/contact', '/gallery', '/terms', '/privacy', '/auth/verify-email', '/auth/forgot-password', '/auth/reset-password'],

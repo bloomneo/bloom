@@ -39,7 +39,7 @@ export default function HomePage() {
         </p>
         <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
           <Button size="lg" asChild>
-            <Link to="/register">Get started</Link>
+            <Link to="/auth/register">Get started</Link>
           </Button>
           <Button size="lg" variant="outline" asChild>
             <Link to="/about">Learn more</Link>
@@ -75,7 +75,7 @@ export default function HomePage() {
           A brief repeat of the hero promise.
         </p>
         <Button size="lg" className="mt-6" asChild>
-          <Link to="/register">Create free account</Link>
+          <Link to="/auth/register">Create free account</Link>
         </Button>
       </section>
     </MarketingLayout>

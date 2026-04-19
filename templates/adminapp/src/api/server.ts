@@ -41,16 +41,31 @@ function checkFrontendExists(distPath: string): boolean {
 const app = express();
 const PORT = config.get('server.port', process.env.PORT || 3000);
 
-// Middleware (following AppKit recommended order)
+// Middleware (following AppKit recommended order).
+// CORS origin list: read CORS_ORIGIN from env (comma-separated) and
+// fall back to common dev origins. This lets you deploy behind a
+// custom domain, or run vite on a non-default port, without editing
+// this file. Without this the scaffolded app silently blocks any
+// origin outside the hard-coded list — a confusing "Invalid username
+// or password" failure mode when the login response is a CORS block.
+const envOrigins = (process.env.CORS_ORIGIN ?? '')
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean);
+const defaultDevOrigins = [
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://localhost:3000',
+  'http://127.0.0.1:5173',
+  'http://127.0.0.1:5174',
+  'http://127.0.0.1:3000',
+];
 app.use(cors({
-  origin: [
-    'http://localhost:5173', // Vite dev server
-    'http://localhost:3000', // Same origin
-    'http://127.0.0.1:5173', // Alternative localhost format
-    'http://127.0.0.1:3000'
-  ],
+  origin: envOrigins.length > 0
+    ? Array.from(new Set([...envOrigins, ...defaultDevOrigins]))
+    : defaultDevOrigins,
   credentials: true,
-  optionsSuccessStatus: 200
+  optionsSuccessStatus: 200,
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

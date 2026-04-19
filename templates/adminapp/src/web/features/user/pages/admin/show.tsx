@@ -256,11 +256,14 @@ const ShowUserPage: React.FC = () => {
 
   return (
     <>
-    <AdminPageHeader breadcrumbs={[
-          { label: "Admin", href: "/admin" },
-          { label: "Users", href: "/user/admin" },
-          { label: "Details" },
-        ]} />
+      <AdminPageHeader
+        title="User Details"
+        breadcrumbs={[
+          { label: 'Admin', href: '/admin' },
+          { label: 'Users', href: '/user/admin' },
+          { label: 'Details' },
+        ]}
+      />
       <SEO
         title={`View User - ${userData.name || userData.email}`}
         description="View user account details"
@@ -268,9 +271,6 @@ const ShowUserPage: React.FC = () => {
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold tracking-tight">
-                User Details
-              </h1>
               <p className="text-muted-foreground">
                 Viewing: {userData.name || userData.email} (ID: {userData.id}). Your role:{' '}
                 <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">

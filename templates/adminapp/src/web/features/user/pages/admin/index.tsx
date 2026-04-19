@@ -6,7 +6,6 @@ import { useAuth } from '../../../auth';
 import { route, hasRole } from '../../../../shared/utils';
 import { config } from '../../../auth/config';
 import type { User } from '../../types';
-import { USER_ROLES } from '../../index';
 import { AdminPageHeader } from '../../../admin/components/AdminPageHeader';
 
 interface AdminUser extends User {
@@ -215,7 +214,10 @@ const AdminDashboardPage: React.FC = () => {
 
   return (
     <>
-    <AdminPageHeader breadcrumbs={[{ label: 'Admin', href: '/admin' }, { label: 'Users' }]} />
+      <AdminPageHeader
+        title="Users"
+        breadcrumbs={[{ label: 'Admin', href: '/admin' }, { label: 'Users' }]}
+      />
       <SEO
         title="User Admin"
         description="User administration and management dashboard"
@@ -223,9 +225,6 @@ const AdminDashboardPage: React.FC = () => {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold tracking-tight">
-                User Admin
-              </h1>
               <p className="text-muted-foreground">
                 User management and system administration. Your role:{' '}
                 <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">

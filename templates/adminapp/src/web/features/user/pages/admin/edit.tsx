@@ -299,11 +299,14 @@ const EditUserPage: React.FC = () => {
 
   return (
     <>
-    <AdminPageHeader breadcrumbs={[
-          { label: "Admin", href: "/admin" },
-          { label: "Users", href: "/user/admin" },
-          { label: "Edit" },
-        ]} />
+      <AdminPageHeader
+        title="Edit User"
+        breadcrumbs={[
+          { label: 'Admin', href: '/admin' },
+          { label: 'Users', href: '/user/admin' },
+          { label: 'Edit' },
+        ]}
+      />
       <SEO
         title={`Edit User - ${userData?.name || userData?.email || 'Unknown'}`}
         description="Edit user account details"
@@ -311,9 +314,6 @@ const EditUserPage: React.FC = () => {
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold tracking-tight">
-                Edit User
-              </h1>
               <p className="text-muted-foreground">
                 Editing: {userData?.name || userData?.email} (ID: {userData?.id}). Your role:{' '}
                 <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">

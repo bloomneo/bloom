@@ -6,7 +6,6 @@ import { AdminPageHeader } from '../../../admin/components/AdminPageHeader';
 import { useAuth } from '../../../auth';
 import { route, hasRole } from '../../../../shared/utils';
 import { config } from '../../../auth/config';
-import { USER_ROLES } from '../../index';
 
 const CreateUserPage: React.FC = () => {
   const { user, token } = useAuth();
@@ -197,11 +196,14 @@ const CreateUserPage: React.FC = () => {
 
   return (
     <>
-    <AdminPageHeader breadcrumbs={[
-        { label: 'Admin', href: '/admin' },
-        { label: 'Users', href: '/user/admin' },
-        { label: 'Create' },
-      ]} />
+      <AdminPageHeader
+        title="Create User"
+        breadcrumbs={[
+          { label: 'Admin', href: '/admin' },
+          { label: 'Users', href: '/user/admin' },
+          { label: 'Create' },
+        ]}
+      />
       <SEO
         title="Create User"
         description="Create a new user account"
@@ -209,9 +211,6 @@ const CreateUserPage: React.FC = () => {
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold tracking-tight">
-                Create User
-              </h1>
               <p className="text-muted-foreground">
                 Add a new user to the system. Your role:{' '}
                 <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">

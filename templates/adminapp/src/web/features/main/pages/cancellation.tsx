@@ -10,19 +10,20 @@
  * from /account, email-based, effective-immediately vs end-of-cycle.
  */
 
-import { MarketingLayout } from '../components/MarketingLayout';
+import { MarketingPageHeader } from '../components/MarketingPageHeader';
 
 export default function CancellationPage() {
   const lastUpdated = 'YYYY-MM-DD';
 
   return (
-    <MarketingLayout
-      title="Cancellation Policy"
-      breadcrumbs={[
+    <>
+      <MarketingPageHeader
+        title="Cancellation Policy"
+        breadcrumbs={[
         { label: 'Home', href: '/' },
         { label: 'Cancellation' },
       ]}
-    >
+      />
       <div className="max-w-3xl mx-auto space-y-6">
         <p className="text-sm text-muted-foreground">
           Last updated: {lastUpdated}
@@ -74,7 +75,7 @@ export default function CancellationPage() {
           </p>
         </LegalSection>
       </div>
-    </MarketingLayout>
+    </>
   );
 }
 

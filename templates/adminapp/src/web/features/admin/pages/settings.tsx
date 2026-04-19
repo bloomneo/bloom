@@ -29,7 +29,7 @@ import {
   Skeleton,
   toast,
 } from '@bloomneo/uikit';
-import { AdminShell } from '../components/AdminShell';
+import { AdminPageHeader } from '../components/AdminPageHeader';
 import { adminFetchJson } from '../lib/admin-api';
 
 interface SettingRow {
@@ -99,11 +99,11 @@ export default function AdminSettings() {
   }
 
   return (
-    <AdminShell
-      currentPath="/admin/settings"
-      title="Settings"
-      breadcrumbs={[{ label: 'Admin', href: '/admin' }, { label: 'Settings' }]}
-    >
+    <>
+      <AdminPageHeader
+        title="Settings"
+        breadcrumbs={[{ label: 'Admin', href: '/admin' }, { label: 'Settings' }]}
+      />
       {error && (
         <Card>
           <CardContent className="py-6 text-sm text-destructive">
@@ -139,7 +139,7 @@ export default function AdminSettings() {
           )}
         </div>
       )}
-    </AdminShell>
+    </>
   );
 }
 

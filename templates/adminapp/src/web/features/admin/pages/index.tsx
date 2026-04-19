@@ -28,7 +28,7 @@ import {
   TableHeader,
   TableRow,
 } from '@bloomneo/uikit';
-import { AdminShell } from '../components/AdminShell';
+import { AdminPageHeader } from '../components/AdminPageHeader';
 import { adminFetchJson } from '../lib/admin-api';
 
 /**
@@ -93,11 +93,11 @@ export default function AdminDashboard() {
   }, []);
 
   return (
-    <AdminShell
-      currentPath="/admin"
-      title="Dashboard"
-      breadcrumbs={[{ label: 'Admin', href: '/admin' }, { label: 'Dashboard' }]}
-    >
+    <>
+      <AdminPageHeader
+        title="Dashboard"
+        breadcrumbs={[{ label: 'Admin', href: '/admin' }, { label: 'Dashboard' }]}
+      />
       {error && (
         <Card>
           <CardContent className="py-6 text-sm text-destructive">
@@ -109,7 +109,7 @@ export default function AdminDashboard() {
       <div className="grid gap-4 md:grid-cols-3">
         {WIDGETS.map((key) => renderWidget(key, summary))}
       </div>
-    </AdminShell>
+    </>
   );
 }
 

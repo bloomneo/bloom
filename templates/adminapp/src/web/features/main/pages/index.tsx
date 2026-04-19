@@ -21,11 +21,10 @@
 
 import { Link } from 'react-router-dom';
 import { Button } from '@bloomneo/uikit';
-import { MarketingLayout } from '../components/MarketingLayout';
 
 export default function HomePage() {
   return (
-    <MarketingLayout>
+    <>
       {/* Hero — keep the headline to one sentence. "What it is, who
           it's for." Subhead adds the "why now". CTA is the single
           next action. */}
@@ -78,7 +77,7 @@ export default function HomePage() {
           <Link to="/auth/register">Create free account</Link>
         </Button>
       </section>
-    </MarketingLayout>
+    </>
   );
 }
 

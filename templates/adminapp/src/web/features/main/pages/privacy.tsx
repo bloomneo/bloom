@@ -17,16 +17,17 @@
  * so this page updates when you change the company name centrally.
  */
 
-import { MarketingLayout } from '../components/MarketingLayout';
+import { MarketingPageHeader } from '../components/MarketingPageHeader';
 
 export default function PrivacyPage() {
   const lastUpdated = 'YYYY-MM-DD'; // TODO: update when policy changes
 
   return (
-    <MarketingLayout
-      title="Privacy Policy"
-      breadcrumbs={[{ label: 'Home', href: '/' }, { label: 'Privacy' }]}
-    >
+    <>
+      <MarketingPageHeader
+        title="Privacy Policy"
+        breadcrumbs={[{ label: 'Home', href: '/' }, { label: 'Privacy' }]}
+      />
       <div className="max-w-3xl mx-auto space-y-6">
         <p className="text-sm text-muted-foreground">
           Last updated: {lastUpdated}
@@ -90,7 +91,7 @@ export default function PrivacyPage() {
           </p>
         </LegalSection>
       </div>
-    </MarketingLayout>
+    </>
   );
 }
 

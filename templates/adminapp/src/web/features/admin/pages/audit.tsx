@@ -24,7 +24,7 @@ import {
   TableHeader,
   TableRow,
 } from '@bloomneo/uikit';
-import { AdminShell } from '../components/AdminShell';
+import { AdminPageHeader } from '../components/AdminPageHeader';
 import { adminFetchJson } from '../lib/admin-api';
 
 interface AuditRow {
@@ -79,11 +79,11 @@ export default function AdminAudit() {
   }
 
   return (
-    <AdminShell
-      currentPath="/admin/audit"
-      title="Audit log"
-      breadcrumbs={[{ label: 'Admin', href: '/admin' }, { label: 'Audit log' }]}
-    >
+    <>
+      <AdminPageHeader
+        title="Audit log"
+        breadcrumbs={[{ label: 'Admin', href: '/admin' }, { label: 'Audit log' }]}
+      />
       <Card>
         <CardContent className="space-y-4 py-6">
           <div className="grid gap-3 md:grid-cols-4">
@@ -165,6 +165,6 @@ export default function AdminAudit() {
           )}
         </CardContent>
       </Card>
-    </AdminShell>
+    </>
   );
 }

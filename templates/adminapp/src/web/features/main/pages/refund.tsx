@@ -10,16 +10,17 @@
  * a refund. Vague policies get you stuck in chargeback disputes.
  */
 
-import { MarketingLayout } from '../components/MarketingLayout';
+import { MarketingPageHeader } from '../components/MarketingPageHeader';
 
 export default function RefundPage() {
   const lastUpdated = 'YYYY-MM-DD';
 
   return (
-    <MarketingLayout
-      title="Refund Policy"
-      breadcrumbs={[{ label: 'Home', href: '/' }, { label: 'Refund' }]}
-    >
+    <>
+      <MarketingPageHeader
+        title="Refund Policy"
+        breadcrumbs={[{ label: 'Home', href: '/' }, { label: 'Refund' }]}
+      />
       <div className="max-w-3xl mx-auto space-y-6">
         <p className="text-sm text-muted-foreground">
           Last updated: {lastUpdated}
@@ -62,7 +63,7 @@ export default function RefundPage() {
           </p>
         </LegalSection>
       </div>
-    </MarketingLayout>
+    </>
   );
 }
 

@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { Alert, AlertDescription, AlertTitle, Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input } from '@bloomneo/uikit';
 import { ArrowLeft, AlertTriangle, RefreshCw, Mail, Phone, Calendar, Shield, User, Edit } from 'lucide-react';
 import { SEO } from '../../../../shared/components';
-import { AdminShell } from '../../../admin/components/AdminShell';
+import { AdminPageHeader } from '../../../admin/components/AdminPageHeader';
 import { useAuth } from '../../../auth';
 import { route, hasRole } from '../../../../shared/utils';
 import { config } from '../../../auth/config';
@@ -149,14 +149,12 @@ const ShowUserPage: React.FC = () => {
 
   if (!canViewUsers) {
     return (
-      <AdminShell
-          currentPath="/user/admin"
-          breadcrumbs={[
+      <>
+    <AdminPageHeader breadcrumbs={[
             { label: "Admin", href: "/admin" },
             { label: "Users", href: "/user/admin" },
             { label: "Details" },
-          ]}
-        >
+          ]} />
         <SEO title="Access Denied" description="You don't have permission to access this page" />
           <div className="flex items-center justify-center min-h-96">
             <Card className="w-full max-w-md">
@@ -174,20 +172,18 @@ const ShowUserPage: React.FC = () => {
               </CardContent>
             </Card>
           </div>
-        </AdminShell>
+        </>
     );
   }
 
   if (!userId) {
     return (
-      <AdminShell
-          currentPath="/user/admin"
-          breadcrumbs={[
+      <>
+    <AdminPageHeader breadcrumbs={[
             { label: "Admin", href: "/admin" },
             { label: "Users", href: "/user/admin" },
             { label: "Details" },
-          ]}
-        >
+          ]} />
         <SEO title="User Not Found" description="User ID is required" />
           <div className="flex items-center justify-center min-h-96">
             <Card className="w-full max-w-md">
@@ -205,20 +201,18 @@ const ShowUserPage: React.FC = () => {
               </CardContent>
             </Card>
           </div>
-        </AdminShell>
+        </>
     );
   }
 
   if (isLoading) {
     return (
-      <AdminShell
-          currentPath="/user/admin"
-          breadcrumbs={[
+      <>
+    <AdminPageHeader breadcrumbs={[
             { label: "Admin", href: "/admin" },
             { label: "Users", href: "/user/admin" },
             { label: "Details" },
-          ]}
-        >
+          ]} />
         <SEO title="Loading User" description="Loading user data..." />
           <div className="flex items-center justify-center min-h-96">
             <div className="text-center">
@@ -226,20 +220,18 @@ const ShowUserPage: React.FC = () => {
               <p>Loading user data...</p>
             </div>
           </div>
-        </AdminShell>
+        </>
     );
   }
 
   if (error || !userData) {
     return (
-      <AdminShell
-          currentPath="/user/admin"
-          breadcrumbs={[
+      <>
+    <AdminPageHeader breadcrumbs={[
             { label: "Admin", href: "/admin" },
             { label: "Users", href: "/user/admin" },
             { label: "Details" },
-          ]}
-        >
+          ]} />
         <SEO title="Error" description="Failed to load user data" />
           <div className="flex items-center justify-center min-h-96">
             <Card className="w-full max-w-md">
@@ -258,19 +250,17 @@ const ShowUserPage: React.FC = () => {
               </CardContent>
             </Card>
           </div>
-        </AdminShell>
+        </>
     );
   }
 
   return (
-    <AdminShell
-        currentPath="/user/admin"
-        breadcrumbs={[
+    <>
+    <AdminPageHeader breadcrumbs={[
           { label: "Admin", href: "/admin" },
           { label: "Users", href: "/user/admin" },
           { label: "Details" },
-        ]}
-      >
+        ]} />
       <SEO
         title={`View User - ${userData.name || userData.email}`}
         description="View user account details"
@@ -565,7 +555,7 @@ const ShowUserPage: React.FC = () => {
             </Card>
           )}
         </div>
-      </AdminShell>
+      </>
   );
 };
 

@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { Alert, AlertDescription, AlertTitle, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@bloomneo/uikit';
 import { Edit, ArrowLeft, AlertTriangle, CheckCircle, RefreshCw } from 'lucide-react';
 import { SEO } from '../../../../shared/components';
-import { AdminShell } from '../../../admin/components/AdminShell';
+import { AdminPageHeader } from '../../../admin/components/AdminPageHeader';
 import { useAuth } from '../../../auth';
 import { route, hasRole } from '../../../../shared/utils';
 import { config } from '../../../auth/config';
@@ -192,14 +192,12 @@ const EditUserPage: React.FC = () => {
 
   if (!canManageUsers) {
     return (
-      <AdminShell
-          currentPath="/user/admin"
-          breadcrumbs={[
+      <>
+    <AdminPageHeader breadcrumbs={[
             { label: "Admin", href: "/admin" },
             { label: "Users", href: "/user/admin" },
             { label: "Edit" },
-          ]}
-        >
+          ]} />
         <SEO title="Access Denied" description="You don't have permission to access this page" />
           <div className="flex items-center justify-center min-h-96">
             <Card className="w-full max-w-md">
@@ -217,20 +215,18 @@ const EditUserPage: React.FC = () => {
               </CardContent>
             </Card>
           </div>
-        </AdminShell>
+        </>
     );
   }
 
   if (!userId) {
     return (
-      <AdminShell
-          currentPath="/user/admin"
-          breadcrumbs={[
+      <>
+    <AdminPageHeader breadcrumbs={[
             { label: "Admin", href: "/admin" },
             { label: "Users", href: "/user/admin" },
             { label: "Edit" },
-          ]}
-        >
+          ]} />
         <SEO title="User Not Found" description="User ID is required" />
           <div className="flex items-center justify-center min-h-96">
             <Card className="w-full max-w-md">
@@ -248,20 +244,18 @@ const EditUserPage: React.FC = () => {
               </CardContent>
             </Card>
           </div>
-        </AdminShell>
+        </>
     );
   }
 
   if (isLoadingUser) {
     return (
-      <AdminShell
-          currentPath="/user/admin"
-          breadcrumbs={[
+      <>
+    <AdminPageHeader breadcrumbs={[
             { label: "Admin", href: "/admin" },
             { label: "Users", href: "/user/admin" },
             { label: "Edit" },
-          ]}
-        >
+          ]} />
         <SEO title="Loading User" description="Loading user data..." />
           <div className="flex items-center justify-center min-h-96">
             <div className="text-center">
@@ -269,20 +263,18 @@ const EditUserPage: React.FC = () => {
               <p>Loading user data...</p>
             </div>
           </div>
-        </AdminShell>
+        </>
     );
   }
 
   if (error && !userData) {
     return (
-      <AdminShell
-          currentPath="/user/admin"
-          breadcrumbs={[
+      <>
+    <AdminPageHeader breadcrumbs={[
             { label: "Admin", href: "/admin" },
             { label: "Users", href: "/user/admin" },
             { label: "Edit" },
-          ]}
-        >
+          ]} />
         <SEO title="Error" description="Failed to load user data" />
           <div className="flex items-center justify-center min-h-96">
             <Card className="w-full max-w-md">
@@ -301,19 +293,17 @@ const EditUserPage: React.FC = () => {
               </CardContent>
             </Card>
           </div>
-        </AdminShell>
+        </>
     );
   }
 
   return (
-    <AdminShell
-        currentPath="/user/admin"
-        breadcrumbs={[
+    <>
+    <AdminPageHeader breadcrumbs={[
           { label: "Admin", href: "/admin" },
           { label: "Users", href: "/user/admin" },
           { label: "Edit" },
-        ]}
-      >
+        ]} />
       <SEO
         title={`Edit User - ${userData?.name || userData?.email || 'Unknown'}`}
         description="Edit user account details"
@@ -481,7 +471,7 @@ const EditUserPage: React.FC = () => {
             </CardContent>
           </Card>
         </div>
-      </AdminShell>
+      </>
   );
 };
 

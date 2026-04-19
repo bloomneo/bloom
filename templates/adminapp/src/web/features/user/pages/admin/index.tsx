@@ -7,7 +7,7 @@ import { route, hasRole } from '../../../../shared/utils';
 import { config } from '../../../auth/config';
 import type { User } from '../../types';
 import { USER_ROLES } from '../../index';
-import { AdminShell } from '../../../admin/components/AdminShell';
+import { AdminPageHeader } from '../../../admin/components/AdminPageHeader';
 
 interface AdminUser extends User {
   tenantId: string | null;
@@ -214,11 +214,8 @@ const AdminDashboardPage: React.FC = () => {
   };
 
   return (
-    <AdminShell
-      currentPath="/user/admin"
-      requiredRoles={USER_ROLES.MODERATOR_ACCESS}
-      breadcrumbs={[{ label: 'Admin', href: '/admin' }, { label: 'Users' }]}
-    >
+    <>
+    <AdminPageHeader breadcrumbs={[{ label: 'Admin', href: '/admin' }, { label: 'Users' }]} />
       <SEO
         title="User Admin"
         description="User administration and management dashboard"
@@ -621,7 +618,7 @@ const AdminDashboardPage: React.FC = () => {
         </DialogContent>
       </Dialog>
 
-    </AdminShell>
+    </>
   );
 };
 

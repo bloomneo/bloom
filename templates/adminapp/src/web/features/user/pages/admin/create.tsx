@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Alert, AlertDescription, AlertTitle, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@bloomneo/uikit';
 import { UserPlus, ArrowLeft, AlertTriangle, CheckCircle } from 'lucide-react';
 import { SEO } from '../../../../shared/components';
-import { AdminShell } from '../../../admin/components/AdminShell';
+import { AdminPageHeader } from '../../../admin/components/AdminPageHeader';
 import { useAuth } from '../../../auth';
 import { route, hasRole } from '../../../../shared/utils';
 import { config } from '../../../auth/config';
@@ -34,14 +34,12 @@ const CreateUserPage: React.FC = () => {
 
   if (!canManageUsers) {
     return (
-      <AdminShell
-        currentPath="/user/admin"
-        breadcrumbs={[
+      <>
+    <AdminPageHeader breadcrumbs={[
           { label: 'Admin', href: '/admin' },
           { label: 'Users', href: '/user/admin' },
           { label: 'Create' },
-        ]}
-      >
+        ]} />
         <SEO title="Access Denied" description="You don't have permission to access this page" />
         <div className="flex items-center justify-center min-h-96">
           <Card className="w-full max-w-md">
@@ -59,7 +57,7 @@ const CreateUserPage: React.FC = () => {
             </CardContent>
           </Card>
         </div>
-      </AdminShell>
+      </>
     );
   }
 
@@ -198,15 +196,12 @@ const CreateUserPage: React.FC = () => {
   };
 
   return (
-    <AdminShell
-      currentPath="/user/admin"
-      requiredRoles={USER_ROLES.ADMIN_ACCESS}
-      breadcrumbs={[
+    <>
+    <AdminPageHeader breadcrumbs={[
         { label: 'Admin', href: '/admin' },
         { label: 'Users', href: '/user/admin' },
         { label: 'Create' },
-      ]}
-    >
+      ]} />
       <SEO
         title="Create User"
         description="Create a new user account"
@@ -415,7 +410,7 @@ const CreateUserPage: React.FC = () => {
             </CardContent>
           </Card>
         </div>
-    </AdminShell>
+    </>
   );
 };
 

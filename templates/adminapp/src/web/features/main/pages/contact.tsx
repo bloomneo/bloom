@@ -14,14 +14,15 @@
  * src/api/features/contact-message/, with rate limiting via appkit.
  */
 
-import { MarketingLayout } from '../components/MarketingLayout';
+import { MarketingPageHeader } from '../components/MarketingPageHeader';
 
 export default function ContactPage() {
   return (
-    <MarketingLayout
-      title="Contact"
-      breadcrumbs={[{ label: 'Home', href: '/' }, { label: 'Contact' }]}
-    >
+    <>
+      <MarketingPageHeader
+        title="Contact"
+        breadcrumbs={[{ label: 'Home', href: '/' }, { label: 'Contact' }]}
+      />
       <div className="max-w-xl mx-auto space-y-6">
         <p className="text-muted-foreground">
           Reach out — we read every message and reply within one business day.
@@ -40,7 +41,7 @@ export default function ContactPage() {
           {/* TODO: Add phone / whatsapp rows here. */}
         </div>
       </div>
-    </MarketingLayout>
+    </>
   );
 }
 

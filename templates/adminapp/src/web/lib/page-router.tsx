@@ -23,8 +23,8 @@
  *   />
  */
 
-import React, { Component, Suspense, useEffect, useMemo, type ErrorInfo, type ReactNode } from 'react';
-import { Routes, Route, useLocation } from 'react-router-dom';
+import React, { Component, Suspense, useEffect, useMemo, type ComponentType, type ErrorInfo, type ReactNode } from 'react';
+import { Outlet, Routes, Route, useLocation } from 'react-router-dom';
 
 /* -------------------------------------------------------------------------- */
 /* Route discovery                                                            */
@@ -198,6 +198,27 @@ const ScrollToTop: React.FC = () => {
 /* PageRouter                                                                 */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * A layout group — pages whose path matches `match` render inside
+ * `Layout`. The layout is mounted once and stays mounted as the user
+ * navigates between matching routes; only the `<Outlet />` inside the
+ * layout swaps. This eliminates the "header flashes on every navigation"
+ * problem that comes from each page wrapping itself in a shell.
+ *
+ * Layouts are evaluated in array order; the FIRST match wins. Keep
+ * more-specific matchers (e.g. `/admin`) before broader ones (e.g. `/`).
+ *
+ * The layout itself MUST render <Outlet /> somewhere inside its chrome
+ * (commonly wrapped in a local <Suspense> so lazy chunk loads only
+ * swap the content area, not the whole page).
+ */
+export interface RouteLayout {
+  /** Which discovered paths belong to this layout. */
+  match: (path: string) => boolean;
+  /** Component that renders <Outlet /> for matching child routes. */
+  Layout: ComponentType;
+}
+
 export interface PageRouterProps {
   /** Custom 404 element. Defaults to a branded theme-aware 404 page. */
   notFound?: ReactNode;
@@ -205,10 +226,16 @@ export interface PageRouterProps {
   errorBoundary?: ReactNode;
   /** Called when any page throws. Useful for Sentry / observability. */
   onError?: (error: Error, info: ErrorInfo) => void;
-  /** Loading fallback shown while a lazy route chunk is fetched. */
+  /** Loading fallback shown while a lazy route chunk is fetched.
+   *  Only used for routes that don't belong to a layout group — a layout
+   *  is expected to manage its own Suspense boundary around <Outlet />. */
   fallback?: ReactNode;
   /** Disable code splitting and load every page eagerly. Default: false. */
   eager?: boolean;
+  /** Layout groups. Pages whose path matches a layout's `match` render
+   *  as nested routes inside that layout, sharing its chrome across
+   *  navigations. Non-matching pages render bare. */
+  layouts?: RouteLayout[];
 }
 
 export const PageRouter: React.FC<PageRouterProps> = ({
@@ -217,6 +244,7 @@ export const PageRouter: React.FC<PageRouterProps> = ({
   onError,
   fallback,
   eager = false,
+  layouts = [],
 }) => {
   // Memoize so routes aren't regenerated on every render. The discovered set
   // is static (it's resolved at build time by Vite's glob), so empty deps are safe.
@@ -238,17 +266,63 @@ export const PageRouter: React.FC<PageRouterProps> = ({
   const notFoundElement = notFound ?? <DefaultNotFound />;
   const lazyFallback = fallback ?? <DefaultLazyFallback />;
 
+  // Bucket each discovered route by its layout (or "bare" for pages with
+  // no matching layout). First-match wins so callers can put the most
+  // specific matcher first.
+  const { grouped, bare } = useMemo(() => {
+    const bucketed = new Map<RouteLayout, DiscoveredRoute[]>();
+    const unlayered: DiscoveredRoute[] = [];
+    for (const route of routes) {
+      const layout = layouts.find((l) => l.match(route.path));
+      if (layout) {
+        const list = bucketed.get(layout) ?? [];
+        list.push(route);
+        bucketed.set(layout, list);
+      } else {
+        unlayered.push(route);
+      }
+    }
+    return { grouped: bucketed, bare: unlayered };
+  }, [routes, layouts]);
+
   return (
     <RouteErrorBoundary fallback={errorElement} onError={onError}>
       <ScrollToTop />
-      <Suspense fallback={lazyFallback}>
-        <Routes>
-          {routes.map(({ path, component: Component }) => (
-            <Route key={path} path={path} element={<Component />} />
-          ))}
-          <Route path="*" element={notFoundElement} />
-        </Routes>
-      </Suspense>
+      <Routes>
+        {/* Grouped routes — each layout renders <Outlet /> for its
+            children; the layout is expected to own its own Suspense
+            boundary (see e.g. AdminShell + MarketingLayout). The
+            layout stays mounted while child routes swap. */}
+        {Array.from(grouped.entries()).map(([layout, layoutRoutes], i) => (
+          <Route key={`layout-${i}`} element={<layout.Layout />}>
+            {layoutRoutes.map(({ path, component: Component }) => (
+              <Route key={path} path={path} element={<Component />} />
+            ))}
+          </Route>
+        ))}
+        {/* Bare routes — no shared layout. Kept inside one Suspense
+            so lazy loads work. */}
+        {bare.length > 0 && (
+          <Route
+            element={
+              <Suspense fallback={lazyFallback}>
+                <BareOutlet />
+              </Suspense>
+            }
+          >
+            {bare.map(({ path, component: Component }) => (
+              <Route key={path} path={path} element={<Component />} />
+            ))}
+          </Route>
+        )}
+        <Route path="*" element={notFoundElement} />
+      </Routes>
     </RouteErrorBoundary>
   );
 };
+
+// Tiny wrapper so the bare-routes Suspense boundary can render
+// <Outlet /> declaratively in the Routes tree above.
+function BareOutlet() {
+  return <Outlet />;
+}

@@ -9,14 +9,15 @@
  * TODO: Link to /contact from here — the "talk to a human" path matters.
  */
 
-import { MarketingLayout } from '../components/MarketingLayout';
+import { MarketingPageHeader } from '../components/MarketingPageHeader';
 
 export default function AboutPage() {
   return (
-    <MarketingLayout
-      title="About"
-      breadcrumbs={[{ label: 'Home', href: '/' }, { label: 'About' }]}
-    >
+    <>
+      <MarketingPageHeader
+        title="About"
+        breadcrumbs={[{ label: 'Home', href: '/' }, { label: 'About' }]}
+      />
       <div className="prose max-w-2xl mx-auto space-y-6">
         <section>
           <h2 className="text-2xl font-semibold">Our mission</h2>
@@ -35,6 +36,6 @@ export default function AboutPage() {
           </p>
         </section>
       </div>
-    </MarketingLayout>
+    </>
   );
 }

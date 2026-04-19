@@ -19,16 +19,17 @@
  * fine starting point — tailor liability sections in particular.
  */
 
-import { MarketingLayout } from '../components/MarketingLayout';
+import { MarketingPageHeader } from '../components/MarketingPageHeader';
 
 export default function TermsPage() {
   const lastUpdated = 'YYYY-MM-DD';
 
   return (
-    <MarketingLayout
-      title="Terms of Service"
-      breadcrumbs={[{ label: 'Home', href: '/' }, { label: 'Terms' }]}
-    >
+    <>
+      <MarketingPageHeader
+        title="Terms of Service"
+        breadcrumbs={[{ label: 'Home', href: '/' }, { label: 'Terms' }]}
+      />
       <div className="max-w-3xl mx-auto space-y-6">
         <p className="text-sm text-muted-foreground">
           Last updated: {lastUpdated}
@@ -99,7 +100,7 @@ export default function TermsPage() {
           </p>
         </LegalSection>
       </div>
-    </MarketingLayout>
+    </>
   );
 }
 

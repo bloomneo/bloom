@@ -2,6 +2,59 @@
 
 All notable changes to Bloom Framework will be documented in this file.
 
+## [4.0.1] - 2026-04-16
+
+Bug-fix release covering seven scaffolding issues reported against
+`bloom create <name> userapp`. No breaking changes; pin remains
+`@bloomneo/appkit@^4.0.0` / `@bloomneo/uikit@^2.0.1`.
+
+### Fixed
+
+- **`copy-agent-docs.js` JSDoc block closing prematurely.** The header
+  comment contained the literal sequence `*/` inside a path example
+  (`.claude/skills/appkit-*/`), closing the `/**` block early and making
+  `npm install` fail with a `SyntaxError` in every freshly scaffolded
+  project. Rewrote the example path using `<name>` instead of `*`.
+  Synced the fix across all five template copies.
+- **`.env` secrets still used the pre-1.5 `voila_` prefix.** The
+  scaffold was generating `VOILA_AUTH_SECRET` + `voila_...` values
+  while `appkit@4.x` and every `.env.example.template` now expect
+  `BLOOM_AUTH_SECRET` + `bloom_...`. Unified the prefix, also added
+  the missing `BLOOM_FRONTEND_KEY` line that `server.ts` reads but
+  was never written. Added bans for `VOILA_<NAME>` and
+  `{{VOILA_<NAME>}}` patterns to `check-doc-drift.mjs` so this
+  cannot regress silently.
+- **Prisma version mismatch in `userapp` template.** `prisma@^5.22.0`
+  was paired with `@prisma/client@^6.16.2`, producing a runtime warning
+  and risking generator/client divergence. Aligned both to `^6.16.2`.
+- **Silent `import()` failures in `api-router.ts`.** All three
+  api-router variants (`userapp`, `desktop-basicapp`, `desktop-userapp`)
+  swallowed route-import errors, so a missing env var or a syntax error
+  in a feature route produced a generic "no features loaded" warning
+  with no cause attached. Now every route-load failure is rendered as
+  an actionable, one-glance message:
+  - `AppKitError` instances (and plain `Error`s whose message starts
+    with `[@bloomneo/appkit/<module>]`) are recognized as appkit errors;
+    the formatter extracts the module name + embedded docs URL and
+    surfaces them on their own lines next to the offending file path.
+  - Node's `Cannot find module '<pkg>'` becomes a one-liner with a
+    ready-to-run `npm install <pkg>` suggestion.
+  - `SyntaxError`s name the file explicitly.
+  - Every branch emits via `loggerClass.get('api-router').error(...)`
+    with structured metadata (`feature`, `file`, `appkitModule`,
+    `appkitCode`, `docsUrl`) so log aggregators can index the fields.
+  Candidate route files are resolved with `existsSync` before import,
+  so we no longer try both `.ts` and `.js` and conflate "wrong
+  extension" with "real load error".
+- **Post-scaffold next-steps were missing the Postgres prereq and the
+  `prisma generate` step.** `npm install` used to finish without
+  generating the Prisma client, so the first `npm run dev` crashed on
+  the `@prisma/client` import. `userapp`'s `postinstall` now chains
+  `prisma generate` after doc hydration (falls back gracefully if the
+  Prisma CLI is unavailable), and the CLI's "Next steps" output calls
+  out the PostgreSQL requirement and the canonical `db:push` / `db:seed`
+  / `dev` sequence.
+
 ## [4.0.0] - 2026-04-17
 
 Maps bloom templates to `@bloomneo/appkit@4.0.0` now that appkit 4.0

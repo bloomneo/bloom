@@ -170,7 +170,7 @@ function generateRandomSecret(prefix = '', length = 32) {
 /**
  * Create .env file with random values for userapp template
  */
-function createUserappEnvFile(projectName, verbose = false) {
+function createUserappEnvFile(projectName, verbose = false, templateType = 'userapp') {
   try {
     const envPath = './.env';
 
@@ -178,8 +178,32 @@ function createUserappEnvFile(projectName, verbose = false) {
     const jwtSecret = generateRandomSecret('jwt_', 48);
     const authSecret = generateRandomSecret('auth_', 36);
     const defaultPassword = generateRandomSecret('', 12);
-    const frontendKey = generateRandomSecret('voila_', 24);
+    const frontendKey = generateRandomSecret('bloom_', 24);
     const sessionSecret = generateRandomSecret('session_', 32);
+
+    // adminapp adds a few feature flags. Keeping them in one trailing block
+    // so the core .env stays familiar to userapp users and the admin extras
+    // are clearly grouped. Defaults are sensible out of the box; each flag
+    // has a comment pointing at the code that reads it.
+    const adminBlock = templateType === 'adminapp'
+      ? `
+# --- adminapp feature flags ---------------------------------------------
+# Allowed role:level pairs. Parsed by src/api/features/admin/admin.roles.ts
+# on server boot. Format: comma-separated, each pair "role:level".
+# The default covers a standard admin/moderator/viewer split.
+ADMIN_USER_ROLES="admin:system,moderator:manage,viewer:basic"
+
+# Master switch for the audit log. When false, auditService.logAudit() is a
+# no-op — useful for early development. Read by audit.service.ts.
+ADMIN_ENABLE_AUDIT_LOG=true
+
+# Comma-separated list of dashboard widget keys to render on /admin.
+# Widget implementations live in src/web/features/admin/pages/dashboard.tsx.
+# Remove a key to hide a widget; add a new key after registering it there.
+ADMIN_DASHBOARD_WIDGETS="users,signups,activity"
+`
+      : '';
+
 
     // Create .env content from template
     const envContent = `# Database Configuration
@@ -219,10 +243,16 @@ VITE_API_URL=http://localhost:3000
 # VITE_API_URL=https://${projectName}.fly.dev
 
 VITE_APP_NAME="${projectName}"
-# Vite Environment Variables (Frontend)
+# Vite Environment Variables (Frontend — exposed to the browser)
 VITE_FRONTEND_KEY=${frontendKey}
 
-VOILA_AUTH_SECRET=${authSecret}
+# AppKit auth — server-side JWT signing secret. @bloomneo/appkit reads this
+# at authClass.get() time. Rotating invalidates every existing token.
+BLOOM_AUTH_SECRET=${authSecret}
+
+# AppKit frontend-key gate — server-side check that requests came from the
+# expected Vite build. Pair with VITE_FRONTEND_KEY above.
+BLOOM_FRONTEND_KEY=${frontendKey}
 
 DEFAULT_USER_PASSWORD=${defaultPassword}
 
@@ -237,7 +267,7 @@ LOG_TO_FILE=true
 # Session Configuration
 SESSION_SECRET="${sessionSecret}"
 SESSION_MAX_AGE=86400000
-`;
+${adminBlock}`;
 
     writeFileSync(envPath, envContent);
     console.log('🔑 Generated .env file with secure random values');
@@ -291,6 +321,8 @@ Usage:
 Templates:
   basicapp            Basic app with routing and features (default)
   userapp             User management with auth, roles, and admin panel
+  adminapp            Admin console — userapp + audit log, settings, dashboard,
+                        mobile bottom-nav, public marketing + legal pages
   desktop-basicapp    Electron desktop app with FBCA (cross-platform)
   desktop-userapp     Desktop user management with SQLite and PIN recovery
   mobile-basicapp     Mobile app for iOS/Android with Capacitor (UI-only)
@@ -320,7 +352,7 @@ if (command === 'create') {
   }
 
   // Validate template type
-  const validTemplates = ['basicapp', 'userapp', 'desktop-basicapp', 'desktop-userapp', 'mobile-basicapp'];
+  const validTemplates = ['basicapp', 'userapp', 'adminapp', 'desktop-basicapp', 'desktop-userapp', 'mobile-basicapp'];
   if (!validTemplates.includes(templateType)) {
     console.error(`❌ Invalid template "${templateType}". Available templates: ${validTemplates.join(', ')}`);
     process.exit(1);
@@ -364,28 +396,36 @@ if (command === 'create') {
     console.log('🚀 Creating Bloom fullstack application...');
     if (verbose) console.log('🔍 [DEBUG] Copying Bloom template files...');
 
-    // Generate frontend key for userapp template processing
+    // Generate frontend key for userapp/adminapp. adminapp is a superset of
+    // userapp (auth + admin console on top) so it needs the same secret.
+    // `bloom_` prefix matches the @bloomneo ecosystem convention.
     let extraReplacements = {};
-    if (templateType === 'userapp') {
-      const frontendKey = generateRandomSecret('voila_', 24);
+    if (templateType === 'userapp' || templateType === 'adminapp') {
+      const frontendKey = generateRandomSecret('bloom_', 24);
       extraReplacements['{{VITE_FRONTEND_KEY}}'] = frontendKey;
     }
 
-    // Generate secrets for desktop-userapp template
+    // Generate secrets for desktop-userapp template. The placeholder name
+    // matches what desktop-userapp/.env.example.template actually uses
+    // (`{{BLOOM_AUTH_SECRET}}`). A pre-4.0.1 mismatch (template had the
+    // right placeholder but this code replaced the old-scope name) meant
+    // the placeholder was never filled and appkit auth broke.
     if (templateType === 'desktop-userapp') {
       const jwtSecret = generateRandomSecret('jwt_', 48);
       const authSecret = generateRandomSecret('auth_', 36);
       extraReplacements['{{JWT_SECRET}}'] = jwtSecret;
-      extraReplacements['{{VOILA_AUTH_SECRET}}'] = authSecret;
+      extraReplacements['{{BLOOM_AUTH_SECRET}}'] = authSecret;
     }
 
     // Copy complete Bloom template (includes both frontend and backend)
     copyBloomTemplate(templateType, verbose, extraReplacements);
 
-    // Create .env file with random values for userapp
-    if (templateType === 'userapp') {
+    // Create .env file with random values for userapp + adminapp.
+    // adminapp uses the same env shape (plus ADMIN_* flags) so it shares
+    // the userapp env-file generator.
+    if (templateType === 'userapp' || templateType === 'adminapp') {
       const actualProjectName = projectName === '.' ? process.cwd().split('/').pop() : projectName;
-      createUserappEnvFile(actualProjectName, verbose);
+      createUserappEnvFile(actualProjectName, verbose, templateType);
     }
 
     if (skipInstall) {
@@ -431,6 +471,21 @@ if (command === 'create') {
   npm start           # Start production server
 
 💡 Default admin login: admin@example.com / admin123
+`);
+      } else if (templateType === 'adminapp') {
+        console.log(`
+✅ Bloom adminapp installed successfully!
+
+📋 Setup steps:
+  1. Edit .env with your database settings (auto-generated with secure secrets)
+  2. npx prisma db push           # Setup database
+  3. npm run db:seed             # Add sample data
+
+🚀 Development:
+  npm run dev          # Both API (3000) + Web (5173)
+
+🔐 First login:        admin@example.com / admin123
+🧩 Feature flags:      see ADMIN_* block in .env
 `);
       } else if (templateType === 'desktop-basicapp') {
         console.log(`
@@ -529,10 +584,11 @@ if (command === 'create') {
 
 Next steps:
   cd ${projectName}
-  # Edit .env with your database settings (auto-generated with secure secrets)
-  npx prisma db push              # Setup database
-  npm run db:seed                # Add sample data
-  npm run dev                    # Start development
+  # 1. Ensure PostgreSQL is running locally (or update DATABASE_URL in .env)
+  # 2. Apply schema + seed data + start dev servers:
+  npm run db:push                # Create tables in your database
+  npm run db:seed                # Add sample data (optional)
+  npm run dev                    # Start API (3000) + Web (5173)
 
 🚀 Development options:
   npm run dev          # Both API (3000) + Web (5173)
@@ -544,6 +600,37 @@ Next steps:
   npm start           # Start production server
 
 💡 Default admin login: admin@example.com / admin123
+`);
+      } else if (templateType === 'adminapp') {
+        console.log(`
+✅ Bloom adminapp project ${projectName} created successfully!
+
+Next steps:
+  cd ${projectName}
+  # 1. Ensure PostgreSQL is running locally (or update DATABASE_URL in .env)
+  # 2. Apply schema + seed data + start dev servers:
+  npm run db:push                # Create tables in your database
+  npm run db:seed                # Add sample data (optional)
+  npm run dev                    # Start API (3000) + Web (5173)
+
+🏢 What's inside:
+  Web (public):  /, /about, /contact, /terms, /privacy, /refund, /cancellation
+  Web (app):     /login, /register, /account
+  Web (admin):   /admin, /admin/users, /admin/audit, /admin/settings
+  API:           /api/auth, /api/user, /api/audit, /api/settings, /api/admin
+
+🚀 Development:
+  npm run dev          # Both API (3000) + Web (5173)
+  npm run dev:api      # Backend only
+  npm run dev:web      # Frontend only
+
+🏗️ Production:
+  npm run build        # Build for production
+  npm start           # Start production server
+
+🔐 First login:        admin@example.com / admin123
+🧩 Feature flags:      see ADMIN_* block in .env
+📱 Mobile:             admin sidebar becomes a bottom tab bar < 768px
 `);
       } else if (templateType === 'desktop-basicapp') {
         console.log(`

@@ -1,0 +1,30 @@
+# fly.toml app configuration file generated for {{PROJECT_NAME}}
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = '{{PROJECT_NAME}}'
+primary_region = 'bom'
+
+[build]
+  [build.args]
+    VITE_API_URL = "https://{{PROJECT_NAME}}.fly.dev"
+    VITE_APP_NAME = "{{PROJECT_NAME}}"
+    VITE_FRONTEND_KEY = "{{VITE_FRONTEND_KEY}}"
+
+# Uncomment the following to enable automatic database migrations on deploy
+# [deploy]
+#   release_command = 'npx prisma db push --accept-data-loss'
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ['app']
+
+[[vm]]
+  memory = '1gb'
+  cpu_kind = 'shared'
+  cpus = 1

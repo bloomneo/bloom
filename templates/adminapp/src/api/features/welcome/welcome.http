@@ -1,0 +1,45 @@
+###
+# Welcome Feature HTTP Tests
+# @file src/api/features/welcome/welcome.http
+#
+# Test welcome API endpoints for demo application
+# These are simple endpoints to demonstrate AppKit integration
+###
+
+@baseUrl = http://localhost:3000
+@frontendKey = bloom_rpqek3wa3mamvtdkiv378
+
+### 1. Basic welcome message
+GET {{baseUrl}}/api/welcome
+X-Frontend-Key: {{frontendKey}}
+
+### 2. Personalized welcome message
+GET {{baseUrl}}/api/welcome/John
+X-Frontend-Key: {{frontendKey}}
+
+### 3. Test with special characters
+GET {{baseUrl}}/api/welcome/José
+X-Frontend-Key: {{frontendKey}}
+
+### 4. Test with long name (should work)
+GET {{baseUrl}}/api/welcome/Christopher
+X-Frontend-Key: {{frontendKey}}
+
+### 5. Test with very long name (should fail - over 100 chars)
+GET {{baseUrl}}/api/welcome/ThisIsAVeryLongNameThatExceedsTheOneHundredCharacterLimitAndShouldTriggerAValidationError
+X-Frontend-Key: {{frontendKey}}
+
+### 6. Test without frontend key (should work in development)
+GET {{baseUrl}}/api/welcome
+
+### 7. Test with wrong frontend key (should fail in production)
+GET {{baseUrl}}/api/welcome
+X-Frontend-Key: wrong_key_123
+
+###
+# Expected Responses:
+# 1-4: 200 with welcome message and timestamp
+# 5: 400 with validation error "Name must be less than 100 characters"
+# 6: 200 in dev, 401/403 in production
+# 7: 401/403 in production, 200 in dev
+###

@@ -13,6 +13,7 @@ import { fileURLToPath, pathToFileURL } from 'url';
 import { dirname, join } from 'path';
 import { readdir } from 'fs/promises';
 import { existsSync } from 'fs';
+import { AppKitError } from '@bloomneo/appkit';
 import { loggerClass } from '@bloomneo/appkit/logger';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -45,6 +46,127 @@ function getFeaturesPath(): string {
   return resourcesPath;
 }
 
+// Recognize an appkit-originated error.
+//
+// `instanceof AppKitError` is the correct check on paper, but in practice
+// (a) Node's dynamic `import()` can break the prototype chain when a module
+// throws at init, and (b) several appkit modules still throw plain `Error`s
+// with pre-formatted `[@bloomneo/appkit/<module>] ...` messages instead of
+// typed `AppKitError` subclasses. So we treat either as "this is appkit's
+// error to explain" and pull the structured fields from whichever side
+// provides them.
+type AppKitErrorish = {
+  message: string;
+  module?: string;
+  code?: string;
+  docsUrl?: string;
+};
+
+function asAppKitErrorish(error: unknown): AppKitErrorish | null {
+  if (!(error instanceof Error)) return null;
+  const anyErr = error as Error & Partial<AppKitErrorish>;
+
+  if (error instanceof AppKitError) {
+    return {
+      message: error.message,
+      module: error.module,
+      code: error.code,
+      docsUrl: error.docsUrl,
+    };
+  }
+
+  if (typeof anyErr.module === 'string' && typeof anyErr.code === 'string') {
+    return {
+      message: error.message,
+      module: anyErr.module,
+      code: anyErr.code,
+      docsUrl: anyErr.docsUrl,
+    };
+  }
+
+  const prefixMatch = error.message.match(/^\[@bloomneo\/appkit\/([^\]]+)\]/);
+  if (prefixMatch) {
+    const urlMatch = error.message.match(/See:\s*(\S+)/);
+    return {
+      message: error.message,
+      module: prefixMatch[1],
+      code: undefined,
+      docsUrl: urlMatch?.[1],
+    };
+  }
+
+  return null;
+}
+
+// Turn a route-load failure into an actionable one-glance message. The rule:
+// never swallow the error, never JSON-dump it, always show the developer
+// exactly what to change.
+function formatRouteLoadError(
+  featureName: string,
+  routeFile: string,
+  error: unknown,
+): string {
+  const appkit = asAppKitErrorish(error);
+  if (appkit) {
+    const body = appkit.message.replace(/\s*See:\s*\S+\s*$/, '').trim();
+    const lines = [
+      `❌ Failed to load "${featureName}" route:`,
+      `   ${body}`,
+    ];
+    if (appkit.docsUrl) lines.push(`   Docs: ${appkit.docsUrl}`);
+    lines.push(`   File: ${routeFile}`);
+    return lines.join('\n');
+  }
+
+  const msg = error instanceof Error ? error.message : String(error);
+
+  const moduleMatch = msg.match(/Cannot find (?:module|package) ['"]([^'"]+)['"]/);
+  if (moduleMatch) {
+    return [
+      `❌ Failed to load "${featureName}" route:`,
+      `   Module not found: ${moduleMatch[1]}`,
+      `   Fix: run \`npm install ${moduleMatch[1]}\` (or check the import path in ${routeFile})`,
+    ].join('\n');
+  }
+
+  if ((error instanceof Error && error.name === 'SyntaxError') || /SyntaxError/.test(msg)) {
+    return [
+      `❌ Failed to load "${featureName}" route:`,
+      `   Syntax error in ${routeFile}`,
+      `   ${msg}`,
+    ].join('\n');
+  }
+
+  return [
+    `❌ Failed to load "${featureName}" route (${routeFile}):`,
+    `   ${msg}`,
+  ].join('\n');
+}
+
+/**
+ * Build structured log metadata for a route-load failure. Pairs with the
+ * human-readable string from `formatRouteLoadError` — humans read the
+ * formatted message in stdout, log aggregators index these fields.
+ */
+function routeLoadErrorMeta(
+  featureName: string,
+  routeFile: string,
+  error: unknown,
+): Record<string, unknown> {
+  const base: Record<string, unknown> = {
+    feature: featureName,
+    file: routeFile,
+    errorName: error instanceof Error ? error.name : typeof error,
+  };
+  const appkit = asAppKitErrorish(error);
+  if (appkit) {
+    if (appkit.module) base.appkitModule = appkit.module;
+    if (appkit.code) base.appkitCode = appkit.code;
+    if (appkit.docsUrl) base.docsUrl = appkit.docsUrl;
+  }
+  return base;
+}
+
 export async function createApiRouter() {
   const router = express.Router();
   const discoveredRoutes: string[] = [];
@@ -65,50 +187,52 @@ export async function createApiRouter() {
   });
 
   try {
-    // Auto-discover feature routes
     const featuresPath = getFeaturesPath();
     logger.info('🔍 Features path:', { featuresPath });
-    logger.info('🔍 __dirname:', { __dirname });
-    logger.info('🔍 process.cwd():', { cwd: process.cwd() });
-    logger.info('🔍 process.resourcesPath:', { resourcesPath: process.resourcesPath });
-    logger.info('🔍 Features path exists:', { exists: existsSync(featuresPath) });
+
+    if (!existsSync(featuresPath)) {
+      logger.warn('⚠️ No features directory found', { featuresPath });
+      return router;
+    }
 
     const features = await readdir(featuresPath, { withFileTypes: true });
-
-    logger.info('🔍 Discovering API routes:');
-    logger.info('🔍 Found features:', { features: features.map(f => f.name).join(', ') });
+    logger.info('🔍 Discovering API routes:', {
+      features: features.filter(f => f.isDirectory()).map(f => f.name).join(', '),
+    });
 
     for (const feature of features) {
-      if (feature.isDirectory()) {
-        const featureName = feature.name;
-        // Try .ts first, then .js
-        const routeFiles = [
-          join(featuresPath, featureName, `${featureName}.route.ts`),
-          join(featuresPath, featureName, `${featureName}.route.js`)
-        ];
+      if (!feature.isDirectory()) continue;
+      const featureName = feature.name;
 
-        let loaded = false;
-        for (const routeFile of routeFiles) {
-          try {
-            logger.info('🔍 Trying to load route:', { routeFile });
-            const fileUrl = pathToFileURL(routeFile).href;
-            logger.info('🔍 File URL:', { fileUrl });
-            const { default: featureRouter } = await import(fileUrl);
-            router.use(`/${featureName}`, featureRouter);
-            discoveredRoutes.push(`/${featureName}`);
-            const fileType = routeFile.endsWith('.ts') ? '.ts' : '.js';
-            logger.info(`✅ /api/${featureName} registered`, { route: `${featureName}.route${fileType}` });
-            loaded = true;
-            break;
-          } catch (error: any) {
-            logger.info('⚠️  Failed to load route:', { routeFile, error: error.message, stack: error.stack });
-            // Continue to next file type
-          }
-        }
+      // Resolve the real route file before importing, so any error that
+      // comes out of `import()` is a *real* load error — not a noisy
+      // "Cannot find module" for the extension we weren't using.
+      const candidates = [
+        join(featuresPath, featureName, `${featureName}.route.ts`),
+        join(featuresPath, featureName, `${featureName}.route.js`),
+      ];
+      const routeFile = candidates.find(f => existsSync(f));
 
-        if (!loaded) {
-          logger.warn(`⚠️  Could not load route for feature "${featureName}"`);
-        }
+      if (!routeFile) {
+        logger.warn(
+          `⚠️  Feature "${featureName}" has no route file — expected ` +
+            `${featureName}.route.ts or ${featureName}.route.js in ${featureName}/`,
+        );
+        continue;
+      }
+
+      try {
+        const fileUrl = pathToFileURL(routeFile).href;
+        const { default: featureRouter } = await import(fileUrl);
+        router.use(`/${featureName}`, featureRouter);
+        discoveredRoutes.push(`/${featureName}`);
+        const fileType = routeFile.endsWith('.ts') ? '.ts' : '.js';
+        logger.info(`✅ /api/${featureName} registered`, { route: `${featureName}.route${fileType}` });
+      } catch (error) {
+        logger.error(
+          formatRouteLoadError(featureName, routeFile, error),
+          routeLoadErrorMeta(featureName, routeFile, error),
+        );
       }
     }
 
@@ -116,7 +240,6 @@ export async function createApiRouter() {
 
   } catch (error: any) {
     logger.error('❌ Error discovering features:', error.message);
-    logger.warn('⚠️ No features directory found or error reading it');
   }
 
   return router;

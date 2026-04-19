@@ -287,7 +287,7 @@ Create `.env` file in your project root:
 # Backend Configuration
 PORT=3000
 NODE_ENV=development
-VOILA_FRONTEND_KEY=your-secret-key
+BLOOM_FRONTEND_KEY=your-secret-key
 
 # API Configuration
 VITE_API_URL=http://localhost:3000

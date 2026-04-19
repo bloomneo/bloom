@@ -132,6 +132,31 @@ test('userapp scaffolds with appkit + uikit + Prisma + auth', () => {
   }
 });
 
+test('adminapp scaffolds with appkit + uikit + Prisma + admin features', () => {
+  const { tmp, projectRoot } = scaffold('adminapp');
+  try {
+    assertCommonShape(projectRoot, 'smoke-adminapp', { expectAppkit: true });
+    assert.ok(existsSync(join(projectRoot, 'src', 'web')), 'src/web exists');
+    assert.ok(existsSync(join(projectRoot, 'src', 'api')), 'src/api exists');
+    // adminapp ships a prisma dir (inherits from userapp + adds AuditLog/AppSetting)
+    assert.ok(
+      existsSync(join(projectRoot, 'prisma')),
+      'prisma/ dir exists for adminapp',
+    );
+    // schema must declare the two adminapp-only models so the migration
+    // actually produces the tables the admin console reads from.
+    const schema = readFileSync(
+      join(projectRoot, 'prisma', 'schema.prisma'),
+      'utf8',
+    );
+    assert.match(schema, /model AuditLog/, 'prisma schema has AuditLog model');
+    assert.match(schema, /model AppSetting/, 'prisma schema has AppSetting model');
+    assert.match(schema, /@default\(cuid\(\)\)/, 'User primary key is cuid');
+  } finally {
+    rmSync(tmp, { recursive: true, force: true });
+  }
+});
+
 test('desktop-basicapp scaffolds with Electron + embedded backend', () => {
   const { tmp, projectRoot } = scaffold('desktop-basicapp');
   try {

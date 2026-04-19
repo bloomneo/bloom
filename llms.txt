@@ -1,4 +1,4 @@
-# @bloomneo/bloom v4.0.0
+# @bloomneo/bloom v4.0.1
 
 Scaffolding CLI for full-stack apps combining `@bloomneo/appkit` (Express
 backend) and `@bloomneo/uikit` (React frontend) with Feature-Based
@@ -116,9 +116,11 @@ Adding a new page = creating a file. Don't edit the page-router.
 
 ## Migration
 
-Current release: **4.0.0**. Jumping from any pre-4 version needs the
-breaking ecosystem-pin bumps below. Existing scaffolded projects keep
-working against their pinned versions — nothing auto-upgrades.
+Current release: **4.0.1** (4.0.0 published moments earlier; 4.0.1
+is a same-day patch for a scaffolded-app env-var bug). Jumping from
+any pre-4 version needs the breaking ecosystem-pin bumps below.
+Existing scaffolded projects keep working against their pinned
+versions — nothing auto-upgrades.
 
 ### From `@bloomneo/bloom@1.5.x` / 2.x / 3.x → `4.0.0`
 

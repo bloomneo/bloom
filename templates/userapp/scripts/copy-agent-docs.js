@@ -12,7 +12,7 @@
  *   docs/appkit-agents.md       — @bloomneo/appkit AGENTS.md (do/never rules)
  *   docs/uikit.md               — @bloomneo/uikit llms.txt (full API reference)
  *   docs/uikit-agents.md        — @bloomneo/uikit AGENTS.md (do/never rules)
- *   .claude/skills/appkit-*/    — every appkit skill, mounted for auto-discovery
+ *   .claude/skills/appkit-<name>/  — every appkit skill, mounted for auto-discovery
  *   .claude/skills/bloomneo-uikit/ — the uikit skill, mounted for auto-discovery
  *
  * Side-effect: replaces any remaining `{{PROJECT_NAME}}` placeholders in this

@@ -1,0 +1,94 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+//
+// adminapp schema. User primary key is a CUID (short, URL-safe, Prisma
+// native) — matching the framework-wide default adopted in Bloom 4.1.
+// AuditLog.actorId and AppSetting.updatedBy are typed as String? so FK
+// alignment with User.id stays consistent.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 String    @id @default(cuid())
+  email              String    @unique
+  password           String
+  name               String?
+  phone              String?
+  role               String    @default("user")
+  level              String    @default("basic")
+  tenantId           String?
+  isVerified         Boolean   @default(false)
+  isActive           Boolean   @default(true)
+  lastLogin          DateTime?
+  resetToken         String?
+  resetTokenExpiry   DateTime?
+  verificationToken  String?
+  verificationExpiry DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@index([tenantId]) // MANDATORY: AppKit performance index
+  @@map("users")
+}
+
+// Audit log — write-only from the app's perspective. Every admin mutation
+// calls auditService.logAudit(...) in a fire-and-forget manner (never
+// throws, never blocks the main flow). Read by the admin audit page with
+// filters (user, action, entity, date range).
+//
+// `oldValue` / `newValue` are JSON blobs so any mutation shape is
+// loggable. The admin audit page renders them as key-value diffs.
+//
+// TODO: If your app tracks multi-tenant data, add a `tenantId` index like
+// the User model. Skipped here since audit queries are admin-scope by
+// default.
+model AuditLog {
+  id          String   @id @default(cuid())
+  actorId     String?
+  actorType   String   @default("user") // 'user' | 'admin' | 'system'
+  action      String // e.g. 'user.create', 'settings.update', 'login.failure'
+  entityType  String? // e.g. 'user', 'setting', 'session'
+  entityId    String? // stringified — entity PKs may vary by model
+  oldValue    Json?
+  newValue    Json?
+  description String?
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  @@index([actorId])
+  @@index([action])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// App settings — simple key-value store. Strings only; parse at the edge
+// if you need numbers/bools. Keys you set via seed data ship as defaults;
+// users with admin role can edit them at runtime via the settings admin
+// page.
+//
+// The `isPublic` flag controls whether the value is exposed via the
+// unauthenticated /api/settings/public endpoint (used by the marketing
+// site to show business name, support contact, etc.).
+//
+// TODO: If a setting's value gets large or structured (e.g. a
+// feature-flag map), switch `value` to Json and update the
+// getPublicSettings parser.
+model AppSetting {
+  key         String   @id
+  value       String
+  isPublic    Boolean  @default(false)
+  description String?
+  updatedAt   DateTime @updatedAt
+  updatedBy   String?
+
+  @@map("app_settings")
+}

@@ -83,12 +83,14 @@ export const adminService = {
     return {
       users: {
         total: totalUsers,
-        byRole: usersByRole.map((r) => ({
+        byRole: (usersByRole as Array<{
+          role: string;
+          level: string;
+          _count: { _all: number };
+        }>).map((r) => ({
           role: r.role,
           level: r.level,
-          // Prisma types the aggregate field as { _all: number } but the
-          // cast is needed because groupBy's return type is dynamic.
-          count: (r._count as { _all: number })._all,
+          count: r._count._all,
         })),
       },
       signups: {

@@ -23,7 +23,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  PageLayout,
+  Container,
   type NavigationItem,
 } from '@bloomneo/uikit';
 import {
@@ -35,6 +35,7 @@ import {
 } from 'lucide-react';
 import { AuthGuard } from '../../auth';
 import { useAuth } from '../../auth/hooks';
+import { Header } from '../../../shared/components/Header';
 
 interface AdminShellProps {
   /** Tells the sidebar/bottom-nav which tab is active. */
@@ -67,7 +68,7 @@ export const AdminShell: React.FC<AdminShellProps> = ({
   children,
 }) => {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { logout } = useAuth();
 
   // The sign-out tab isn't a route — it invokes the auth hook. Adding it
   // inside the render so it can close over the logout handler without
@@ -84,28 +85,57 @@ export const AdminShell: React.FC<AdminShellProps> = ({
 
   return (
     <AuthGuard requiredRoles={['admin.system', 'moderator.manage']}>
-      <PageLayout scheme="sidebar" tone="clean" size="xl">
-        <PageLayout.Header
-          logo={<span className="text-xl font-bold">Admin</span>}
-          actions={
-            user && (
-              <span className="text-sm text-muted-foreground hidden sm:inline">
-                {user.email}
-              </span>
-            )
-          }
-        />
-        <PageLayout.Content
+      <div className="min-h-screen flex flex-col bg-background text-foreground">
+        {/* Shared Header — same brand bar + theme switcher + sign-out menu
+            the public and dashboard pages use. Consistent chrome across
+            the whole app. The admin-specific nav lives in the sidebar
+            below, not in this header. */}
+        <Header />
+        {/* Container handles the sidebar → bottom-tab swap on mobile. */}
+        <Container
           sidebar="left"
           navigation={navigation}
           currentPath={currentPath}
           onNavigate={(href) => navigate(href)}
-          title={title}
-          breadcrumbs={breadcrumbs}
+          size="xl"
+          className="flex-1"
         >
+          {(title || (breadcrumbs && breadcrumbs.length > 0)) && (
+            <div className="mb-6 space-y-2">
+              {breadcrumbs && breadcrumbs.length > 0 && (
+                <nav
+                  aria-label="Breadcrumb"
+                  className="text-sm text-muted-foreground"
+                >
+                  <ol className="flex flex-wrap items-center gap-1.5">
+                    {breadcrumbs.map((crumb, i) => (
+                      <li key={i} className="flex items-center gap-1.5">
+                        {crumb.href ? (
+                          <a
+                            href={crumb.href}
+                            className="hover:text-foreground transition-colors"
+                          >
+                            {crumb.label}
+                          </a>
+                        ) : (
+                          <span>{crumb.label}</span>
+                        )}
+                        {i < breadcrumbs.length - 1 && (
+                          <span aria-hidden>/</span>
+                        )}
+                      </li>
+                    ))}
+                  </ol>
+                </nav>
+              )}
+              {title && (
+                <h1 className="text-2xl sm:text-3xl font-bold">{title}</h1>
+              )}
+            </div>
+          )}
           {children}
-        </PageLayout.Content>
-      </PageLayout>
+        </Container>
+      </div>
     </AuthGuard>
   );
 };

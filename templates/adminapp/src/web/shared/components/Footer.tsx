@@ -1,26 +1,56 @@
-import React from 'react';
+/**
+ * Shared footer rendered inside every MarketingLayout-wrapped page.
+ * @file src/web/shared/components/Footer.tsx
+ *
+ * Admin pages use AdminShell (not MarketingLayout) and render without
+ * a footer — the bottom-nav takes that real estate on mobile anyway.
+ *
+ * TODO: Swap the hard-coded company name + links for values pulled
+ * from /api/settings/public (business_name, support_email). That way
+ * the footer updates from the admin settings editor.
+ */
+
+import { Link } from 'react-router-dom';
 import { Footer as UIFooter } from '@bloomneo/uikit';
 
-// Configurable Footer Component using UIKit sections
+/**
+ * Public-facing footer link set. Every payment-processor onboarding
+ * form asks for a refund + cancellation URL; this is where those live.
+ * Order: legal first, then contact — legal links get the most clicks
+ * from processor review.
+ */
+const FOOTER_LINKS: Array<{ label: string; to: string }> = [
+  { label: 'About', to: '/about' },
+  { label: 'Contact', to: '/contact' },
+  { label: 'Terms', to: '/terms' },
+  { label: 'Privacy', to: '/privacy' },
+  { label: 'Refund', to: '/refund' },
+  { label: 'Cancellation', to: '/cancellation' },
+];
+
 export const Footer: React.FC = () => {
   return (
     <UIFooter tone="subtle" size="xl">
-      <div className="flex flex-col space-y-4">
-        {/* Branding Section */}
-        <div className="text-center space-y-4">
-          <div className="flex items-center justify-center gap-3">
-            <div className="w-6 h-6 bg-primary rounded flex items-center justify-center text-primary-foreground font-bold text-xs">
-              MY
-            </div>
-            <span className="font-semibold text-foreground">MyApp</span>
-          </div>
+      <div className="flex flex-col gap-6 py-6">
+        {/* Links row — wraps to multiple rows on narrow screens. */}
+        <nav className="flex flex-wrap justify-center gap-x-6 gap-y-2">
+          {FOOTER_LINKS.map((link) => (
+            <Link
+              key={link.to}
+              to={link.to}
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              {link.label}
+            </Link>
+          ))}
+        </nav>
 
-          {/* Copyright Only */}
-          <div className="border-t border-border pt-4">
-            <p className="text-sm text-muted-foreground">
-              © {new Date().getFullYear()} MyApp. All rights reserved.
-            </p>
-          </div>
+        {/* Copyright. Replace "MyApp" with your real brand — see the
+            TODO at the top of this file for how to make it dynamic. */}
+        <div className="border-t pt-4 text-center">
+          <p className="text-sm text-muted-foreground">
+            © {new Date().getFullYear()} MyApp. All rights reserved.
+          </p>
         </div>
       </div>
     </UIFooter>

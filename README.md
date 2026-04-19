@@ -32,7 +32,9 @@ bloom create my-app desktop-basicapp # desktop via Electron
 
 - **basicapp** - Basic fullstack app with routing and features (default)
 - **userapp** - Complete user management with authentication, roles, admin panel, and database
+- **adminapp** - userapp + audit log, settings editor, dashboard, mobile bottom-nav, and public marketing + legal pages
 - **desktop-basicapp** - Cross-platform Electron desktop app with FBCA architecture
+- **desktop-userapp** - Desktop user management with SQLite and PIN recovery
 - **mobile-basicapp** - Native iOS and Android mobile app with Capacitor 7
 
 ## 🚀 Quick Start

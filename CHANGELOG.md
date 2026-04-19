@@ -2,58 +2,141 @@
 
 All notable changes to Bloom Framework will be documented in this file.
 
-## [4.0.1] - 2026-04-16
+## [4.1.0] - 2026-04-19
 
-Bug-fix release covering seven scaffolding issues reported against
-`bloom create <name> userapp`. No breaking changes; pin remains
-`@bloomneo/appkit@^4.0.0` / `@bloomneo/uikit@^2.0.1`.
+Adds the `adminapp` template, adopts CUID as the default User primary
+key across every Prisma-backed template, and repins `@bloomneo/uikit`
+to `^2.1.1` so scaffolded apps pick up the mobile sidebar → bottom-nav
+swap + soft-gray default borders. Also folds the unreleased 4.0.1
+bug fixes into this release — 4.0.1 was never published, its fixes
+ship here.
 
-### Fixed
+### Added — `adminapp` template
+
+New template positioned between `userapp` and a fully custom admin
+console. Ships with everything needed to open a real admin UI on day
+one — no feature additions required:
+
+**Backend** (`src/api/features/`)
+- `audit/` — fire-and-forget audit log service + admin list endpoint
+  (`GET /api/audit/list`). Writes never throw and never block the main
+  request; `ADMIN_ENABLE_AUDIT_LOG=false` turns logAudit() into a
+  no-op for local development.
+- `settings/` — key-value `AppSetting` store with two surfaces:
+  `GET /api/settings/public` (typed, camelCase, unauthenticated) for
+  the marketing site and `/api/settings/admin/*` (list + PUT) for the
+  admin editor. Every write fires an audit event.
+- `admin/` — single-shot dashboard summary aggregate
+  (`GET /api/admin/summary`) + role allow-list endpoint
+  (`GET /api/admin/roles`) driven by the `ADMIN_USER_ROLES` env var.
+  Includes `admin.roles.ts` parser with safe defaults and
+  malformed-entry handling.
+
+**Frontend** (`src/web/features/`)
+- `admin/components/AdminShell.tsx` — `PageLayout scheme="sidebar"`
+  wrapper with `AuthGuard` (admin.system + moderator.manage). Desktop
+  renders a left sidebar; mobile renders a bottom tab bar + "More"
+  sheet via uikit 2.1.1.
+- `admin/pages/index.tsx` — dashboard with widget grid (users count,
+  30-day signups with daily series, recent activity). Widget set is
+  driven by `VITE_ADMIN_DASHBOARD_WIDGETS` so ops can turn widgets
+  on/off per deploy without a code change.
+- `admin/pages/audit.tsx` — filter + table, 300 ms debounce, skeleton
+  + empty states.
+- `admin/pages/settings.tsx` — inline edit with optimistic save and
+  toast feedback; groups rows by key prefix.
+- `main/components/MarketingLayout.tsx` — public-page shell (Header +
+  main + Footer). Distinct from AdminShell; no PageLayout — the
+  shared Header handles its own nav.
+- `main/pages/` — `index` (marketing homepage with hero + 3-feature
+  grid + CTA, placeholder copy), `about`, `contact` (no form by
+  default; TODO points to how to add one), `privacy`, `terms`,
+  `refund`, `cancellation`. Legal pages open with a PLACEHOLDER
+  warning and TODO markers for jurisdiction review.
+- `shared/components/Footer.tsx` updated with all six legal links.
+
+**Prisma models added to `prisma/schema.prisma`**
+- `AuditLog` — actorId + actorType + action + entityType/entityId +
+  oldValue/newValue JSON + ipAddress/userAgent. Indexed on actorId,
+  action, (entityType, entityId), createdAt.
+- `AppSetting` — key (PK), value, isPublic flag, description,
+  updatedBy, updatedAt.
+
+**Env vars (seeded into `.env` at scaffold time)**
+- `ADMIN_USER_ROLES="admin:system,moderator:manage,viewer:basic"` —
+  parsed allow-list for role:level combos
+- `ADMIN_ENABLE_AUDIT_LOG=true` — master switch
+- `ADMIN_DASHBOARD_WIDGETS="users,signups,activity"` — widget list
+
+**Scaffolder wiring** (`bin/bloom.js`)
+- `adminapp` added to the validTemplates list + `--help` output
+- Secret generation shared with `userapp` (BLOOM_AUTH_SECRET,
+  BLOOM_FRONTEND_KEY); `.env` gains the ADMIN_* block
+- Post-scaffold "Next steps" block calls out PostgreSQL prereq,
+  default admin login (`admin@example.com / admin123`), feature
+  flags, and the mobile bottom-nav behavior
+- New scaffold test asserts the three Prisma models and
+  `@default(cuid())` on User
+
+### Added — CUID primary key across every User-bearing template
+
+`User.id` is now `String @id @default(cuid())` in adminapp and userapp
+(the two Prisma-backed templates). ~75 type signatures updated across
+auth + user features (`userId: number` → `string`). User IDs no
+longer leak insertion order to the network. desktop-userapp keeps its
+SQLite `INTEGER` primary key for now — its User IDs never leave the
+device, so the risk profile is different.
+
+Appkit was already flexible (`LoginTokenPayload.userId: string |
+number`), so JWT generation + verification work with CUID strings
+without any appkit change.
+
+### Changed — `@bloomneo/uikit` pin bumped to `^2.1.1`
+
+Every `package.json.template` across all six templates now pins
+`^2.1.1` (was `^2.0.1`). This picks up:
+- sidebar → bottom-nav on mobile for `<PageLayout.Content sidebar="…">`
+- soft-gray default borders (Tailwind v4 had regressed this to near-black)
+
+New scaffolds get both automatically. Existing scaffolds stay on
+whatever pin they already locked — nothing auto-upgrades.
+
+### Fixed — folded from the unreleased 4.0.1
+
+Seven scaffolding issues reported against `bloom create <name> userapp`
+that were waiting in the tree:
 
 - **`copy-agent-docs.js` JSDoc block closing prematurely.** The header
   comment contained the literal sequence `*/` inside a path example
-  (`.claude/skills/appkit-*/`), closing the `/**` block early and making
-  `npm install` fail with a `SyntaxError` in every freshly scaffolded
-  project. Rewrote the example path using `<name>` instead of `*`.
-  Synced the fix across all five template copies.
-- **`.env` secrets still used the pre-1.5 `voila_` prefix.** The
-  scaffold was generating `VOILA_AUTH_SECRET` + `voila_...` values
-  while `appkit@4.x` and every `.env.example.template` now expect
-  `BLOOM_AUTH_SECRET` + `bloom_...`. Unified the prefix, also added
-  the missing `BLOOM_FRONTEND_KEY` line that `server.ts` reads but
-  was never written. Added bans for `VOILA_<NAME>` and
-  `{{VOILA_<NAME>}}` patterns to `check-doc-drift.mjs` so this
-  cannot regress silently.
+  (`.claude/skills/appkit-*/`), closing the `/**` block early and
+  making `npm install` fail with a `SyntaxError` in every freshly
+  scaffolded project. Fix synced across all five template copies.
+- **`.env` secrets still used the pre-1.5 `voila_` prefix.** Scaffold
+  produced `VOILA_AUTH_SECRET` + `voila_...` values while
+  `appkit@4.x` and every `.env.example.template` now expect
+  `BLOOM_AUTH_SECRET` + `bloom_...`. Unified the prefix, added the
+  missing `BLOOM_FRONTEND_KEY` line that `server.ts` reads but was
+  never written. `check-doc-drift.mjs` now bans `VOILA_<NAME>` and
+  `{{VOILA_<NAME>}}` patterns so this cannot regress silently.
 - **Prisma version mismatch in `userapp` template.** `prisma@^5.22.0`
-  was paired with `@prisma/client@^6.16.2`, producing a runtime warning
-  and risking generator/client divergence. Aligned both to `^6.16.2`.
-- **Silent `import()` failures in `api-router.ts`.** All three
-  api-router variants (`userapp`, `desktop-basicapp`, `desktop-userapp`)
-  swallowed route-import errors, so a missing env var or a syntax error
-  in a feature route produced a generic "no features loaded" warning
-  with no cause attached. Now every route-load failure is rendered as
-  an actionable, one-glance message:
-  - `AppKitError` instances (and plain `Error`s whose message starts
-    with `[@bloomneo/appkit/<module>]`) are recognized as appkit errors;
-    the formatter extracts the module name + embedded docs URL and
-    surfaces them on their own lines next to the offending file path.
-  - Node's `Cannot find module '<pkg>'` becomes a one-liner with a
-    ready-to-run `npm install <pkg>` suggestion.
-  - `SyntaxError`s name the file explicitly.
-  - Every branch emits via `loggerClass.get('api-router').error(...)`
-    with structured metadata (`feature`, `file`, `appkitModule`,
-    `appkitCode`, `docsUrl`) so log aggregators can index the fields.
-  Candidate route files are resolved with `existsSync` before import,
-  so we no longer try both `.ts` and `.js` and conflate "wrong
-  extension" with "real load error".
-- **Post-scaffold next-steps were missing the Postgres prereq and the
-  `prisma generate` step.** `npm install` used to finish without
-  generating the Prisma client, so the first `npm run dev` crashed on
-  the `@prisma/client` import. `userapp`'s `postinstall` now chains
-  `prisma generate` after doc hydration (falls back gracefully if the
-  Prisma CLI is unavailable), and the CLI's "Next steps" output calls
-  out the PostgreSQL requirement and the canonical `db:push` / `db:seed`
-  / `dev` sequence.
+  was paired with `@prisma/client@^6.16.2`, producing a runtime
+  warning. Aligned both to `^6.16.2`.
+- **Silent `import()` failures in `api-router.ts` variants.** All
+  three routers (userapp, desktop-basicapp, desktop-userapp)
+  swallowed route-import errors. Every catch now renders an
+  actionable one-glance message: `AppKitError` instances surface
+  module + docs URL; Node's `Cannot find module` turns into a
+  `npm install <pkg>` suggestion; `SyntaxError`s name the file.
+  Structured metadata attached to every `logger.error` call for
+  log-aggregator indexing.
+- **Post-scaffold next-steps missing Postgres prereq + `prisma
+  generate`.** `npm install` used to finish without generating the
+  Prisma client, so the first `npm run dev` crashed on the
+  `@prisma/client` import. `userapp`'s `postinstall` now chains
+  `prisma generate` after doc hydration (falls back gracefully if
+  the Prisma CLI is unavailable); scaffolder output calls out the
+  PostgreSQL requirement and canonical `db:push` → `db:seed` → `dev`
+  sequence.
 
 ## [4.0.0] - 2026-04-17
 

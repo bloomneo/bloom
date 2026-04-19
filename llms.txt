@@ -1,4 +1,4 @@
-# @bloomneo/bloom v4.0.1
+# @bloomneo/bloom v4.1.0
 
 Scaffolding CLI for full-stack apps combining `@bloomneo/appkit` (Express
 backend) and `@bloomneo/uikit` (React frontend) with Feature-Based
@@ -52,6 +52,7 @@ Prints the installed bloom version. Exits 0.
 |---|---|---|---|---|
 | `basicapp` | Web | Express (appkit) | — | `npm run dev` |
 | `userapp` | Web | Express + Prisma + auth | Prisma (Postgres/SQLite) | `npx prisma db push && npm run dev` |
+| `adminapp` | Web | Express + Prisma + auth + admin console | Prisma (Postgres) | `npx prisma db push && npm run dev` |
 | `desktop-basicapp` | Desktop (Electron) | Embedded Express | — | `npm run dev` |
 | `desktop-userapp` | Desktop (Electron) | Embedded Express | better-sqlite3 | `npm run dev` |
 | `mobile-basicapp` | Mobile (Capacitor) | **None (UI-only)** | — | `npx cap sync ios\|android` + native build |
@@ -60,8 +61,9 @@ Prints the installed bloom version. Exits 0.
 
 - **Plain fullstack web app** → `basicapp`
 - **Fullstack + auth + users** → `userapp`
+- **Admin console on top of userapp** (audit log, settings editor, dashboard, mobile bottom-nav, public marketing + legal pages) → `adminapp`
 - **Cross-platform desktop** → `desktop-basicapp` or `desktop-userapp`
-- **Native mobile (no backend)** → `mobile-basicapp` (needs a `basicapp` / `userapp` deployed separately)
+- **Native mobile (no backend)** → `mobile-basicapp` (needs a `basicapp` / `userapp` / `adminapp` deployed separately)
 
 ---
 
@@ -116,11 +118,15 @@ Adding a new page = creating a file. Don't edit the page-router.
 
 ## Migration
 
-Current release: **4.0.1** (4.0.0 published moments earlier; 4.0.1
-is a same-day patch for a scaffolded-app env-var bug). Jumping from
-any pre-4 version needs the breaking ecosystem-pin bumps below.
-Existing scaffolded projects keep working against their pinned
-versions — nothing auto-upgrades.
+Current release: **4.1.0**. Adds the `adminapp` template + a
+system-wide cuid primary key for User + folds the pending 4.0.1 bug
+fixes (copy-agent-docs JSDoc fix, api-router structured errors,
+VOILA_→BLOOM_ env migration, prisma version alignment) into one
+release. Templates repinned to `@bloomneo/uikit@^2.1.1` for the
+mobile sidebar → bottom-nav behavior. Jumping from any pre-4 version
+needs the breaking ecosystem-pin bumps below. Existing scaffolded
+projects keep working against their pinned versions — nothing
+auto-upgrades.
 
 ### From `@bloomneo/bloom@1.5.x` / 2.x / 3.x → `4.0.0`
 

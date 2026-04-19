@@ -25,6 +25,7 @@ import {
   TableRow,
 } from '@bloomneo/uikit';
 import { AdminShell } from '../components/AdminShell';
+import { adminFetchJson } from '../lib/admin-api';
 
 interface AuditRow {
   id: string;
@@ -60,16 +61,17 @@ export default function AdminAudit() {
   async function load(current: Filters) {
     setError(null);
     try {
-      const params = new URLSearchParams();
-      if (current.action) params.set('action', current.action);
-      if (current.entityType) params.set('entityType', current.entityType);
-      if (current.actorId) params.set('actorId', current.actorId);
-      const res = await fetch(`/api/audit/list?${params.toString()}`, {
-        credentials: 'include',
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      setRows(data.items as AuditRow[]);
+      const data = await adminFetchJson<{ items: AuditRow[] }>(
+        '/api/audit/list',
+        {
+          query: {
+            action: current.action,
+            entityType: current.entityType,
+            actorId: current.actorId,
+          },
+        },
+      );
+      setRows(data.items);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load');
       setRows([]);

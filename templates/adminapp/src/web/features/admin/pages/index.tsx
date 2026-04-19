@@ -29,6 +29,7 @@ import {
   TableRow,
 } from '@bloomneo/uikit';
 import { AdminShell } from '../components/AdminShell';
+import { adminFetchJson } from '../lib/admin-api';
 
 /**
  * Matches the server-side `AdminSummary` shape. Kept inline so this page
@@ -77,16 +78,14 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch('/api/admin/summary', { credentials: 'include' })
-      .then(async (res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json();
-      })
-      .then((data: AdminSummary) => {
+    adminFetchJson<AdminSummary>('/api/admin/summary')
+      .then((data) => {
         if (!cancelled) setSummary(data);
       })
-      .catch((err) => {
-        if (!cancelled) setError(err.message ?? 'Failed to load');
+      .catch((err: unknown) => {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : 'Failed to load');
+        }
       });
     return () => {
       cancelled = true;

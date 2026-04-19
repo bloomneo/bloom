@@ -30,6 +30,7 @@ import {
   toast,
 } from '@bloomneo/uikit';
 import { AdminShell } from '../components/AdminShell';
+import { adminFetchJson } from '../lib/admin-api';
 
 interface SettingRow {
   key: string;
@@ -58,13 +59,11 @@ export default function AdminSettings() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch('/api/settings/admin/list', { credentials: 'include' })
-      .then(async (res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json();
-      })
-      .then((data) => setRows(data.items as SettingRow[]))
-      .catch((e) => setError(e.message ?? 'Failed to load'));
+    adminFetchJson<{ items: SettingRow[] }>('/api/settings/admin/list')
+      .then((data) => setRows(data.items))
+      .catch((e: unknown) =>
+        setError(e instanceof Error ? e.message : 'Failed to load'),
+      );
   }, []);
 
   // Group by prefix for rendering. Preserves the DB ordering within each
@@ -81,14 +80,13 @@ export default function AdminSettings() {
 
   async function saveValue(key: string, value: string) {
     try {
-      const res = await fetch(`/api/settings/admin/${encodeURIComponent(key)}`, {
-        method: 'PUT',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ value }),
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const saved = (await res.json()) as SettingRow;
+      const saved = await adminFetchJson<SettingRow>(
+        `/api/settings/admin/${encodeURIComponent(key)}`,
+        {
+          method: 'PUT',
+          body: JSON.stringify({ value }),
+        },
+      );
       setRows((prev) =>
         prev ? prev.map((r) => (r.key === key ? saved : r)) : prev,
       );

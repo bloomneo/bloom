@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Alert, AlertDescription, AlertTitle, Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, Input, PageLayout, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@bloomneo/uikit';
+import { Alert, AlertDescription, AlertTitle, Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@bloomneo/uikit';
 import { Users, ArrowLeft, RefreshCw, AlertTriangle, Mail, Phone, Edit, Trash2, Eye, ChevronLeft, ChevronRight, Search, UserPlus } from 'lucide-react';
-import { Header, Footer, SEO } from '../../../../shared/components';
-import { AuthGuard } from '../../../auth';
+import { SEO } from '../../../../shared/components';
 import { useAuth } from '../../../auth';
 import { route, hasRole } from '../../../../shared/utils';
 import { config } from '../../../auth/config';
 import type { User } from '../../types';
 import { USER_ROLES } from '../../index';
+import { AdminShell } from '../../../admin/components/AdminShell';
 
 interface AdminUser extends User {
   tenantId: string | null;
@@ -214,15 +214,16 @@ const AdminDashboardPage: React.FC = () => {
   };
 
   return (
-    <PageLayout>
+    <AdminShell
+      currentPath="/user/admin"
+      requiredRoles={USER_ROLES.MODERATOR_ACCESS}
+      breadcrumbs={[{ label: 'Admin', href: '/admin' }, { label: 'Users' }]}
+    >
       <SEO
         title="User Admin"
         description="User administration and management dashboard"
       />
-      <Header />
-      <PageLayout.Content>
-        <AuthGuard requiredRoles={USER_ROLES.MODERATOR_ACCESS}>
-          <div className="space-y-6">
+        <div className="space-y-6">
             <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold tracking-tight">
@@ -543,10 +544,6 @@ const AdminDashboardPage: React.FC = () => {
             </CardContent>
           </Card>
           </div>
-        </AuthGuard>
-      </PageLayout.Content>
-
-      <Footer />
 
       {/* Delete Confirmation Modal */}
       <Dialog open={deleteModal.isOpen} onOpenChange={(open) => !open && cancelDelete()}>
@@ -623,8 +620,8 @@ const AdminDashboardPage: React.FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-         
-    </PageLayout>
+
+    </AdminShell>
   );
 };
 

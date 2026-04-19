@@ -44,9 +44,35 @@ interface AdminShellProps {
   title?: string;
   /** Optional breadcrumb trail rendered between header and content. */
   breadcrumbs?: { label: string; href?: string }[];
+  /**
+   * Role allow-list for the inner AuthGuard. Defaults to every
+   * moderator + admin level so both read pages (dashboard, audit,
+   * users list) and write pages (settings, user-edit) accept it.
+   * Write endpoints are already gated server-side with
+   * `requireUserRoles(['admin.system'])` — this is defense-in-depth,
+   * not the primary enforcement point.
+   *
+   * @llm-rule WHEN: A page needs stricter gating than default
+   * @llm-rule NOTE: Server already enforces per-endpoint — UI-only override
+   */
+  requiredRoles?: string[];
   /** Page body. */
   children: React.ReactNode;
 }
+
+/**
+ * Broad admin chrome access. Narrow per-page if you want — but note
+ * the server is the source of truth for authorization, so a moderator
+ * seeing a page they can't mutate is a UX hint, not a security issue.
+ */
+const DEFAULT_ADMIN_ROLES = [
+  'moderator.review',
+  'moderator.approve',
+  'moderator.manage',
+  'admin.tenant',
+  'admin.org',
+  'admin.system',
+];
 
 /**
  * Admin navigation. Items 5+ overflow into the mobile "More" sheet — the
@@ -65,6 +91,7 @@ export const AdminShell: React.FC<AdminShellProps> = ({
   currentPath,
   title,
   breadcrumbs,
+  requiredRoles = DEFAULT_ADMIN_ROLES,
   children,
 }) => {
   const navigate = useNavigate();
@@ -84,7 +111,7 @@ export const AdminShell: React.FC<AdminShellProps> = ({
   ];
 
   return (
-    <AuthGuard requiredRoles={['admin.system', 'moderator.manage']}>
+    <AuthGuard requiredRoles={requiredRoles}>
       <div className="min-h-screen flex flex-col bg-background text-foreground">
         {/* Shared Header — same brand bar + theme switcher + sign-out menu
             the public and dashboard pages use. Consistent chrome across

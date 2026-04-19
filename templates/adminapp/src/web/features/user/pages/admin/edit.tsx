@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Alert, AlertDescription, AlertTitle, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input, PageLayout, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@bloomneo/uikit';
+import { Alert, AlertDescription, AlertTitle, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@bloomneo/uikit';
 import { Edit, ArrowLeft, AlertTriangle, CheckCircle, RefreshCw } from 'lucide-react';
-import { Header, Footer, SEO } from '../../../../shared/components';
+import { SEO } from '../../../../shared/components';
+import { AdminShell } from '../../../admin/components/AdminShell';
 import { useAuth } from '../../../auth';
 import { route, hasRole } from '../../../../shared/utils';
 import { config } from '../../../auth/config';
@@ -191,10 +192,15 @@ const EditUserPage: React.FC = () => {
 
   if (!canManageUsers) {
     return (
-      <PageLayout>
+      <AdminShell
+          currentPath="/user/admin"
+          breadcrumbs={[
+            { label: "Admin", href: "/admin" },
+            { label: "Users", href: "/user/admin" },
+            { label: "Edit" },
+          ]}
+        >
         <SEO title="Access Denied" description="You don't have permission to access this page" />
-        <Header />
-        <PageLayout.Content>
           <div className="flex items-center justify-center min-h-96">
             <Card className="w-full max-w-md">
               <CardContent className="pt-6">
@@ -211,18 +217,21 @@ const EditUserPage: React.FC = () => {
               </CardContent>
             </Card>
           </div>
-        </PageLayout.Content>
-        <Footer />
-      </PageLayout>
+        </AdminShell>
     );
   }
 
   if (!userId) {
     return (
-      <PageLayout>
+      <AdminShell
+          currentPath="/user/admin"
+          breadcrumbs={[
+            { label: "Admin", href: "/admin" },
+            { label: "Users", href: "/user/admin" },
+            { label: "Edit" },
+          ]}
+        >
         <SEO title="User Not Found" description="User ID is required" />
-        <Header />
-        <PageLayout.Content>
           <div className="flex items-center justify-center min-h-96">
             <Card className="w-full max-w-md">
               <CardContent className="pt-6">
@@ -239,36 +248,42 @@ const EditUserPage: React.FC = () => {
               </CardContent>
             </Card>
           </div>
-        </PageLayout.Content>
-        <Footer />
-      </PageLayout>
+        </AdminShell>
     );
   }
 
   if (isLoadingUser) {
     return (
-      <PageLayout>
+      <AdminShell
+          currentPath="/user/admin"
+          breadcrumbs={[
+            { label: "Admin", href: "/admin" },
+            { label: "Users", href: "/user/admin" },
+            { label: "Edit" },
+          ]}
+        >
         <SEO title="Loading User" description="Loading user data..." />
-        <Header />
-        <PageLayout.Content>
           <div className="flex items-center justify-center min-h-96">
             <div className="text-center">
               <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4" />
               <p>Loading user data...</p>
             </div>
           </div>
-        </PageLayout.Content>
-        <Footer />
-      </PageLayout>
+        </AdminShell>
     );
   }
 
   if (error && !userData) {
     return (
-      <PageLayout>
+      <AdminShell
+          currentPath="/user/admin"
+          breadcrumbs={[
+            { label: "Admin", href: "/admin" },
+            { label: "Users", href: "/user/admin" },
+            { label: "Edit" },
+          ]}
+        >
         <SEO title="Error" description="Failed to load user data" />
-        <Header />
-        <PageLayout.Content>
           <div className="flex items-center justify-center min-h-96">
             <Card className="w-full max-w-md">
               <CardContent className="pt-6">
@@ -286,21 +301,23 @@ const EditUserPage: React.FC = () => {
               </CardContent>
             </Card>
           </div>
-        </PageLayout.Content>
-        <Footer />
-      </PageLayout>
+        </AdminShell>
     );
   }
 
   return (
-    <PageLayout>
+    <AdminShell
+        currentPath="/user/admin"
+        breadcrumbs={[
+          { label: "Admin", href: "/admin" },
+          { label: "Users", href: "/user/admin" },
+          { label: "Edit" },
+        ]}
+      >
       <SEO
         title={`Edit User - ${userData?.name || userData?.email || 'Unknown'}`}
         description="Edit user account details"
       />
-      <Header />
-
-      <PageLayout.Content>
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div>
@@ -464,10 +481,7 @@ const EditUserPage: React.FC = () => {
             </CardContent>
           </Card>
         </div>
-      </PageLayout.Content>
-
-      <Footer />
-    </PageLayout>
+      </AdminShell>
   );
 };
 

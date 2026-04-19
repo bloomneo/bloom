@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Alert, AlertDescription, AlertTitle, Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input, PageLayout } from '@bloomneo/uikit';
+import { Alert, AlertDescription, AlertTitle, Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input } from '@bloomneo/uikit';
 import { ArrowLeft, AlertTriangle, RefreshCw, Mail, Phone, Calendar, Shield, User, Edit } from 'lucide-react';
-import { Header, Footer, SEO } from '../../../../shared/components';
+import { SEO } from '../../../../shared/components';
+import { AdminShell } from '../../../admin/components/AdminShell';
 import { useAuth } from '../../../auth';
 import { route, hasRole } from '../../../../shared/utils';
 import { config } from '../../../auth/config';
@@ -148,10 +149,15 @@ const ShowUserPage: React.FC = () => {
 
   if (!canViewUsers) {
     return (
-      <PageLayout>
+      <AdminShell
+          currentPath="/user/admin"
+          breadcrumbs={[
+            { label: "Admin", href: "/admin" },
+            { label: "Users", href: "/user/admin" },
+            { label: "Details" },
+          ]}
+        >
         <SEO title="Access Denied" description="You don't have permission to access this page" />
-        <Header />
-        <PageLayout.Content>
           <div className="flex items-center justify-center min-h-96">
             <Card className="w-full max-w-md">
               <CardContent className="pt-6">
@@ -168,18 +174,21 @@ const ShowUserPage: React.FC = () => {
               </CardContent>
             </Card>
           </div>
-        </PageLayout.Content>
-        <Footer />
-      </PageLayout>
+        </AdminShell>
     );
   }
 
   if (!userId) {
     return (
-      <PageLayout>
+      <AdminShell
+          currentPath="/user/admin"
+          breadcrumbs={[
+            { label: "Admin", href: "/admin" },
+            { label: "Users", href: "/user/admin" },
+            { label: "Details" },
+          ]}
+        >
         <SEO title="User Not Found" description="User ID is required" />
-        <Header />
-        <PageLayout.Content>
           <div className="flex items-center justify-center min-h-96">
             <Card className="w-full max-w-md">
               <CardContent className="pt-6">
@@ -196,36 +205,42 @@ const ShowUserPage: React.FC = () => {
               </CardContent>
             </Card>
           </div>
-        </PageLayout.Content>
-        <Footer />
-      </PageLayout>
+        </AdminShell>
     );
   }
 
   if (isLoading) {
     return (
-      <PageLayout>
+      <AdminShell
+          currentPath="/user/admin"
+          breadcrumbs={[
+            { label: "Admin", href: "/admin" },
+            { label: "Users", href: "/user/admin" },
+            { label: "Details" },
+          ]}
+        >
         <SEO title="Loading User" description="Loading user data..." />
-        <Header />
-        <PageLayout.Content>
           <div className="flex items-center justify-center min-h-96">
             <div className="text-center">
               <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4" />
               <p>Loading user data...</p>
             </div>
           </div>
-        </PageLayout.Content>
-        <Footer />
-      </PageLayout>
+        </AdminShell>
     );
   }
 
   if (error || !userData) {
     return (
-      <PageLayout>
+      <AdminShell
+          currentPath="/user/admin"
+          breadcrumbs={[
+            { label: "Admin", href: "/admin" },
+            { label: "Users", href: "/user/admin" },
+            { label: "Details" },
+          ]}
+        >
         <SEO title="Error" description="Failed to load user data" />
-        <Header />
-        <PageLayout.Content>
           <div className="flex items-center justify-center min-h-96">
             <Card className="w-full max-w-md">
               <CardContent className="pt-6">
@@ -243,21 +258,23 @@ const ShowUserPage: React.FC = () => {
               </CardContent>
             </Card>
           </div>
-        </PageLayout.Content>
-        <Footer />
-      </PageLayout>
+        </AdminShell>
     );
   }
 
   return (
-    <PageLayout>
+    <AdminShell
+        currentPath="/user/admin"
+        breadcrumbs={[
+          { label: "Admin", href: "/admin" },
+          { label: "Users", href: "/user/admin" },
+          { label: "Details" },
+        ]}
+      >
       <SEO
         title={`View User - ${userData.name || userData.email}`}
         description="View user account details"
       />
-      <Header />
-
-      <PageLayout.Content>
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div>
@@ -548,10 +565,7 @@ const ShowUserPage: React.FC = () => {
             </Card>
           )}
         </div>
-      </PageLayout.Content>
-
-      <Footer />
-    </PageLayout>
+      </AdminShell>
   );
 };
 

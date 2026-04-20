@@ -6,7 +6,25 @@
 import { Router, Request, Response } from 'express';
 import { errorClass } from '@bloomneo/appkit/error';
 import { securityClass } from '@bloomneo/appkit/security';
+import { databaseClass } from '@bloomneo/appkit/database';
 import { authService } from './auth.service.js';
+import { auditService } from '../audit/audit.service.js';
+
+/**
+ * Server-side enforcement of the admin's `feature_signup_open` flag.
+ * The client hides the form when false, but never trust the client —
+ * a direct POST to /api/auth/register still has to be gated here.
+ * Returns true when the flag is missing (default-open) so a brand-new
+ * install without a settings row still accepts signups.
+ */
+async function isSignupOpen(): Promise<boolean> {
+  const db = await databaseClass.get();
+  const row = await db.appSetting.findUnique({
+    where: { key: 'feature_signup_open' },
+  });
+  if (!row) return true;
+  return (row.value ?? 'true').toLowerCase() !== 'false';
+}
 
 // Initialize AppKit modules
 const router = Router();
@@ -24,7 +42,41 @@ const authRateLimit = security.requests(10, 15 * 60 * 1000, {
 router.post('/register', authRateLimit, async (req: Request, res: Response) => {
   try {
     const requestId = (req as any).requestMetadata?.requestId || 'unknown';
+
+    // Gate on the admin-controlled flag. Defense in depth — the /register
+    // page hides the form when this is false, but the endpoint must own
+    // final enforcement for direct API callers.
+    if (!(await isSignupOpen())) {
+      auditService.logAudit({
+        actorType: 'system',
+        action: 'auth.register.blocked',
+        description: 'Registration attempted while signups are closed',
+        newValue: { email: req.body?.email },
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent') ?? undefined,
+      });
+      return res.status(403).json({
+        error: 'SIGNUPS_CLOSED',
+        message: 'New signups are currently disabled by the administrator.',
+        requestId,
+      });
+    }
+
     const result = await authService.register(req.body);
+
+    // Fire-and-forget audit entry. Never await; if the DB is down the
+    // user still gets their account. `newValue` deliberately omits the
+    // hashed password — never log secrets even incidentally.
+    auditService.logAudit({
+      actorId: result.user?.id ?? null,
+      actorType: 'user',
+      action: 'auth.register',
+      entityType: 'user',
+      entityId: result.user?.id ?? null,
+      newValue: { email: result.user?.email, role: result.user?.role },
+      ipAddress: req.ip,
+      userAgent: req.get('user-agent') ?? undefined,
+    });
 
     res.status(201).json({
       ...result,
@@ -33,6 +85,14 @@ router.post('/register', authRateLimit, async (req: Request, res: Response) => {
 
   } catch (err: any) {
     console.error('Registration error:', err);
+    auditService.logAudit({
+      actorType: 'system',
+      action: 'auth.register.failure',
+      description: err.message ?? 'Registration failed',
+      newValue: { email: req.body?.email },
+      ipAddress: req.ip,
+      userAgent: req.get('user-agent') ?? undefined,
+    });
     res.status(err.statusCode || 500).json({
       error: 'REGISTRATION_FAILED',
       message: err.message || 'Registration failed',
@@ -48,6 +108,18 @@ router.post('/login', authRateLimit, async (req: Request, res: Response) => {
     const requestId = (req as any).requestMetadata?.requestId || 'unknown';
     const result = await authService.login(req.body);
 
+    // Audit successful logins so the admin activity feed shows who's
+    // coming in. Failed logins are audited in the catch below.
+    auditService.logAudit({
+      actorId: result.user?.id ?? null,
+      actorType: 'user',
+      action: 'auth.login.success',
+      entityType: 'user',
+      entityId: result.user?.id ?? null,
+      ipAddress: req.ip,
+      userAgent: req.get('user-agent') ?? undefined,
+    });
+
     res.json({
       ...result,
       requestId
@@ -55,6 +127,18 @@ router.post('/login', authRateLimit, async (req: Request, res: Response) => {
 
   } catch (err: any) {
     console.error('Login error:', err);
+    // Surface bad-credential attempts in the audit log. We don't know
+    // the user id here (the service threw before returning), so we log
+    // the attempted email in `newValue` so the admin can spot brute-force
+    // patterns from a single address.
+    auditService.logAudit({
+      actorType: 'system',
+      action: 'auth.login.failure',
+      description: err.message ?? 'Login failed',
+      newValue: { email: req.body?.email },
+      ipAddress: req.ip,
+      userAgent: req.get('user-agent') ?? undefined,
+    });
     res.status(err.statusCode || 500).json({
       error: 'LOGIN_FAILED',
       message: err.message || 'Login failed',

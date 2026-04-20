@@ -39,7 +39,7 @@
   },
   "dependencies": {
     "@bloomneo/appkit": "^4.0.0",
-    "@bloomneo/uikit": "^2.1.2",
+    "@bloomneo/uikit": "^2.1.3",
     "bcrypt": "^5.1.1",
     "better-sqlite3": "^12.4.1",
     "cors": "^2.8.5",

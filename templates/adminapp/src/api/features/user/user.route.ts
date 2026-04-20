@@ -7,6 +7,7 @@ import express from 'express';
 import { errorClass } from '@bloomneo/appkit/error';
 import { authClass } from '@bloomneo/appkit/auth';
 import { userService } from './user.service.js';
+import { auditService } from '../audit/audit.service.js';
 
 // Initialize AppKit modules
 const router = express.Router();
@@ -138,7 +139,7 @@ router.post('/change-password',
  */
 router.get('/admin/users',
   auth.requireLoginToken(),
-  auth.requireUserRoles(['admin.tenant', 'admin.org', 'admin.system']),
+  auth.requireUserRoles(['admin.system']),
   error.asyncRoute(async (req, res) => {
     const requestId = req.requestMetadata?.requestId || 'unknown';
     const { tenantId } = req.query;
@@ -170,7 +171,7 @@ router.get('/admin/users',
  */
 router.get('/admin/list',
   auth.requireLoginToken(),
-  auth.requireUserRoles(['moderator.review', 'moderator.approve', 'moderator.manage', 'admin.tenant', 'admin.org', 'admin.system']),
+  auth.requireUserRoles(['moderator.manage', 'admin.system']),
   error.asyncRoute(async (req, res) => {
     const requestId = req.requestMetadata?.requestId || 'unknown';
     const { tenantId } = req.query;
@@ -202,7 +203,7 @@ router.get('/admin/list',
  */
 router.post('/admin/create',
   auth.requireLoginToken(),
-  auth.requireUserRoles(['admin.tenant', 'admin.org', 'admin.system']),
+  auth.requireUserRoles(['admin.system']),
   error.asyncRoute(async (req, res) => {
     const requestId = req.requestMetadata?.requestId || 'unknown';
     const { name, email, phone, password, role, level, isActive, isVerified } = req.body;
@@ -225,6 +226,24 @@ router.post('/admin/create',
         level: level || 'basic',
         isActive: isActive !== undefined ? isActive : true,
         isVerified: isVerified !== undefined ? isVerified : false
+      });
+
+      // Audit the creation. Never log the password — just the
+      // identity fields the admin actually cares about reviewing.
+      auditService.logAudit({
+        actorId: String(auth.getUser(req as any)?.userId ?? ''),
+        actorType: 'admin',
+        action: 'user.create',
+        entityType: 'user',
+        entityId: user?.id ?? null,
+        newValue: {
+          email: user?.email,
+          role: user?.role,
+          level: user?.level,
+          isActive: user?.isActive,
+        },
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent') ?? undefined,
       });
 
       res.status(201).json({
@@ -250,16 +269,19 @@ router.post('/admin/create',
  */
 router.get('/admin/users/:id',
   auth.requireLoginToken(),
-  auth.requireUserRoles(['moderator.review', 'moderator.approve', 'moderator.manage', 'admin.tenant', 'admin.org', 'admin.system']),
+  auth.requireUserRoles(['moderator.manage', 'admin.system']),
   error.asyncRoute(async (req, res) => {
     const requestId = req.requestMetadata?.requestId || 'unknown';
     const userId = req.params.id;
 
     try {
-      if (isNaN(userId)) {
+      // User.id is a cuid (String) after the 4.1 migration; cuids start
+      // with 'c', are 24–25 chars, and never numeric. Only assert it's
+      // non-empty; Prisma handles the malformed-id case downstream.
+      if (!userId || typeof userId !== 'string') {
         return res.status(400).json({
           error: 'Invalid user ID',
-          message: 'User ID must be a valid number',
+          message: 'User ID must be a non-empty string',
           requestId
         });
       }
@@ -297,13 +319,40 @@ router.get('/admin/users/:id',
  */
 router.put('/admin/users/:id',
   auth.requireLoginToken(),
-  auth.requireUserRoles(['admin.tenant', 'admin.org', 'admin.system']),
+  auth.requireUserRoles(['admin.system']),
   error.asyncRoute(async (req, res) => {
     const requestId = req.requestMetadata?.requestId || 'unknown';
     const userId = req.params.id;
 
     try {
+      // Snapshot the row before mutating so the audit entry has a
+      // before/after diff to render in the admin UI.
+      const before = await userService.getUserById(userId);
       const user = await userService.updateUser(userId, req.body);
+
+      auditService.logAudit({
+        actorId: String(auth.getUser(req as any)?.userId ?? ''),
+        actorType: 'admin',
+        action: 'user.update',
+        entityType: 'user',
+        entityId: userId,
+        oldValue: before
+          ? {
+              email: before.email,
+              role: before.role,
+              level: before.level,
+              isActive: before.isActive,
+            }
+          : null,
+        newValue: {
+          email: user?.email,
+          role: user?.role,
+          level: user?.level,
+          isActive: user?.isActive,
+        },
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent') ?? undefined,
+      });
 
       res.json({
         message: 'User updated successfully',
@@ -328,7 +377,7 @@ router.put('/admin/users/:id',
  */
 router.delete('/admin/users/:id',
   auth.requireLoginToken(),
-  auth.requireUserRoles(['admin.tenant', 'admin.org', 'admin.system']),
+  auth.requireUserRoles(['admin.system']),
   error.asyncRoute(async (req, res) => {
     const requestId = req.requestMetadata?.requestId || 'unknown';
     const userId = req.params.id;
@@ -345,7 +394,27 @@ router.delete('/admin/users/:id',
         });
       }
 
+      // Snapshot so the audit log has the deleted user's details for
+      // any future "who was this user?" lookup.
+      const before = await userService.getUserById(userId);
       await userService.deleteUser(userId);
+
+      auditService.logAudit({
+        actorId: String(auth.getUser(req as any)?.userId ?? ''),
+        actorType: 'admin',
+        action: 'user.delete',
+        entityType: 'user',
+        entityId: userId,
+        oldValue: before
+          ? {
+              email: before.email,
+              role: before.role,
+              level: before.level,
+            }
+          : null,
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent') ?? undefined,
+      });
 
       res.json({
         message: 'User deleted successfully',
@@ -369,7 +438,7 @@ router.delete('/admin/users/:id',
  */
 router.put('/admin/users/:id/password',
   auth.requireLoginToken(),
-  auth.requireUserRoles(['admin.tenant', 'admin.org', 'admin.system']),
+  auth.requireUserRoles(['admin.system']),
   error.asyncRoute(async (req, res) => {
     const requestId = req.requestMetadata?.requestId || 'unknown';
     const userId = req.params.id;
@@ -377,6 +446,19 @@ router.put('/admin/users/:id/password',
 
     try {
       await userService.adminChangePassword(userId, newPassword);
+
+      // Log the fact but never the new password. `description` is a
+      // human-readable summary for the admin activity feed.
+      auditService.logAudit({
+        actorId: String(auth.getUser(req as any)?.userId ?? ''),
+        actorType: 'admin',
+        action: 'user.password.reset',
+        entityType: 'user',
+        entityId: userId,
+        description: 'Admin reset the user password',
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent') ?? undefined,
+      });
 
       res.json({
         message: 'Password updated successfully',

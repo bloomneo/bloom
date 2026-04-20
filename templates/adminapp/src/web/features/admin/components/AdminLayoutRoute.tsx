@@ -23,12 +23,16 @@
  * <AdminPageHeader> component rendered INSIDE each page's <Outlet />
  * content. The chrome owns nothing about page-level meta.
  *
+ * @see ../../../../../docs/admin-patterns.md §3 chrome / layout routes, §7 role gating
+ * @see https://dev.bloomneo.com/adminapp/layout-routes
+ *
  * @llm-rule WHEN: Wiring the admin route tree in page-router or App.tsx
  * @llm-rule PREFER: AdminLayoutRoute as the layout element; AdminPageHeader inside pages
  * @llm-rule AVOID: Re-introducing a per-page chrome wrapper — defeats the whole point
+ * @llm-rule NOTE: `navigation` is useMemo'd so Container doesn't see a fresh array on every render (the sidebar internally memoizes on prop identity)
  */
 
-import { Suspense } from 'react';
+import { Suspense, useMemo } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Container, type NavigationItem } from '@bloomneo/uikit';
 import {
@@ -41,17 +45,11 @@ import {
 import { AuthGuard } from '../../auth';
 import { useAuth } from '../../auth/hooks';
 import { Header } from '../../../shared/components/Header';
+import { Footer } from '../../../shared/components/Footer';
 
 /** Default moderator+admin role set; narrow with <AuthGuard> inside a
- *  specific page if you want stricter gating. */
-const DEFAULT_ADMIN_ROLES = [
-  'moderator.review',
-  'moderator.approve',
-  'moderator.manage',
-  'admin.tenant',
-  'admin.org',
-  'admin.system',
-];
+ *  specific page if you want stricter gating (e.g. admin-only). */
+const DEFAULT_ADMIN_ROLES = ['moderator.manage', 'admin.system'];
 
 /** Top-level admin nav. First 4 become the mobile bottom-tab row; the
  *  rest (including Sign out) fold into the "More" sheet on < md. */
@@ -82,15 +80,20 @@ export function AdminLayoutRoute() {
   const { logout } = useAuth();
 
   // Sign-out is an action, not a route — close over the hook handler.
-  const navigation: NavigationItem[] = [
-    ...ADMIN_NAV,
-    {
-      key: 'signout',
-      label: 'Sign out',
-      icon: LogOut,
-      onClick: () => logout(),
-    },
-  ];
+  // Memoize so the sidebar doesn't see a fresh array on every render
+  // (location changes on every nav, which triggers re-render here).
+  const navigation: NavigationItem[] = useMemo(
+    () => [
+      ...ADMIN_NAV,
+      {
+        key: 'signout',
+        label: 'Sign out',
+        icon: LogOut,
+        onClick: () => logout(),
+      },
+    ],
+    [logout],
+  );
 
   return (
     <AuthGuard requiredRoles={DEFAULT_ADMIN_ROLES}>
@@ -112,6 +115,13 @@ export function AdminLayoutRoute() {
             <Outlet />
           </Suspense>
         </Container>
+        {/* Same shared Footer as the public pages — keeps brand +
+            legal links visible inside the admin console too. On mobile
+            (<md) the admin sidebar becomes a bottom tab bar, so the
+            Footer sits ABOVE that bar (the tab bar has
+            `pb-[env(safe-area-inset-bottom)]` and reserves its own
+            viewport height). */}
+        <Footer />
       </div>
     </AuthGuard>
   );

@@ -30,7 +30,7 @@ const CreateUserPage: React.FC = () => {
     return null;
   }
 
-  const canManageUsers = hasRole(user, ['admin.tenant', 'admin.org', 'admin.system']);
+  const canManageUsers = hasRole(user, ['admin.system']);
 
   if (!canManageUsers) {
     return (
@@ -65,21 +65,9 @@ const CreateUserPage: React.FC = () => {
     setFormData(prev => {
       const updated = { ...prev, [field]: value };
 
-      // Reset level when role changes and set appropriate default
+      // One level per role — template ships three tiers total.
       if (field === 'role') {
-        switch (value) {
-          case 'user':
-            updated.level = 'basic';
-            break;
-          case 'moderator':
-            updated.level = 'review';
-            break;
-          case 'admin':
-            updated.level = 'tenant';
-            break;
-          default:
-            updated.level = 'basic';
-        }
+        updated.level = defaultLevelFor(value as string);
       }
 
       return updated;
@@ -88,32 +76,27 @@ const CreateUserPage: React.FC = () => {
     setSuccess(null);
   };
 
-  // Get available levels based on selected role
+  // Three-tier role model: admin.system / moderator.manage / user.basic.
+  // Extend `getAvailableLevels` + `defaultLevelFor` together if you add
+  // new tiers, and keep them in sync with `admin.roles.ts` + the server-
+  // side gates in `api/features/user/user.route.ts`.
+  const defaultLevelFor = (role: string): string => {
+    switch (role) {
+      case 'admin': return 'system';
+      case 'moderator': return 'manage';
+      case 'user': return 'basic';
+      default: return 'basic';
+    }
+  };
+
   const getAvailableLevels = (role: string) => {
     switch (role) {
       case 'user':
-        return [
-          { value: 'basic', label: 'Basic' },
-          { value: 'pro', label: 'Pro' },
-          { value: 'max', label: 'Max' }
-        ];
+        return [{ value: 'basic', label: 'Basic' }];
       case 'moderator':
-        return [
-          { value: 'review', label: 'Review' },
-          { value: 'approve', label: 'Approve' },
-          { value: 'manage', label: 'Manage' }
-        ];
+        return [{ value: 'manage', label: 'Manage' }];
       case 'admin':
-        const adminLevels = [
-          { value: 'tenant', label: 'Tenant' }
-        ];
-        if (hasRole(user, ['admin.org', 'admin.system'])) {
-          adminLevels.push({ value: 'org', label: 'Organization' });
-        }
-        if (hasRole(user, ['admin.system'])) {
-          adminLevels.push({ value: 'system', label: 'System' });
-        }
-        return adminLevels;
+        return [{ value: 'system', label: 'System' }];
       default:
         return [{ value: 'basic', label: 'Basic' }];
     }
@@ -227,37 +210,40 @@ const CreateUserPage: React.FC = () => {
             </Button>
           </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <UserPlus className="h-5 w-5" />
-                User Details
-              </CardTitle>
-              <CardDescription>
-                Enter the information for the new user account.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {error && (
-                <Alert className="mb-6 bg-destructive/10 border-destructive text-destructive">
-                  <AlertTriangle className="h-4 w-4" />
-                  <AlertTitle>Error</AlertTitle>
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
+          {error && (
+            <Alert className="bg-destructive/10 border-destructive text-destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
 
-              {success && (
-                <Alert className="mb-6 bg-green-50 border-green-200 text-green-800">
-                  <CheckCircle className="h-4 w-4" />
-                  <AlertTitle>Success</AlertTitle>
-                  <AlertDescription>{success}</AlertDescription>
-                </Alert>
-              )}
+          {success && (
+            <Alert className="bg-green-50 border-green-200 text-green-800">
+              <CheckCircle className="h-4 w-4" />
+              <AlertTitle>Success</AlertTitle>
+              <AlertDescription>{success}</AlertDescription>
+            </Alert>
+          )}
 
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Same split as the edit page: Profile (identity + password)
+              on the left, Access (role / level / status / verification)
+              on the right. Two equal-width columns on md+, stacks on
+              mobile. Full-width inputs inside each card so selects
+              don't crunch. */}
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid gap-6 md:grid-cols-2">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <UserPlus className="h-5 w-5" />
+                    Profile
+                  </CardTitle>
+                  <CardDescription>Contact info + initial password.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <label htmlFor="name" className="text-sm font-medium">Full Name</label>
+                    <label htmlFor="name" className="text-sm font-medium">Full name</label>
                     <Input
                       id="name"
                       type="text"
@@ -267,9 +253,8 @@ const CreateUserPage: React.FC = () => {
                       required
                     />
                   </div>
-
                   <div className="space-y-2">
-                    <label htmlFor="email" className="text-sm font-medium">Email Address</label>
+                    <label htmlFor="email" className="text-sm font-medium">Email address</label>
                     <Input
                       id="email"
                       type="email"
@@ -279,9 +264,8 @@ const CreateUserPage: React.FC = () => {
                       required
                     />
                   </div>
-
                   <div className="space-y-2">
-                    <label htmlFor="phone" className="text-sm font-medium">Phone Number</label>
+                    <label htmlFor="phone" className="text-sm font-medium">Phone number</label>
                     <Input
                       id="phone"
                       type="tel"
@@ -290,48 +274,43 @@ const CreateUserPage: React.FC = () => {
                       placeholder="Enter phone number (optional)"
                     />
                   </div>
-
                   <div className="space-y-2">
                     <label htmlFor="password" className="text-sm font-medium">Password</label>
-                    <div className="space-y-2">
-                      <Input
-                        id="password"
-                        type="text"
-                        value={formData.password}
-                        onChange={(e) => handleInputChange('password', e.target.value)}
-                        placeholder="Enter password or use options below"
-                        required
-                      />
-                      <div className="flex gap-2 flex-wrap">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setPasswordOption('random')}
-                        >
-                          Random
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setPasswordOption('default')}
-                        >
-                          Default12345
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setPasswordOption('phone')}
-                          disabled={!formData.phone || formData.phone.length < 6}
-                        >
-                          Phone Number
-                        </Button>
-                      </div>
+                    <Input
+                      id="password"
+                      type="text"
+                      value={formData.password}
+                      onChange={(e) => handleInputChange('password', e.target.value)}
+                      placeholder="Enter password or use an option below"
+                      required
+                    />
+                    <div className="flex gap-2 flex-wrap">
+                      <Button type="button" variant="outline" size="sm" onClick={() => setPasswordOption('random')}>
+                        Random
+                      </Button>
+                      <Button type="button" variant="outline" size="sm" onClick={() => setPasswordOption('default')}>
+                        Default12345
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setPasswordOption('phone')}
+                        disabled={!formData.phone || formData.phone.length < 6}
+                      >
+                        Phone number
+                      </Button>
                     </div>
                   </div>
+                </CardContent>
+              </Card>
 
+              <Card>
+                <CardHeader>
+                  <CardTitle>Access</CardTitle>
+                  <CardDescription>Role, level, and account state at creation.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
                   <div className="space-y-2">
                     <label htmlFor="role" className="text-sm font-medium">Role</label>
                     <Select value={formData.role} onValueChange={(value) => handleInputChange('role', value)}>
@@ -341,13 +320,12 @@ const CreateUserPage: React.FC = () => {
                       <SelectContent>
                         <SelectItem value="user">User</SelectItem>
                         <SelectItem value="moderator">Moderator</SelectItem>
-                        {hasRole(user, ['admin.org', 'admin.system']) && (
+                        {hasRole(user, ['admin.system']) && (
                           <SelectItem value="admin">Admin</SelectItem>
                         )}
                       </SelectContent>
                     </Select>
                   </div>
-
                   <div className="space-y-2">
                     <label htmlFor="level" className="text-sm font-medium">Level</label>
                     <Select value={formData.level} onValueChange={(value) => handleInputChange('level', value)}>
@@ -363,7 +341,6 @@ const CreateUserPage: React.FC = () => {
                       </SelectContent>
                     </Select>
                   </div>
-
                   <div className="space-y-2">
                     <label htmlFor="status" className="text-sm font-medium">Status</label>
                     <Select
@@ -379,9 +356,8 @@ const CreateUserPage: React.FC = () => {
                       </SelectContent>
                     </Select>
                   </div>
-
                   <div className="space-y-2">
-                    <label htmlFor="verification" className="text-sm font-medium">Email Verification</label>
+                    <label htmlFor="verification" className="text-sm font-medium">Email verification</label>
                     <Select
                       value={formData.isVerified ? 'verified' : 'not-verified'}
                       onValueChange={(value) => handleInputChange('isVerified', value === 'verified')}
@@ -391,24 +367,24 @@ const CreateUserPage: React.FC = () => {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="verified">Verified</SelectItem>
-                        <SelectItem value="not-verified">Not Verified</SelectItem>
+                        <SelectItem value="not-verified">Not verified</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-                </div>
+                </CardContent>
+              </Card>
+            </div>
 
-                <div className="flex gap-4">
-                  <Button type="submit" disabled={isLoading} className="gap-2">
-                    <UserPlus className="h-4 w-4" />
-                    {isLoading ? 'Creating User...' : 'Create User'}
-                  </Button>
-                  <Button type="button" variant="outline" asChild>
-                    <Link to={route('/user/admin')}>Cancel</Link>
-                  </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
+            <div className="flex gap-4">
+              <Button type="submit" disabled={isLoading} className="gap-2">
+                <UserPlus className="h-4 w-4" />
+                {isLoading ? 'Creating user…' : 'Create user'}
+              </Button>
+              <Button type="button" variant="outline" asChild>
+                <Link to={route('/user/admin')}>Cancel</Link>
+              </Button>
+            </div>
+          </form>
         </div>
     </>
   );

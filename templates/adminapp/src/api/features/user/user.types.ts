@@ -70,21 +70,14 @@ export interface AuthTokenPayload {
   exp: number;
 }
 
-// Role levels for authorization
+// Role levels for authorization. The adminapp ships three tiers —
+// extend both unions together if you add a level, and remember to update
+// `admin.roles.ts` + `user.route.ts` gates + the seed file to match.
 export type UserRole = 'user' | 'moderator' | 'admin';
-export type UserLevel = 'basic' | 'pro' | 'max' | 'review' | 'approve' | 'manage' | 'tenant' | 'org' | 'system';
+export type UserLevel = 'basic' | 'manage' | 'system';
 
 // Complete role.level combinations
-export type RoleLevel =
-  | 'user.basic'
-  | 'user.pro'
-  | 'user.max'
-  | 'moderator.review'
-  | 'moderator.approve'
-  | 'moderator.manage'
-  | 'admin.tenant'
-  | 'admin.org'
-  | 'admin.system';
+export type RoleLevel = 'user.basic' | 'moderator.manage' | 'admin.system';
 
 // Express request with authenticated user
 export interface AuthenticatedRequest {

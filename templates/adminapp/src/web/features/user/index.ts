@@ -12,10 +12,11 @@ export { UserProvider, useUser } from './context/UserContext';
 // Components
 export { ErrorBoundary } from './components';
 
-// Role constants for user feature (use with AuthGuard at component level)
+// Role constants for user feature (use with AuthGuard at component level).
+// Three-tier model — admin.system / moderator.manage / user.basic.
 export const USER_ROLES = {
   PROFILE_ACCESS: [], // All authenticated users can access profile
-  ADMIN_ACCESS: ['admin.tenant', 'admin.org', 'admin.system'],
-  MODERATOR_ACCESS: ['moderator.review', 'moderator.approve', 'moderator.manage', 'admin.tenant', 'admin.org', 'admin.system'],
-  FULL_ADMIN: ['admin.system']
+  ADMIN_ACCESS: ['admin.system'],
+  MODERATOR_ACCESS: ['moderator.manage', 'admin.system'],
+  FULL_ADMIN: ['admin.system'],
 };

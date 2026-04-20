@@ -20,6 +20,14 @@
  * TODO: When the log table gets large, add a scheduled purge (e.g. keep
  * the last 90 days) via a separate cron feature. The `@@index([createdAt])`
  * in the schema is there for that query.
+ *
+ * @see ../../../../docs/admin-patterns.md §6 auditing mutations
+ * @see https://dev.bloomneo.com/adminapp/audit
+ *
+ * @llm-rule WHEN: Any admin mutation (user/setting/role change, login events) needs an audit trail
+ * @llm-rule AVOID: `await auditService.logAudit(...)` — defeats the fire-and-forget guarantee; if Postgres hiccups the caller's request fails too
+ * @llm-rule AVOID: Passing secrets (passwords, API keys, tokens) in `oldValue`/`newValue` — the service does no sanitization. Redact at the call site
+ * @llm-rule NOTE: Action strings follow `<feature>.<verb>` convention (user.create, auth.login.failure) so the audit page filter stays predictable
  */
 
 import { databaseClass } from '@bloomneo/appkit/database';
@@ -133,6 +141,47 @@ export const auditService = {
       take: limit,
       skip: offset,
     });
-    return rows as AuditLogEntry[];
+
+    // Denormalize actor → {name, email}. The schema intentionally has no
+    // Prisma relation on AuditLog.actorId (audit rows must survive even
+    // if the user is later deleted), so we resolve here with one extra
+    // query. Cheap: `users` is indexed on id, and the set of unique
+    // actorIds in a page of 50 is small.
+    type ActorRow = {
+      id: string;
+      name: string | null;
+      email: string;
+    };
+    type AuditRow = AuditLogEntry & { actorId: string | null };
+
+    const auditRows = rows as AuditRow[];
+
+    const actorIds = Array.from(
+      new Set(
+        auditRows
+          .map((r) => r.actorId)
+          .filter((id): id is string => typeof id === 'string' && id.length > 0),
+      ),
+    );
+
+    const actors: ActorRow[] = actorIds.length
+      ? ((await db.user.findMany({
+          where: { id: { in: actorIds } },
+          select: { id: true, name: true, email: true },
+        })) as ActorRow[])
+      : [];
+
+    const actorMap = new Map<string, Pick<ActorRow, 'name' | 'email'>>(
+      actors.map((a) => [a.id, { name: a.name, email: a.email }]),
+    );
+
+    return auditRows.map((row) => {
+      const actor = row.actorId ? actorMap.get(row.actorId) : undefined;
+      return {
+        ...row,
+        actorName: actor?.name ?? null,
+        actorEmail: actor?.email ?? null,
+      } as AuditLogEntry;
+    });
   },
 };

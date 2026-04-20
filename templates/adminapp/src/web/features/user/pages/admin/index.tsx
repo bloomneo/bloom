@@ -48,19 +48,9 @@ export default function AdminUsersPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const canManageUsers =
-    user !== null &&
-    hasRole(user, ['admin.tenant', 'admin.org', 'admin.system']);
+  const canManageUsers = user !== null && hasRole(user, ['admin.system']);
   const canViewUsers =
-    user !== null &&
-    hasRole(user, [
-      'moderator.review',
-      'moderator.approve',
-      'moderator.manage',
-      'admin.tenant',
-      'admin.org',
-      'admin.system',
-    ]);
+    user !== null && hasRole(user, ['moderator.manage', 'admin.system']);
 
   const fetchUsers = useCallback(async () => {
     if (!token || !user) return;

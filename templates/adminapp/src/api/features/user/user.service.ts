@@ -9,6 +9,7 @@
 
 import { loggerClass } from '@bloomneo/appkit/logger';
 import { errorClass } from '@bloomneo/appkit/error';
+import { databaseClass } from '@bloomneo/appkit/database';
 import { model } from './user.model.js';
 import type {
   UserResponse,
@@ -19,6 +20,59 @@ import type {
 // Initialize AppKit modules following the pattern
 const logger = loggerClass.get('user-service');
 const error = errorClass.get();
+
+/**
+ * Count users currently sitting at the highest-privilege role. Used to
+ * guard against demoting or deleting the last admin — which would lock
+ * the instance out of its own settings/audit/user UI until someone
+ * rescues the DB from the outside.
+ */
+async function countActiveAdmins(): Promise<number> {
+  const db = await databaseClass.get();
+  return db.user.count({
+    where: { role: 'admin', level: 'system', isActive: true },
+  });
+}
+
+/**
+ * Would this mutation leave zero admins? Fires for update paths that
+ * change role/level/isActive away from admin.system, and for deletes.
+ *
+ * Returns a reason string when the mutation is blocked, or null when
+ * it's safe to proceed. Safe when the target isn't currently the last
+ * admin, or when the change preserves their admin status.
+ */
+async function wouldBreakLastAdmin(
+  targetUserId: string,
+  next: Partial<UserUpdateRequest>,
+  operation: 'update' | 'delete',
+): Promise<string | null> {
+  const db = await databaseClass.get();
+  const target = await db.user.findUnique({ where: { id: targetUserId } });
+  if (!target) return null;
+  const isAdmin =
+    target.role === 'admin' && target.level === 'system' && target.isActive;
+  if (!isAdmin) return null;
+
+  const admins = await countActiveAdmins();
+  if (admins > 1) return null;
+
+  if (operation === 'delete') {
+    return 'Cannot delete the last active admin. Promote another user first.';
+  }
+
+  // For updates, allow the mutation if it leaves the user as an active
+  // admin.system. Block otherwise.
+  const nextRole = next.role ?? target.role;
+  const nextLevel = next.level ?? target.level;
+  const nextActive =
+    next.isActive !== undefined ? next.isActive : target.isActive;
+  const stillAdmin =
+    nextRole === 'admin' && nextLevel === 'system' && nextActive === true;
+  if (stillAdmin) return null;
+
+  return 'Cannot demote or deactivate the last active admin. Promote another user first.';
+}
 
 export const userService = {
   /**
@@ -223,6 +277,12 @@ export const userService = {
         throw error.notFound('User not found');
       }
 
+      // Guard: prevent demoting/deactivating the last admin.
+      const blockedReason = await wouldBreakLastAdmin(id, data, 'update');
+      if (blockedReason) {
+        throw error.badRequest(blockedReason);
+      }
+
       const updatedUser = await model.update(id, data);
 
       logger.info('Admin update user completed', { id });
@@ -247,6 +307,12 @@ export const userService = {
       const user = await model.findById(id);
       if (!user) {
         throw error.notFound('User not found');
+      }
+
+      // Guard: prevent deleting the last admin.
+      const blockedReason = await wouldBreakLastAdmin(id, {}, 'delete');
+      if (blockedReason) {
+        throw error.badRequest(blockedReason);
       }
 
       await model.delete(id);

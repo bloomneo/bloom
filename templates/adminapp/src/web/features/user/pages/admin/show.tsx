@@ -40,8 +40,8 @@ const ShowUserPage: React.FC = () => {
 
   // Get values AFTER hooks are declared
   const userId = searchParams.get('id');
-  const canViewUsers = user ? hasRole(user, ['moderator.review', 'moderator.approve', 'moderator.manage', 'admin.tenant', 'admin.org', 'admin.system']) : false;
-  const canManageUsers = user ? hasRole(user, ['admin.tenant', 'admin.org', 'admin.system']) : false;
+  const canViewUsers = user ? hasRole(user, ['moderator.manage', 'admin.system']) : false;
+  const canManageUsers = user ? hasRole(user, ['admin.system']) : false;
 
   const fetchUser = async () => {
     if (!userId || !token) return;
@@ -296,7 +296,7 @@ const ShowUserPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Basic Information */}
             <Card>
               <CardHeader>
@@ -394,7 +394,7 @@ const ShowUserPage: React.FC = () => {
             </Card>
 
             {/* Activity Information */}
-            <Card className="lg:col-span-2">
+            <Card className="md:col-span-2">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Calendar className="h-5 w-5" />

@@ -256,10 +256,12 @@ router.get('/admin/users/:id',
     const userId = req.params.id;
 
     try {
-      if (isNaN(userId)) {
+      // User.id is a cuid (String) after the 4.1 migration. Don't use
+      // isNaN — cuids always fail that and every lookup would 400.
+      if (!userId || typeof userId !== 'string') {
         return res.status(400).json({
           error: 'Invalid user ID',
-          message: 'User ID must be a valid number',
+          message: 'User ID must be a non-empty string',
           requestId
         });
       }

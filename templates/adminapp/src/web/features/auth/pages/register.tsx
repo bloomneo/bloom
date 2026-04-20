@@ -4,6 +4,20 @@ import { User, Mail, Lock, ArrowRight, Loader2, AlertTriangle, Eye, EyeOff, Chec
 import { SEO } from '../../../shared/components';
 import { useAuth } from '../hooks';
 
+/**
+ * When the admin toggles `feature_signup_open` to false in /admin/settings,
+ * this page renders a "closed" panel instead of the form. Gate fetched
+ * once on mount via /api/settings/public. While the flag is loading we
+ * render the form optimistically — the server's /auth/register endpoint
+ * is expected to own the final enforcement.
+ */
+const API_BASE =
+  (import.meta as unknown as { env: Record<string, string> }).env.VITE_API_URL ??
+  'http://localhost:3000';
+const FRONTEND_KEY =
+  (import.meta as unknown as { env: Record<string, string> }).env
+    .VITE_FRONTEND_KEY ?? '';
+
 const RegisterPage: React.FC = () => {
   const { register } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
@@ -11,6 +25,29 @@ const RegisterPage: React.FC = () => {
   const [registerError, setRegisterError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  // null = loading, true = open, false = closed.
+  const [signupOpen, setSignupOpen] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`${API_BASE}/api/settings/public`, {
+      headers: FRONTEND_KEY ? { 'X-Frontend-Key': FRONTEND_KEY } : {},
+    })
+      .then((r) => (r.ok ? r.json() : {}))
+      .then((data: { featureSignupOpen?: boolean }) => {
+        if (cancelled) return;
+        // Default-open: a missing/malformed public endpoint shouldn't
+        // silently lock new signups — operators always have the admin
+        // settings toggle to close it explicitly.
+        setSignupOpen(data?.featureSignupOpen !== false);
+      })
+      .catch(() => {
+        if (!cancelled) setSignupOpen(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -148,7 +185,28 @@ const RegisterPage: React.FC = () => {
         imageAlt="Mountains with clouds and forest fog"
         imageOverlay="dark"
       >
-        {isSuccess ? (
+        {signupOpen === false ? (
+          // Signups disabled by admin
+          <div className="space-y-4">
+            <Alert>
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>Signups are currently closed</AlertTitle>
+              <AlertDescription>
+                New accounts aren't being accepted right now. If you have
+                an invitation, use the link in your email. Otherwise,
+                please check back later.
+              </AlertDescription>
+            </Alert>
+            <div className="text-center">
+              <a
+                href="/auth/login"
+                className="font-medium text-primary hover:underline"
+              >
+                Already have an account? Sign in
+              </a>
+            </div>
+          </div>
+        ) : isSuccess ? (
           // Success Message
           <div className="space-y-4">
             <Alert className="bg-green-50 border-green-200 text-green-800">

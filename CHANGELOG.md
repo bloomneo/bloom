@@ -2,6 +2,117 @@
 
 All notable changes to Bloom Framework will be documented in this file.
 
+## [4.2.0] - 2026-04-20
+
+`adminapp` polish release — consolidates a week of iteration into a
+template that boots to a working admin console with zero hand-edits.
+Tightens the role model to three tiers, wires the marketing /contact
+page to live settings, adds ship-blocker guards (signup gate, last-
+admin protection), and does a performance + documentation sweep on
+the admin feature.
+
+### Added — `adminapp`
+
+- **`settings.seed.js`** — first-boot seed for `AppSetting` rows so
+  `/contact` renders real values immediately. Idempotent — rows
+  already present are left alone. Wired into `npm run db:seed`.
+- **`.env.example.template`** — checked-in env reference grouped by
+  concern (DB / Auth / Server / Email / Vite / Seeding / Admin).
+- **Single-save settings UI** — Contact card and grouped AppSetting
+  cards now batch edits behind one "Save changes" + "Reset" pair
+  per card. Dirty-detection disables the buttons when nothing changed.
+- **`ContactCard` component** — form toggle, recipient (hidden unless
+  enabled), and the support details shown on `/contact`. Replaces the
+  previous split across Business / Feature-flags / Other cards.
+- **Live `/contact` page** — fetches `/api/settings/public` on mount
+  and renders saved support details with fallback defaults. Includes
+  a form that posts to `/api/contact-message` when the admin has
+  flipped `contact_form_enabled=true`; recipient lookup happens
+  server-side, never sent to the client.
+- **`docs/admin-patterns.md`** — canonical reference doc (layout
+  routes, admin-api helper, PageLoading, audit, role gating, settings,
+  adding a feature, common traps, perf notes, file-header convention).
+  Every admin source file points here via `@see`.
+
+### Changed — simplified role model (three tiers)
+
+The adminapp now ships three role.level pairs instead of nine:
+
+- `admin.system` — full admin
+- `moderator.manage` — user support
+- `user.basic` — end user
+
+Previously we shipped `user.{basic,pro,max}`, `moderator.{review,approve,
+manage}`, `admin.{tenant,org,system}` — rarely differentiated in
+practice. The simpler model reduces dropdowns, server-side gate
+variants, and seed noise; extend if your app earns it.
+
+Files touched:
+
+- `admin.roles.ts` default and parsing
+- `user.route.ts` role gates (now `['admin.system']` for admin,
+  `['moderator.manage','admin.system']` for moderator read)
+- `user.types.ts` `RoleLevel` union
+- `user.seed.js` — three accounts (`admin@`, `moderator@`, `user@`)
+- Web: `AdminLayoutRoute` allow-list, `USER_ROLES` helper, user admin
+  create/edit/show/index pages (one-level-per-role dropdowns)
+- `bloom.js` generated `.env`: `ADMIN_USER_ROLES="admin:system,moderator:manage,user:basic"`
+
+### Fixed — `adminapp`
+
+- **`/register` respects `feature_signup_open`** — client renders a
+  "Signups currently closed" panel when the admin has disabled new
+  accounts; server's `POST /api/auth/register` returns 403
+  `SIGNUPS_CLOSED` regardless of what the client sends. Defense in
+  depth.
+- **Last-admin protection** — `userService.updateUser` /
+  `deleteUser` now count active `admin.system` users and refuse any
+  mutation that would leave zero admins. Lock-out-by-demotion no
+  longer possible via the admin UI.
+- **Public-setting self-heal** — `settings.service.updateSetting`
+  creates new known-public rows with `isPublic=true`, and promotes
+  existing private rows on next edit. Previously the first save of
+  `support_hours` created a private row that never surfaced on
+  `/contact`.
+- **Missing `ContactCard` component** — settings page referenced it
+  but the definition was never written; typecheck passed, render
+  crashed on first open.
+- **Template `AGENTS.md.template`** — docs table was missing
+  `uikit-agents.md` and `admin-patterns.md` rows; agents couldn't
+  find the uikit rules or this release's patterns doc.
+
+### Performance — `adminapp`
+
+Targeted memoization on the admin feature:
+
+- Dashboard chart widgets (`SignupsAreaChart`, `RolesDonut`,
+  `ActivityTable`, `StatCard`, `StatUsers`, `StatSignups`,
+  `StatActivity`) wrapped in `React.memo`; `stats` object and
+  `peakLabel` derived via `useMemo` once per summary.
+- Audit page: `load` memoized via `useCallback`; `AuditDetail` drawer
+  memoized so filter typing doesn't re-render its JSON pretty-print.
+- Settings page: `saveValue` + `saveWithToast` stabilized via
+  `useCallback` so child cards don't see a fresh handler every keystroke.
+- `AdminLayoutRoute`: `navigation` array memoized — stops the sidebar
+  from re-processing nav items on every route change.
+
+### Documentation — `adminapp`
+
+Per-file `@see` links + `@llm-rule` hints added to the eight
+highest-leverage admin files (dashboard, audit, settings, layout
+route, admin-api, PageLoading, audit service, settings service).
+Future agents reading these files get pointed at `docs/admin-patterns.md`
+and the online docs without having to re-derive patterns from code.
+
+### Cross-template
+
+- `userapp/user.route.ts` — replace `isNaN(userId)` with
+  `typeof userId === 'string'` (cuids never pass isNaN; every admin
+  lookup was 400'ing). Same fix as adminapp.
+- `userapp/main.tsx` — `ToastProvider` now mounts with
+  `position="top-right"` and `richColors` to match adminapp defaults.
+- All templates: `@bloomneo/uikit` pin bumped from `^2.1.2` to `^2.1.3`.
+
 ## [4.1.0] - 2026-04-19
 
 Adds the `adminapp` template, adopts CUID as the default User primary

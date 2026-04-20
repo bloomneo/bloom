@@ -24,7 +24,9 @@ import '@bloomneo/uikit/styles';
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ThemeProvider theme="base" mode="light" forceConfig={true}>
-      <ToastProvider />
+      {/* position="top-right" + richColors so stacked toasts don't
+          overlap with transparent backgrounds (where text smears). */}
+      <ToastProvider position="top-right" richColors />
       <ConfirmProvider>
         <App />
       </ConfirmProvider>

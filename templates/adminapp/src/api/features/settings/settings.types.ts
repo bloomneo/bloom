@@ -24,10 +24,23 @@
  */
 export const KNOWN_SETTING_KEYS = [
   'business_name',
+  // Support / contact details — every one of these is isPublic=true
+  // and flows into getPublicSettings for the marketing /contact page.
+  // Admins edit them in Settings → Contact, the page picks up the
+  // changes on next reload.
   'support_email',
   'support_phone',
+  'support_hours',
+  'support_address',
   'support_whatsapp_url',
   'feature_signup_open',
+  // Contact-form routing — server-side (isPublic=false). Public
+  // endpoint surfaces only the `enabled` flag so the marketing page
+  // knows whether to render the form; the recipient + rate limit
+  // live in api/features/contact-message/ so a compromised browser
+  // can't redirect intake.
+  'contact_form_enabled',
+  'contact_form_to_email',
 ] as const;
 
 export type SettingKey = (typeof KNOWN_SETTING_KEYS)[number];
@@ -54,8 +67,21 @@ export interface PublicSettings {
   businessName?: string;
   supportEmail?: string;
   supportPhone?: string;
+  /** Operating hours string — freeform, e.g. "Mon–Fri, 9am–6pm IST". */
+  supportHours?: string;
+  /** Mailing address — freeform, may include newlines. */
+  supportAddress?: string;
   supportWhatsappUrl?: string;
   featureSignupOpen?: boolean;
+  /**
+   * Contact-form config. `enabled` is the only thing exposed
+   * publicly so the marketing page can decide whether to render
+   * the form. Recipient + rate limit live server-side in
+   * `api/features/contact-message/`.
+   */
+  contactForm?: {
+    enabled: boolean;
+  };
 }
 
 /**

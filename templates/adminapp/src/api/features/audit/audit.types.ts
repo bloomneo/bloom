@@ -21,10 +21,17 @@ export type AuditActorType = 'user' | 'admin' | 'system';
  * One audit row as stored in Postgres + returned to the admin audit page.
  * Dates are serialized ISO strings over HTTP; the route hands raw Prisma
  * Date objects to res.json() and Express takes care of the conversion.
+ *
+ * `actorName` / `actorEmail` are DENORMALIZED on read — the audit table
+ * stores only `actorId` (no Prisma relation) so the list endpoint does a
+ * single follow-up query resolving ids to display values. Both are
+ * optional: a system-initiated event or a deleted user leaves them null.
  */
 export interface AuditLogEntry {
   id: string;
   actorId: string | null;
+  actorName?: string | null;
+  actorEmail?: string | null;
   actorType: AuditActorType;
   action: string;
   entityType: string | null;

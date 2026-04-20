@@ -1,22 +1,23 @@
 import React from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { Button, Header as UIHeader, HeaderLogo, HeaderNav, type NavigationItem, useTheme } from '@bloomneo/uikit';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Header as UIHeader, HeaderLogo, HeaderNav, type NavigationItem } from '@bloomneo/uikit';
 import { useAuth } from '../../features/auth';
 import { hasRole, route } from '../utils';
 import {
   LayoutDashboard,
   User,
   LogOut,
-  Sun,
-  Moon,
   Shield,
   LogIn,
   UserPlus,
 } from 'lucide-react';
 
-// Logo component
+// Logo component. Wrapped in a <Link> so clicking the brand mark
+// returns to the home page — universal expectation on any SaaS site.
+// Using react-router <Link> so the click is a SPA navigation, not a
+// full-page reload.
 const Logo: React.FC = () => (
-  <div className="flex items-center gap-3">
+  <Link to="/" className="flex items-center gap-3 no-underline">
     <div className="w-8 h-8 bg-secondary rounded flex items-center justify-center text-secondary-foreground font-bold text-sm">
       UI
     </div>
@@ -24,40 +25,13 @@ const Logo: React.FC = () => (
       <h3 className="voila-brand-logo text-xl font-bold">MyApp</h3>
       <p className="text-xs text-background">Feature-Based Architecture</p>
     </div>
-  </div>
+  </Link>
 );
 
-// Theme actions component
-const ThemeActions: React.FC = () => {
-  const { theme, mode, setTheme, availableThemes, toggleMode } = useTheme();
-
-  return (
-    <div className="flex items-center gap-3">
-      {/* Theme Selector */}
-      <select
-        value={theme}
-        onChange={(e) => setTheme(e.target.value as any)}
-        className="border border-input rounded px-3 py-2 text-sm focus:outline-none text-background"
-      >
-        {availableThemes.map(themeId => (
-          <option key={themeId} value={themeId}>
-            {themeId.charAt(0).toUpperCase() + themeId.slice(1)}
-          </option>
-        ))}
-      </select>
-
-      {/* Light/Dark Mode Toggle */}
-      <Button onClick={toggleMode} variant="secondary" size="sm">
-        {mode === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-        <span className="ml-2 hidden sm:inline">
-          {mode === 'dark' ? 'Light' : 'Dark'}
-        </span>
-      </Button>
-    </div>
-  );
-};
-
 // Unified Header Component that handles both authenticated and public states
+// Theme + mode switcher moved to /admin/settings so the public header
+// stays brand-focused. Add it back here if you want per-visitor theme
+// control on the marketing site.
 export const Header: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -124,9 +98,6 @@ export const Header: React.FC = () => {
         onNavigate={handleNavigation}
       />
 
-      <div className="flex items-center ml-2">
-        <ThemeActions />
-      </div>
     </UIHeader>
   );
 };

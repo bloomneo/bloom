@@ -80,6 +80,43 @@ export const adminService = {
       }),
     );
 
+    // Resolve the 5 recent-audit actorIds to names/emails so the
+    // dashboard "Recent activity" widget can show human labels
+    // instead of cuids. Same denormalization pattern as listAudit.
+    type ActorRow = {
+      id: string;
+      name: string | null;
+      email: string;
+    };
+    type RawAudit = AuditLogEntry & { actorId: string | null };
+    const rawRecent = recentAudit as RawAudit[];
+    const recentActorIds = Array.from(
+      new Set(
+        rawRecent
+          .map((r) => r.actorId)
+          .filter(
+            (id): id is string => typeof id === 'string' && id.length > 0,
+          ),
+      ),
+    );
+    const recentActors: ActorRow[] = recentActorIds.length
+      ? ((await db.user.findMany({
+          where: { id: { in: recentActorIds } },
+          select: { id: true, name: true, email: true },
+        })) as ActorRow[])
+      : [];
+    const recentActorMap = new Map<string, Pick<ActorRow, 'name' | 'email'>>(
+      recentActors.map((a) => [a.id, { name: a.name, email: a.email }]),
+    );
+    const recentEnriched: AuditLogEntry[] = rawRecent.map((row) => {
+      const actor = row.actorId ? recentActorMap.get(row.actorId) : undefined;
+      return {
+        ...row,
+        actorName: actor?.name ?? null,
+        actorEmail: actor?.email ?? null,
+      } as AuditLogEntry;
+    });
+
     return {
       users: {
         total: totalUsers,
@@ -98,7 +135,7 @@ export const adminService = {
         daily,
       },
       activity: {
-        recent: recentAudit as AuditLogEntry[],
+        recent: recentEnriched,
       },
     };
   },

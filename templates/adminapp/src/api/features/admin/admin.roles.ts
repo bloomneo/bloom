@@ -3,12 +3,18 @@
  * @file src/api/features/admin/admin.roles.ts
  *
  * Format (from .env):
- *   ADMIN_USER_ROLES="admin:system,moderator:manage,viewer:basic"
+ *   ADMIN_USER_ROLES="admin:system,moderator:manage,user:basic"
  *
  * This defines which `role:level` pairs a User row is allowed to have.
  * The admin user-CRUD page reads this at render time to populate the
  * role dropdown; the auth middleware reads it at login time to reject
  * tokens claiming unknown roles.
+ *
+ * The adminapp ships three tiers intentionally — anything more is
+ * usually cosmetic until the app has real differentiation to back it
+ * (per-tenant admins, billing-tier gating, etc.). If you need more,
+ * add entries to ADMIN_USER_ROLES and also update the allow-list in
+ * `user.route.ts` (admin.* / moderator.* checks) accordingly.
  *
  * Keeping the allow-list in the env (rather than the DB) has two wins:
  *   1. Rebooting the server is the single source of truth — no "did I
@@ -16,8 +22,12 @@
  *   2. Per-deploy role tiers (a staging env with extra test roles)
  *      are trivial.
  *
+ * @see ../../../../docs/admin-patterns.md §7 role gating
+ * @see https://dev.bloomneo.com/adminapp/roles
+ *
  * @llm-rule WHEN: Validating a role:level combo or populating a role picker
  * @llm-rule AVOID: Hardcoding role strings in route handlers — read from here
+ * @llm-rule NOTE: The template ships three roles (admin/moderator/user). Adding levels means updating user.route.ts gates AND this env default
  */
 
 import { loggerClass } from '@bloomneo/appkit/logger';
@@ -31,13 +41,13 @@ export interface RolePair {
 
 /**
  * Safe default — used when ADMIN_USER_ROLES is unset or malformed. Keeps
- * the server bootable even if the operator forgets to set the var. The
- * three tiers map to: full admin / content moderator / read-only viewer.
+ * the server bootable even if the operator forgets to set the var. Three
+ * tiers: full admin / moderator (user support) / end user.
  */
 const DEFAULT_PAIRS: RolePair[] = [
   { role: 'admin', level: 'system' },
   { role: 'moderator', level: 'manage' },
-  { role: 'viewer', level: 'basic' },
+  { role: 'user', level: 'basic' },
 ];
 
 /**

@@ -44,7 +44,7 @@ const EditUserPage: React.FC = () => {
 
   // Get values AFTER hooks are declared
   const userId = searchParams.get('id');
-  const canManageUsers = user ? hasRole(user, ['admin.tenant', 'admin.org', 'admin.system']) : false;
+  const canManageUsers = user ? hasRole(user, ['admin.system']) : false;
 
   const fetchUser = async () => {
     if (!userId || !token) return;
@@ -97,19 +97,7 @@ const EditUserPage: React.FC = () => {
 
       // Reset level when role changes and set appropriate default
       if (field === 'role') {
-        switch (value) {
-          case 'user':
-            updated.level = 'basic';
-            break;
-          case 'moderator':
-            updated.level = 'review';
-            break;
-          case 'admin':
-            updated.level = 'tenant';
-            break;
-          default:
-            updated.level = 'basic';
-        }
+        updated.level = defaultLevelFor(value as string);
       }
 
       return updated;
@@ -118,34 +106,26 @@ const EditUserPage: React.FC = () => {
     setSuccess(null);
   };
 
-  // Get available levels based on selected role
-  const getAvailableLevels = (role: string) => {
-    if (!user) return [{ value: 'basic', label: 'Basic' }];
+  // Three-tier role model: admin.system / moderator.manage / user.basic.
+  // Keep in sync with server gates (api/features/user/user.route.ts)
+  // and admin.roles.ts if you extend the tiers.
+  const defaultLevelFor = (role: string): string => {
+    switch (role) {
+      case 'admin': return 'system';
+      case 'moderator': return 'manage';
+      case 'user': return 'basic';
+      default: return 'basic';
+    }
+  };
 
+  const getAvailableLevels = (role: string) => {
     switch (role) {
       case 'user':
-        return [
-          { value: 'basic', label: 'Basic' },
-          { value: 'pro', label: 'Pro' },
-          { value: 'max', label: 'Max' }
-        ];
+        return [{ value: 'basic', label: 'Basic' }];
       case 'moderator':
-        return [
-          { value: 'review', label: 'Review' },
-          { value: 'approve', label: 'Approve' },
-          { value: 'manage', label: 'Manage' }
-        ];
+        return [{ value: 'manage', label: 'Manage' }];
       case 'admin':
-        const adminLevels = [
-          { value: 'tenant', label: 'Tenant' }
-        ];
-        if (hasRole(user, ['admin.org', 'admin.system'])) {
-          adminLevels.push({ value: 'org', label: 'Organization' });
-        }
-        if (hasRole(user, ['admin.system'])) {
-          adminLevels.push({ value: 'system', label: 'System' });
-        }
-        return adminLevels;
+        return [{ value: 'system', label: 'System' }];
       default:
         return [{ value: 'basic', label: 'Basic' }];
     }
@@ -329,37 +309,40 @@ const EditUserPage: React.FC = () => {
             </Button>
           </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Edit className="h-5 w-5" />
-                User Details
-              </CardTitle>
-              <CardDescription>
-                Update the user account information.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {error && (
-                <Alert className="mb-6 bg-destructive/10 border-destructive text-destructive">
-                  <AlertTriangle className="h-4 w-4" />
-                  <AlertTitle>Error</AlertTitle>
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
+          {error && (
+            <Alert className="bg-destructive/10 border-destructive text-destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
 
-              {success && (
-                <Alert className="mb-6 bg-green-50 border-green-200 text-green-800">
-                  <CheckCircle className="h-4 w-4" />
-                  <AlertTitle>Success</AlertTitle>
-                  <AlertDescription>{success}</AlertDescription>
-                </Alert>
-              )}
+          {success && (
+            <Alert className="bg-green-50 border-green-200 text-green-800">
+              <CheckCircle className="h-4 w-4" />
+              <AlertTitle>Success</AlertTitle>
+              <AlertDescription>{success}</AlertDescription>
+            </Alert>
+          )}
 
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Split the form into two equal-width cards on md+:
+              Profile (identity fields) and Access (role/level/status/
+              verification). Each field is full-card-width inside so
+              <Select> triggers don't crunch. Stacks to single column
+              on mobile. */}
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid gap-6 md:grid-cols-2">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Edit className="h-5 w-5" />
+                    Profile
+                  </CardTitle>
+                  <CardDescription>Basic contact information.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <label htmlFor="name" className="text-sm font-medium">Full Name</label>
+                    <label htmlFor="name" className="text-sm font-medium">Full name</label>
                     <Input
                       id="name"
                       type="text"
@@ -369,9 +352,8 @@ const EditUserPage: React.FC = () => {
                       required
                     />
                   </div>
-
                   <div className="space-y-2">
-                    <label htmlFor="email" className="text-sm font-medium">Email Address</label>
+                    <label htmlFor="email" className="text-sm font-medium">Email address</label>
                     <Input
                       id="email"
                       type="email"
@@ -381,9 +363,8 @@ const EditUserPage: React.FC = () => {
                       required
                     />
                   </div>
-
                   <div className="space-y-2">
-                    <label htmlFor="phone" className="text-sm font-medium">Phone Number</label>
+                    <label htmlFor="phone" className="text-sm font-medium">Phone number</label>
                     <Input
                       id="phone"
                       type="tel"
@@ -392,7 +373,15 @@ const EditUserPage: React.FC = () => {
                       placeholder="Enter phone number (optional)"
                     />
                   </div>
+                </CardContent>
+              </Card>
 
+              <Card>
+                <CardHeader>
+                  <CardTitle>Access</CardTitle>
+                  <CardDescription>Role, level, and account state.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
                   <div className="space-y-2">
                     <label htmlFor="role" className="text-sm font-medium">Role</label>
                     <Select value={formData.role} onValueChange={(value) => handleInputChange('role', value)}>
@@ -402,13 +391,12 @@ const EditUserPage: React.FC = () => {
                       <SelectContent>
                         <SelectItem value="user">User</SelectItem>
                         <SelectItem value="moderator">Moderator</SelectItem>
-                        {hasRole(user, ['admin.org', 'admin.system']) && (
+                        {hasRole(user, ['admin.system']) && (
                           <SelectItem value="admin">Admin</SelectItem>
                         )}
                       </SelectContent>
                     </Select>
                   </div>
-
                   <div className="space-y-2">
                     <label htmlFor="level" className="text-sm font-medium">Level</label>
                     <Select value={formData.level} onValueChange={(value) => handleInputChange('level', value)}>
@@ -424,7 +412,6 @@ const EditUserPage: React.FC = () => {
                       </SelectContent>
                     </Select>
                   </div>
-
                   <div className="space-y-2">
                     <label htmlFor="status" className="text-sm font-medium">Status</label>
                     <Select
@@ -440,9 +427,8 @@ const EditUserPage: React.FC = () => {
                       </SelectContent>
                     </Select>
                   </div>
-
                   <div className="space-y-2">
-                    <label htmlFor="verified" className="text-sm font-medium">Verification Status</label>
+                    <label htmlFor="verified" className="text-sm font-medium">Verification</label>
                     <Select
                       value={formData.isVerified ? 'verified' : 'unverified'}
                       onValueChange={(value) => handleInputChange('isVerified', value === 'verified')}
@@ -456,20 +442,22 @@ const EditUserPage: React.FC = () => {
                       </SelectContent>
                     </Select>
                   </div>
-                </div>
+                </CardContent>
+              </Card>
+            </div>
 
-                <div className="flex gap-4">
-                  <Button type="submit" disabled={isLoading} className="gap-2">
-                    <Edit className="h-4 w-4" />
-                    {isLoading ? 'Updating User...' : 'Update User'}
-                  </Button>
-                  <Button type="button" variant="outline" asChild>
-                    <Link to={route('/user/admin')}>Cancel</Link>
-                  </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
+            {/* Submit row lives outside the cards so the two-card grid
+                stays symmetrical; buttons span the full width below. */}
+            <div className="flex gap-4">
+              <Button type="submit" disabled={isLoading} className="gap-2">
+                <Edit className="h-4 w-4" />
+                {isLoading ? 'Updating user…' : 'Update user'}
+              </Button>
+              <Button type="button" variant="outline" asChild>
+                <Link to={route('/user/admin')}>Cancel</Link>
+              </Button>
+            </div>
+          </form>
         </div>
       </>
   );

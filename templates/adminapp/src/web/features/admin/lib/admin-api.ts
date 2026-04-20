@@ -17,6 +17,13 @@
  * `.then(r => r.json())`.
  *
  * @file src/web/features/admin/lib/admin-api.ts
+ *
+ * @see ../../../../../docs/admin-patterns.md §4 admin-api, §10 common traps
+ * @see https://dev.bloomneo.com/adminapp/admin-api
+ *
+ * @llm-rule WHEN: Any admin page needs to read or write server state
+ * @llm-rule AVOID: Hand-rolling fetch('/api/...') — missing X-Frontend-Key returns an opaque 403 and relative URLs hit Vite (HTML response → "JSON.parse: unexpected character")
+ * @llm-rule PREFER: adminFetchJson for GETs/PUTs/POSTs that want parsed-or-throw; adminFetch when the caller needs the raw Response
  */
 
 const baseUrl =

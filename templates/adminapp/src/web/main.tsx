@@ -19,17 +19,49 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { ConfirmProvider, ThemeProvider, ToastProvider } from '@bloomneo/uikit';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import App from './App';
 import './styles/index.css';
 import '@bloomneo/uikit/styles';
 
+/**
+ * Single QueryClient for the whole app. Defaults tuned for an admin
+ * console:
+ *   - staleTime: 30s — cached data re-uses for 30s before marking
+ *     stale. Keeps dashboard-to-audit navigation instant without
+ *     showing outdated numbers for long.
+ *   - refetchOnWindowFocus: true — admins flipping between tabs
+ *     get fresh data when they return.
+ *   - retry: 1 — retry once on network wobble; don't hammer on real
+ *     500s (the admin will see the error toast and can retry).
+ *
+ * TODO: Expose the QueryClient via a hook if you need programmatic
+ * cache invalidation from outside React (e.g. after a websocket push).
+ */
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 30_000,
+      refetchOnWindowFocus: true,
+      retry: 1,
+    },
+    mutations: {
+      retry: 0,
+    },
+  },
+});
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ThemeProvider theme="base" mode="light" forceConfig={true}>
-      <ToastProvider />
-      <ConfirmProvider>
-        <App />
-      </ConfirmProvider>
+      <QueryClientProvider client={queryClient}>
+        {/* position="top-right" + richColors so stacked toasts don't
+            smear. See uikit AGENTS.md for the provider-tree rule. */}
+        <ToastProvider position="top-right" richColors />
+        <ConfirmProvider>
+          <App />
+        </ConfirmProvider>
+      </QueryClientProvider>
     </ThemeProvider>
   </React.StrictMode>
 );

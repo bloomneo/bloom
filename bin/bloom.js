@@ -190,8 +190,9 @@ function createUserappEnvFile(projectName, verbose = false, templateType = 'user
 # --- adminapp feature flags ---------------------------------------------
 # Allowed role:level pairs. Parsed by src/api/features/admin/admin.roles.ts
 # on server boot. Format: comma-separated, each pair "role:level".
-# The default covers a standard admin/moderator/viewer split.
-ADMIN_USER_ROLES="admin:system,moderator:manage,viewer:basic"
+# The template ships three tiers: admin (full), moderator (user support),
+# user (the default for signups). Add more if you need them.
+ADMIN_USER_ROLES="admin:system,moderator:manage,user:basic"
 
 # Master switch for the audit log. When false, auditService.logAudit() is a
 # no-op — useful for early development. Read by audit.service.ts.

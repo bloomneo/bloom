@@ -22,6 +22,8 @@ After `npm install`, these files are in `docs/`:
 | `docs/appkit.md` | Full `@bloomneo/appkit` API — all 12 modules, method signatures, examples |
 | `docs/appkit-agents.md` | AppKit agent rules — always/never lists, canonical patterns |
 | `docs/uikit.md` | Full `@bloomneo/uikit` API — components, hooks, layouts, themes |
+| `docs/uikit-agents.md` | UIKit agent rules — always/never lists, import/compose patterns |
+| `docs/admin-patterns.md` | This template's patterns — layout routes, admin-api helper, audit, settings |
 
 These are copied from the installed packages on every `npm install`, so they
 always match the exact version in use. **Read them before generating code.**

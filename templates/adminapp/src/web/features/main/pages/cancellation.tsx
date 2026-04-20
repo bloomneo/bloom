@@ -11,6 +11,7 @@
  */
 
 import { MarketingPageHeader } from '../components/MarketingPageHeader';
+import { Link } from 'react-router-dom';
 
 export default function CancellationPage() {
   const lastUpdated = 'YYYY-MM-DD';
@@ -32,12 +33,12 @@ export default function CancellationPage() {
         <LegalSection title="Self-serve cancellation">
           <p>
             Signed-in users can cancel at{' '}
-            <a
-              href="/account"
+            <Link
+              to="/account"
               className="text-primary underline-offset-4 hover:underline"
             >
               Account settings
-            </a>
+            </Link>
             . Cancellation takes effect at the end of the current
             billing cycle — you keep access until then.
           </p>
@@ -61,9 +62,9 @@ export default function CancellationPage() {
             On cancellation your subscription stops but your account
             stays dormant. After 90 days of inactivity, your data is
             deleted per our{' '}
-            <a href="/privacy" className="text-primary underline-offset-4 hover:underline">
+            <Link to="/privacy" className="text-primary underline-offset-4 hover:underline">
               privacy policy
-            </a>
+            </Link>
             . To delete immediately, email{' '}
             <a
               href="mailto:privacy@example.com"

@@ -18,6 +18,7 @@
  */
 
 import { MarketingPageHeader } from '../components/MarketingPageHeader';
+import { Link } from 'react-router-dom';
 
 export default function PrivacyPage() {
   const lastUpdated = 'YYYY-MM-DD'; // TODO: update when policy changes
@@ -71,9 +72,9 @@ export default function PrivacyPage() {
           <p>
             Spell out the access, correction, deletion, and portability
             rights you provide + how to exercise them. Link to{' '}
-            <a href="/contact" className="text-primary underline-offset-4 hover:underline">
+            <Link to="/contact" className="text-primary underline-offset-4 hover:underline">
               /contact
-            </a>{' '}
+            </Link>{' '}
             as the request intake.
           </p>
         </LegalSection>

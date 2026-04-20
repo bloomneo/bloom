@@ -122,7 +122,7 @@ Current release: **4.1.0**. Adds the `adminapp` template + a
 system-wide cuid primary key for User + folds the pending 4.0.1 bug
 fixes (copy-agent-docs JSDoc fix, api-router structured errors,
 VOILA_→BLOOM_ env migration, prisma version alignment) into one
-release. Templates repinned to `@bloomneo/uikit@^2.1.1` for the
+release. Templates repinned to `@bloomneo/uikit@^2.1.2` for the
 mobile sidebar → bottom-nav behavior. Jumping from any pre-4 version
 needs the breaking ecosystem-pin bumps below. Existing scaffolded
 projects keep working against their pinned versions — nothing

@@ -2,7 +2,7 @@
 
 > Rules for AI coding agents using `bloom` (v4.1.0) to scaffold full-stack
 > applications that combine `@bloomneo/appkit` (Express backend, pinned
-> `^4.0.0`) and `@bloomneo/uikit` (React frontend, pinned `^2.1.1`) via
+> `^4.0.0`) and `@bloomneo/uikit` (React frontend, pinned `^2.1.2`) via
 > Feature-Based Component Architecture (FBCA).
 >
 > Read this FIRST. If the project is already scaffolded, also read

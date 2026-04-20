@@ -20,6 +20,7 @@
  */
 
 import { MarketingPageHeader } from '../components/MarketingPageHeader';
+import { Link } from 'react-router-dom';
 
 export default function TermsPage() {
   const lastUpdated = 'YYYY-MM-DD';
@@ -62,13 +63,13 @@ export default function TermsPage() {
         <LegalSection title="Fees, refunds, cancellation">
           <p>
             Billing terms in one paragraph, with links to{' '}
-            <a href="/refund" className="text-primary underline-offset-4 hover:underline">
+            <Link to="/refund" className="text-primary underline-offset-4 hover:underline">
               the refund policy
-            </a>{' '}
+            </Link>{' '}
             and{' '}
-            <a href="/cancellation" className="text-primary underline-offset-4 hover:underline">
+            <Link to="/cancellation" className="text-primary underline-offset-4 hover:underline">
               the cancellation policy
-            </a>
+            </Link>
             .
           </p>
         </LegalSection>

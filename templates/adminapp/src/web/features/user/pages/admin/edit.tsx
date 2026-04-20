@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams , Link} from 'react-router-dom';
 import { Alert, AlertDescription, AlertTitle, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@bloomneo/uikit';
 import { Edit, ArrowLeft, AlertTriangle, CheckCircle, RefreshCw } from 'lucide-react';
 import { SEO } from '../../../../shared/components';
@@ -209,7 +209,7 @@ const EditUserPage: React.FC = () => {
                     You don't have permission to edit users.
                   </p>
                   <Button asChild>
-                    <a href={route('/user/admin')}>Back to User Admin</a>
+                    <Link to={route('/user/admin')}>Back to User Admin</Link>
                   </Button>
                 </div>
               </CardContent>
@@ -238,7 +238,7 @@ const EditUserPage: React.FC = () => {
                     User ID is required to edit a user.
                   </p>
                   <Button asChild>
-                    <a href={route('/user/admin')}>Back to User Admin</a>
+                    <Link to={route('/user/admin')}>Back to User Admin</Link>
                   </Button>
                 </div>
               </CardContent>
@@ -286,7 +286,7 @@ const EditUserPage: React.FC = () => {
                   <div className="flex gap-2 justify-center">
                     <Button onClick={fetchUser}>Retry</Button>
                     <Button variant="outline" asChild>
-                      <a href={route('/user/admin')}>Back to User Admin</a>
+                      <Link to={route('/user/admin')}>Back to User Admin</Link>
                     </Button>
                   </div>
                 </div>
@@ -322,10 +322,10 @@ const EditUserPage: React.FC = () => {
               </p>
             </div>
             <Button asChild variant="outline" className="gap-2">
-              <a href={route('/user/admin')}>
+              <Link to={route('/user/admin')}>
                 <ArrowLeft className="h-4 w-4" />
                 Back to User Admin
-              </a>
+              </Link>
             </Button>
           </div>
 
@@ -464,7 +464,7 @@ const EditUserPage: React.FC = () => {
                     {isLoading ? 'Updating User...' : 'Update User'}
                   </Button>
                   <Button type="button" variant="outline" asChild>
-                    <a href={route('/user/admin')}>Cancel</a>
+                    <Link to={route('/user/admin')}>Cancel</Link>
                   </Button>
                 </div>
               </form>

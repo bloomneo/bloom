@@ -3,6 +3,7 @@ import { Alert, AlertDescription, AlertTitle, Button, Card, CardContent, CardDes
 import { UserPlus, ArrowLeft, AlertTriangle, CheckCircle } from 'lucide-react';
 import { SEO } from '../../../../shared/components';
 import { AdminPageHeader } from '../../../admin/components/AdminPageHeader';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../../auth';
 import { route, hasRole } from '../../../../shared/utils';
 import { config } from '../../../auth/config';
@@ -50,7 +51,7 @@ const CreateUserPage: React.FC = () => {
                   You don't have permission to create users.
                 </p>
                 <Button asChild>
-                  <a href={route('/user/admin')}>Back to User Admin</a>
+                  <Link to={route('/user/admin')}>Back to User Admin</Link>
                 </Button>
               </div>
             </CardContent>
@@ -219,10 +220,10 @@ const CreateUserPage: React.FC = () => {
               </p>
             </div>
             <Button asChild variant="outline" className="gap-2">
-              <a href={route('/user/admin')}>
+              <Link to={route('/user/admin')}>
                 <ArrowLeft className="h-4 w-4" />
                 Back to User Admin
-              </a>
+              </Link>
             </Button>
           </div>
 
@@ -402,7 +403,7 @@ const CreateUserPage: React.FC = () => {
                     {isLoading ? 'Creating User...' : 'Create User'}
                   </Button>
                   <Button type="button" variant="outline" asChild>
-                    <a href={route('/user/admin')}>Cancel</a>
+                    <Link to={route('/user/admin')}>Cancel</Link>
                   </Button>
                 </div>
               </form>

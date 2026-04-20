@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, PageLayout } from '@bloomneo/uikit';
 import { Users, Shield, Settings, ArrowLeft } from 'lucide-react';
 import { Header, Footer, SEO } from '../../../shared/components';
@@ -31,7 +32,7 @@ const AdminPage: React.FC = () => {
                     You don't have permission to access the admin area.
                   </p>
                   <Button asChild>
-                    <a href={route('/dashboard')}>Back to Dashboard</a>
+                    <Link to={route('/dashboard')}>Back to Dashboard</Link>
                   </Button>
                 </div>
               </CardContent>
@@ -66,10 +67,10 @@ const AdminPage: React.FC = () => {
               </p>
             </div>
             <Button asChild variant="outline" className="gap-2">
-              <a href={route('/dashboard')}>
+              <Link to={route('/dashboard')}>
                 <ArrowLeft className="h-4 w-4" />
                 Back to Dashboard
-              </a>
+              </Link>
             </Button>
           </div>
 
@@ -88,7 +89,7 @@ const AdminPage: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {/* Users Management */}
                 <Button asChild className="h-auto flex-col py-6 px-4" variant="outline">
-                  <a href={route('/user/admin')}>
+                  <Link to={route('/user/admin')}>
                     <Users className="h-8 w-8 mb-3 text-primary" />
                     <div className="text-center">
                       <div className="font-semibold mb-1">Users</div>
@@ -96,7 +97,7 @@ const AdminPage: React.FC = () => {
                         {canManageUsers ? 'Manage user accounts' : 'View user listings'}
                       </div>
                     </div>
-                  </a>
+                  </Link>
                 </Button>
 
                 {/* System Settings - placeholder for future */}

@@ -297,7 +297,47 @@ See <https://dev.bloomneo.com/adminapp/adding-a-feature>.
 
 ---
 
-## 11. Performance notes
+## 11. Security posture
+
+What the template ships with, and what it doesn't:
+
+**Shipped:**
+- Auth rate-limit (`authRateLimit` — 10/15min/IP) on `/register`,
+  `/login`, `/forgot-password`, `/reset-password`.
+- Admin-mutation rate-limit (`adminWriteLimit` — 60/5min/IP) on every
+  `/api/settings/admin/*` write and every `/api/user/admin/*` mutation.
+- Contact-form rate-limit (`5/10min/IP`) on `/api/contact-message`.
+- Heavier limit on `/api/settings/admin/email-test` (10/10min) because
+  real email sends cost money.
+- Server-side signup gate via `feature_signup_open` AppSetting.
+- Server-side last-admin protection in `userService.updateUser` and
+  `deleteUser` — can't lock yourself out by demoting the only admin.
+- Frontend-key gate on every `/api/*` route via appkit/security.
+- JWT bearer auth — `Authorization: Bearer <token>`, NOT cookies.
+  This closes the classic CSRF vector; browsers don't auto-attach
+  bearer tokens.
+- `isVerified` check on login (opt-out via `AUTH_REQUIRE_VERIFIED_EMAIL=false`
+  for dev).
+- Audit is fire-and-forget — never blocks a user's request path.
+
+**Intentionally NOT shipped:**
+- **CSRF middleware.** See above — bearer tokens don't ride on CSRF.
+  If you add cookie-based sessions, wire csurf + `SameSite=Lax`.
+- **Global request-rate middleware.** Per-route limits are more useful
+  and don't throttle the dashboard while an admin types in the filter.
+- **Refresh tokens / session rotation.** Tokens expire after
+  `JWT_EXPIRES_IN` (default 7 days); admins revoke by deactivating the
+  user. If you need per-session revocation, add a `Session` table with
+  a `tokenId` claim.
+
+**Gaps you'll hit eventually:**
+- npm audit flags the `bcrypt → @mapbox/node-pre-gyp → tar` chain.
+  Swap to `bcryptjs` if your hosting requires clean audit output.
+- Audit log never throws. For compliance apps that need "failed
+  writes must be visible", add an `AUDIT_STRICT_MODE` that raises
+  when the DB write errors.
+
+## 12. Performance notes
 
 - **Pages are lazy-loaded** by the PageRouter; don't import page
   components into other modules or you defeat code-splitting.
@@ -316,7 +356,7 @@ See <https://dev.bloomneo.com/adminapp/adding-a-feature>.
 
 ---
 
-## 12. File header convention
+## 13. File header convention
 
 Every source file should open with a JSDoc block answering four
 questions:

@@ -59,7 +59,9 @@ async function loadContactConfig() {
       key: { in: ['contact_form_enabled', 'contact_form_to_email', 'support_email'] },
     },
   });
-  const byKey = new Map(rows.map((r: { key: string; value: string }) => [r.key, r.value]));
+  const byKey = new Map<string, string>(
+    rows.map((r: { key: string; value: string }): [string, string] => [r.key, r.value]),
+  );
   const enabled =
     (byKey.get('contact_form_enabled') ?? '').toLowerCase() === 'true';
   // Fallback chain: explicit contact_form_to_email → support_email

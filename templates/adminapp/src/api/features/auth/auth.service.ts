@@ -142,6 +142,26 @@ export const authService = {
         throw error.badRequest('Account is deactivated');
       }
 
+      // Check if user has verified their email. Registration sets
+      // isVerified=false; the /verify-email flow flips it to true.
+      // Without this check a registered-but-unverified user can sign in
+      // and the whole verification flow becomes cosmetic.
+      //
+      // To disable verification-gated login for dev convenience, set
+      // AUTH_REQUIRE_VERIFIED_EMAIL=false in .env.
+      const requireVerified =
+        (process.env.AUTH_REQUIRE_VERIFIED_EMAIL ?? 'true').toLowerCase() !==
+        'false';
+      if (requireVerified && !user.isVerified) {
+        logger.warn('Unverified user login attempt', {
+          email: data.email,
+          userId: user.id,
+        });
+        throw error.badRequest(
+          'Please verify your email before signing in. Check your inbox for a verification link.',
+        );
+      }
+
       logger.info('User is active, generating JWT token', {
         userId: user.id,
         role: user.role,

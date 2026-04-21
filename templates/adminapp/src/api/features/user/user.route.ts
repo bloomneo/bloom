@@ -6,6 +6,7 @@
 import express from 'express';
 import { errorClass } from '@bloomneo/appkit/error';
 import { authClass } from '@bloomneo/appkit/auth';
+import { securityClass } from '@bloomneo/appkit/security';
 import { userService } from './user.service.js';
 import { auditService } from '../audit/audit.service.js';
 
@@ -13,6 +14,17 @@ import { auditService } from '../audit/audit.service.js';
 const router = express.Router();
 const error = errorClass.get();
 const auth = authClass.get();
+const security = securityClass.get();
+
+/**
+ * Rate limiter for admin-side user mutations (create / update / delete /
+ * admin password change). Authenticated + role-gated, so the threat
+ * surface is "compromised admin session" rather than "anonymous spam".
+ * 60 writes in 5 min is generous for human editing; automation trips it.
+ */
+const adminWriteLimit = security.requests(60, 5 * 60 * 1000, {
+  message: 'Too many admin writes in a short window. Try again shortly.',
+});
 
 /**
  * Get user profile by ID
@@ -202,6 +214,7 @@ router.get('/admin/list',
  * Create new user (admin only)
  */
 router.post('/admin/create',
+  adminWriteLimit,
   auth.requireLoginToken(),
   auth.requireUserRoles(['admin.system']),
   error.asyncRoute(async (req, res) => {
@@ -318,6 +331,7 @@ router.get('/admin/users/:id',
  * Update user by admin (admin only)
  */
 router.put('/admin/users/:id',
+  adminWriteLimit,
   auth.requireLoginToken(),
   auth.requireUserRoles(['admin.system']),
   error.asyncRoute(async (req, res) => {
@@ -376,6 +390,7 @@ router.put('/admin/users/:id',
  * Delete user (admin only)
  */
 router.delete('/admin/users/:id',
+  adminWriteLimit,
   auth.requireLoginToken(),
   auth.requireUserRoles(['admin.system']),
   error.asyncRoute(async (req, res) => {
@@ -437,6 +452,7 @@ router.delete('/admin/users/:id',
  * Admin change user password (admin only)
  */
 router.put('/admin/users/:id/password',
+  adminWriteLimit,
   auth.requireLoginToken(),
   auth.requireUserRoles(['admin.system']),
   error.asyncRoute(async (req, res) => {

@@ -7,8 +7,24 @@ import { Router, Request, Response } from 'express';
 import { errorClass } from '@bloomneo/appkit/error';
 import { securityClass } from '@bloomneo/appkit/security';
 import { databaseClass } from '@bloomneo/appkit/database';
+import { loggerClass } from '@bloomneo/appkit/logger';
 import { authService } from './auth.service.js';
 import { auditService } from '../audit/audit.service.js';
+
+const logger = loggerClass.get('auth-routes');
+
+/**
+ * Normalize any thrown value into something with `statusCode` + `message`.
+ * `catch (err)` is unknown by default in strict TS; this pulls the
+ * fields we care about without leaking internals to the client.
+ */
+function normalizeError(err: unknown): { statusCode?: number; message: string } {
+  if (err instanceof Error) {
+    const anyErr = err as Error & { statusCode?: number };
+    return { statusCode: anyErr.statusCode, message: err.message };
+  }
+  return { message: typeof err === 'string' ? err : 'Unknown error' };
+}
 
 /**
  * Server-side enforcement of the admin's `feature_signup_open` flag.
@@ -83,19 +99,20 @@ router.post('/register', authRateLimit, async (req: Request, res: Response) => {
       requestId
     });
 
-  } catch (err: any) {
-    console.error('Registration error:', err);
+  } catch (err) {
+    const { statusCode, message } = normalizeError(err);
+    logger.warn('register failed', { email: req.body?.email, error: message });
     auditService.logAudit({
       actorType: 'system',
       action: 'auth.register.failure',
-      description: err.message ?? 'Registration failed',
+      description: message,
       newValue: { email: req.body?.email },
       ipAddress: req.ip,
       userAgent: req.get('user-agent') ?? undefined,
     });
-    res.status(err.statusCode || 500).json({
+    res.status(statusCode ?? 500).json({
       error: 'REGISTRATION_FAILED',
-      message: err.message || 'Registration failed',
+      message,
     });
   }
 });
@@ -125,8 +142,9 @@ router.post('/login', authRateLimit, async (req: Request, res: Response) => {
       requestId
     });
 
-  } catch (err: any) {
-    console.error('Login error:', err);
+  } catch (err) {
+    const { statusCode, message } = normalizeError(err);
+    logger.warn('login failed', { email: req.body?.email, error: message });
     // Surface bad-credential attempts in the audit log. We don't know
     // the user id here (the service threw before returning), so we log
     // the attempted email in `newValue` so the admin can spot brute-force
@@ -134,14 +152,14 @@ router.post('/login', authRateLimit, async (req: Request, res: Response) => {
     auditService.logAudit({
       actorType: 'system',
       action: 'auth.login.failure',
-      description: err.message ?? 'Login failed',
+      description: message,
       newValue: { email: req.body?.email },
       ipAddress: req.ip,
       userAgent: req.get('user-agent') ?? undefined,
     });
-    res.status(err.statusCode || 500).json({
+    res.status(statusCode ?? 500).json({
       error: 'LOGIN_FAILED',
-      message: err.message || 'Login failed',
+      message,
     });
   }
 });
@@ -180,11 +198,12 @@ router.post('/verify-email', async (req: Request, res: Response) => {
       message: 'Email verified successfully',
       user: result.user,
     });
-  } catch (err: any) {
-    console.error('Email verification error:', err);
+  } catch (err) {
+    const { message } = normalizeError(err);
+    logger.warn('email verification failed', { error: message });
     res.status(500).json({
       error: 'INTERNAL_ERROR',
-      message: err.message || 'Email verification failed',
+      message,
     });
   }
 });
@@ -212,11 +231,12 @@ router.post('/resend-verification', async (req: Request, res: Response) => {
     res.json({
       message: 'Verification email sent successfully',
     });
-  } catch (err: any) {
-    console.error('Resend verification error:', err);
+  } catch (err) {
+    const { message } = normalizeError(err);
+    logger.warn('resend verification failed', { email: req.body?.email, error: message });
     res.status(500).json({
       error: 'INTERNAL_ERROR',
-      message: err.message || 'Failed to resend verification email',
+      message,
     });
   }
 });
@@ -244,11 +264,12 @@ router.post('/forgot-password', authRateLimit, async (req: Request, res: Respons
     res.json({
       message: 'If an account exists with this email, a password reset link has been sent',
     });
-  } catch (err: any) {
-    console.error('Forgot password error:', err);
+  } catch (err) {
+    const { message } = normalizeError(err);
+    logger.warn('forgot-password failed', { email: req.body?.email, error: message });
     res.status(500).json({
       error: 'INTERNAL_ERROR',
-      message: err.message || 'Failed to process forgot password request',
+      message,
     });
   }
 });
@@ -284,11 +305,12 @@ router.post('/reset-password', authRateLimit, async (req: Request, res: Response
     res.json({
       message: 'Password reset successfully',
     });
-  } catch (err: any) {
-    console.error('Reset password error:', err);
+  } catch (err) {
+    const { message } = normalizeError(err);
+    logger.warn('reset-password failed', { error: message });
     res.status(500).json({
       error: 'INTERNAL_ERROR',
-      message: err.message || 'Failed to reset password',
+      message,
     });
   }
 });

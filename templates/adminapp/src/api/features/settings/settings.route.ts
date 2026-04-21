@@ -16,6 +16,7 @@ import { errorClass } from '@bloomneo/appkit/error';
 import { authClass } from '@bloomneo/appkit/auth';
 import { loggerClass } from '@bloomneo/appkit/logger';
 import { emailClass } from '@bloomneo/appkit/email';
+import { securityClass } from '@bloomneo/appkit/security';
 import { settingsService } from './settings.service.js';
 import type { UpdateSettingInput } from './settings.types.js';
 import {
@@ -28,7 +29,26 @@ import { auditService } from '../audit/audit.service.js';
 const router = express.Router();
 const error = errorClass.get();
 const auth = authClass.get();
+const security = securityClass.get();
 const logger = loggerClass.get('settings-routes');
+
+/**
+ * Rate limiter for admin write endpoints. An authenticated admin is
+ * not malicious by default, but a compromised admin session shouldn't
+ * be able to grind every row in the settings table. 60 writes in 5
+ * minutes is plenty for human editing; anything faster is automation.
+ */
+const adminWriteLimit = security.requests(60, 5 * 60 * 1000, {
+  message: 'Too many admin writes in a short window. Try again shortly.',
+});
+
+/**
+ * Heavier limit for the test-email endpoint — sending real email is
+ * expensive and can trigger provider rate limits of its own.
+ */
+const testEmailLimit = security.requests(10, 10 * 60 * 1000, {
+  message: 'Too many test emails. Try again later.',
+});
 
 /**
  * GET /api/settings/public
@@ -63,6 +83,7 @@ router.get(
  */
 router.put(
   '/admin/:key',
+  adminWriteLimit,
   auth.requireLoginToken(),
   auth.requireUserRoles(['admin.system']),
   error.asyncRoute(async (req, res) => {
@@ -163,6 +184,7 @@ router.get(
  */
 router.put(
   '/admin/email-env',
+  adminWriteLimit,
   auth.requireLoginToken(),
   auth.requireUserRoles(['admin.system']),
   error.asyncRoute(async (req, res) => {
@@ -219,6 +241,7 @@ router.put(
  */
 router.post(
   '/admin/email-test',
+  testEmailLimit,
   auth.requireLoginToken(),
   auth.requireUserRoles(['admin.system']),
   error.asyncRoute(async (req, res) => {

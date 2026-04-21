@@ -2,6 +2,58 @@
 
 All notable changes to Bloom Framework will be documented in this file.
 
+## [4.2.1] - 2026-04-21
+
+Security hardening pass on the `adminapp` template, closing gaps
+surfaced during an external audit. No breaking changes.
+
+### Fixed
+
+- **`isVerified` gate on login** — `authService.login` now rejects
+  unverified accounts with a clear message. Dev workflows can opt out
+  via `AUTH_REQUIRE_VERIFIED_EMAIL=false`. Without this gate the
+  registration-verification flow was cosmetic — any registered account
+  could sign in before verifying their email.
+- **Structured logging in auth routes** — replaced six `console.error`
+  calls in `auth.route.ts` with `loggerClass.get('auth-routes').warn()`.
+  Prod logs now carry structured context (email, error message) routed
+  through appkit's logger instead of going to stderr.
+- **Typed error handling in auth routes** — replaced `catch (err: any)`
+  with `catch (err)` + a `normalizeError()` helper that extracts
+  `statusCode` + `message` from `unknown`. Catches regressions where a
+  non-Error is thrown.
+
+### Added
+
+- **Per-route rate limits on admin mutations** — all
+  `/api/settings/admin/*` writes, `/api/settings/admin/email-env`, and
+  `/api/user/admin/*` (create / update / delete / password) are now
+  limited to 60 writes per 5-minute window per IP via
+  `adminWriteLimit`. `/api/settings/admin/email-test` gets a tighter
+  10 / 10-minute cap because real email sends have upstream cost.
+- **`docs/admin-patterns.md` §11 Security posture** — lists exactly
+  what the template ships vs. intentionally omits (CSRF not wired
+  because bearer-token auth closes the classic vector; no global
+  request limiter; no refresh tokens), plus known gaps (bcrypt chain
+  npm-audit noise, audit-log strict mode).
+- **`.env.example.template` security block** — documents
+  `AUTH_REQUIRE_VERIFIED_EMAIL` and explains the CSRF posture so
+  reviewers don't chase a non-issue.
+
+### Notes
+
+Items from the external audit that were fact-checked as **not issues**:
+
+- **`.gitignore`** — template already ships `.gitignore.template` that
+  scaffolds to `.gitignore` with `.env` on the first line. False alarm.
+- **Auth rate-limit missing** — `authRateLimit` was always wired on
+  `/register`, `/login`, `/forgot-password`, `/reset-password`. The
+  auditor missed it.
+- **CSRF not wired** — intentional. App uses `Authorization: Bearer`
+  from localStorage (not cookies), so browsers don't auto-attach auth
+  on cross-site requests. Classic CSRF vector is closed without
+  middleware. Documented in §11.
+
 ## [4.2.0] - 2026-04-20
 
 `adminapp` polish release — consolidates a week of iteration into a

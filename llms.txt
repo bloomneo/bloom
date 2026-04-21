@@ -1,4 +1,4 @@
-# @bloomneo/bloom v4.2.2
+# @bloomneo/bloom v4.2.3
 
 Scaffolding CLI for full-stack apps combining `@bloomneo/appkit` (Express
 backend) and `@bloomneo/uikit` (React frontend) with Feature-Based
@@ -118,9 +118,15 @@ Adding a new page = creating a file. Don't edit the page-router.
 
 ## Migration
 
-Current release: **4.2.2**. Drops all historical `@voilajsx/helix`
+Current release: **4.2.3**. Bumps the `@bloomneo/uikit` pin across all
+templates from `^2.1.3` to `^2.1.5`. uikit 2.1.5 is a cosmetic cleanup
+release that drops lingering `@voilajsx/uikit` references from its
+user-facing docs (README, AGENTS.md, SKILL.md) — scaffolded apps no
+longer inherit the voilajsx warnings through the postinstall hook.
+
+Prior release: **4.2.2**. Dropped historical `@voilajsx/helix`
 references (README, package.json description, llms.txt — changelog
-history kept). Cleans up `(err: any)` in the inherited userapp user
+history kept). Cleaned up `(err: any)` in the inherited userapp user
 admin routes via a `normalizeError()` helper so strict TS catches
 regressions.
 

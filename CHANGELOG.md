@@ -2,6 +2,22 @@
 
 All notable changes to Bloom Framework will be documented in this file.
 
+## [4.2.3] - 2026-04-21
+
+### Changed
+
+- **`@bloomneo/uikit` pin bumped `^2.1.3` → `^2.1.5`** across every
+  template (adminapp / basicapp / userapp / mobile-basicapp /
+  desktop-basicapp / desktop-userapp). uikit 2.1.5 drops residual
+  `@voilajsx/uikit` references from its user-facing docs (README,
+  AGENTS.md, SKILL.md), so scaffolded apps no longer inherit those
+  warnings via the postinstall hook that copies uikit's agent docs.
+
+  No API changes — this is a cosmetic/doc-hygiene bump. Existing
+  scaffolded apps that run `npm install` pick up uikit 2.1.5 on
+  install; agent-doc files in `docs/uikit-agents.md` get rewritten by
+  the postinstall with the cleaned-up copy.
+
 ## [4.2.2] - 2026-04-21
 
 Drops historical voilajsx references and tightens error handling in

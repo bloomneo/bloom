@@ -1,7 +1,5 @@
 # 🌸 Bloom Framework
 
-> Previously published as `@voilajsx/helix`. Same code, new home, new namespace, new CLI command. See the [migration note](#scope-change) below.
-
 A modern fullstack framework that combines **@bloomneo/uikit** (React frontend) and **@bloomneo/appkit** (Express backend) with Feature-Based Component Architecture (FBCA). One CLI scaffolds web, desktop (Electron), and mobile (Capacitor) apps from the same project.
 
 [![npm version](https://img.shields.io/npm/v/@bloomneo/bloom.svg)](https://www.npmjs.com/package/@bloomneo/bloom)
@@ -415,41 +413,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [UIKit Documentation](https://github.com/bloomneo/uikit)
 - [AppKit Documentation](https://github.com/bloomneo/appkit)
 - [FBCA Guide](https://docs.bloomneo.com/fbca)
-
-<a id="scope-change"></a>
-
-## 🔁 Scope change (1.5.0)
-
-This package was previously published as **`@voilajsx/helix`** with a **`helix`** CLI command. Starting with `1.5.0` it lives at **`@bloomneo/bloom`** with a **`bloom`** CLI command. The old package on npm is frozen at `1.2.0` and will not receive further updates.
-
-**What changed:**
-
-- **Package name** — `@voilajsx/helix` → `@bloomneo/bloom`
-- **CLI command** — `helix create` → `bloom create`
-- **Brand** — Helix Framework → Bloom Framework
-- **GitHub home** — `voilajsx/helix` → `bloomneo/bloom`
-- **Sister packages** — templates now reference `@bloomneo/uikit` and `@bloomneo/appkit` (formerly `@voilajsx/uikit` and `@voilajsx/appkit`)
-
-**Migration:**
-
-```diff
-- npm install -g @voilajsx/helix
-+ npm install -g @bloomneo/bloom
-```
-
-```diff
-- helix create my-app
-+ bloom create my-app
-```
-
-In any project that has Bloom installed locally:
-
-```diff
-- npx helix create my-app
-+ npx bloom create my-app
-```
-
-A project-wide find-and-replace of `@voilajsx/helix` → `@bloomneo/bloom`, `@voilajsx/uikit` → `@bloomneo/uikit`, and `@voilajsx/appkit` → `@bloomneo/appkit` is sufficient. The CLI flags, template names, and FBCA conventions are identical between the two scopes — only the namespace and the CLI command word changed.
 
 ## 💖 Support
 

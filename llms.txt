@@ -1,4 +1,4 @@
-# @bloomneo/bloom v4.2.1
+# @bloomneo/bloom v4.2.2
 
 Scaffolding CLI for full-stack apps combining `@bloomneo/appkit` (Express
 backend) and `@bloomneo/uikit` (React frontend) with Feature-Based
@@ -118,7 +118,13 @@ Adding a new page = creating a file. Don't edit the page-router.
 
 ## Migration
 
-Current release: **4.2.1**. Security hardening pass on adminapp —
+Current release: **4.2.2**. Drops all historical `@voilajsx/helix`
+references (README, package.json description, llms.txt — changelog
+history kept). Cleans up `(err: any)` in the inherited userapp user
+admin routes via a `normalizeError()` helper so strict TS catches
+regressions.
+
+Prior release: **4.2.1**. Security hardening pass on adminapp —
 login now gates on `isVerified`, admin mutations are rate-limited
 (60/5min), auth routes log through appkit/logger (not console.error),
 error handling in auth routes is typed (`unknown` not `any`), and
@@ -183,8 +189,7 @@ bumps are breaking per semver, so each gets its own major.
   `bloom-<template>`), so scaffolded projects get the user's actual
   name.
 - Deleted stale `docs/UIKIT_*.md` template docs (deep imports +
-  hallucinated `ValidatedInput` + nonexistent "UIKit CLI" — all
-  inherited from the `@voilajsx/uikit` era).
+  hallucinated `ValidatedInput` + nonexistent "UIKit CLI").
 - Dead code removed from `bin/bloom.js`.
 - Deleted 274MB `docs/` nested vite subproject (not shipped, no
   references).

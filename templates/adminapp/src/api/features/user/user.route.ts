@@ -17,6 +17,20 @@ const auth = authClass.get();
 const security = securityClass.get();
 
 /**
+ * Extract status + message from an unknown throwable. appkit's
+ * error.* factories produce Error objects with a `statusCode` field;
+ * native throws lack it. Replaces the older `catch (err: any)` pattern
+ * so strict TS actually catches regressions.
+ */
+function normalizeError(err: unknown): { statusCode?: number; message: string } {
+  if (err instanceof Error) {
+    const withCode = err as Error & { statusCode?: number };
+    return { statusCode: withCode.statusCode, message: err.message };
+  }
+  return { message: typeof err === 'string' ? err : 'Unknown error' };
+}
+
+/**
  * Rate limiter for admin-side user mutations (create / update / delete /
  * admin password change). Authenticated + role-gated, so the threat
  * surface is "compromised admin session" rather than "anonymous spam".
@@ -54,12 +68,13 @@ router.get('/profile',
         requestId
       });
 
-    } catch (err: any) {
-      if (err.statusCode) {
+    } catch (err) {
+      const { statusCode, message } = normalizeError(err);
+      if (statusCode) {
         throw err;
       }
-      res.status(err.statusCode || 500).json({
-        error: err.message || 'Failed to get profile',
+      res.status(statusCode || 500).json({
+        error: message || 'Failed to get profile',
         requestId
       });
     }
@@ -90,12 +105,13 @@ router.put('/profile',
         requestId
       });
 
-    } catch (err: any) {
-      if (err.statusCode) {
+    } catch (err) {
+      const { statusCode, message } = normalizeError(err);
+      if (statusCode) {
         throw err;
       }
-      res.status(err.statusCode || 500).json({
-        error: err.message || 'Failed to update profile',
+      res.status(statusCode || 500).json({
+        error: message || 'Failed to update profile',
         requestId
       });
     }
@@ -125,16 +141,17 @@ router.post('/change-password',
         requestId
       });
 
-    } catch (err: any) {
+    } catch (err) {
+      const { statusCode, message } = normalizeError(err);
       // Handle AppKit errors with proper status codes and messages
-      if (err.statusCode) {
-        res.status(err.statusCode).json({
-          error: err.message || 'Password change failed',
+      if (statusCode) {
+        res.status(statusCode).json({
+          error: message || 'Password change failed',
           requestId
         });
       } else {
         res.status(500).json({
-          error: err.message || 'Password change failed',
+          error: message || 'Password change failed',
           requestId
         });
       }
@@ -166,12 +183,13 @@ router.get('/admin/users',
         requestId
       });
 
-    } catch (err: any) {
-      if (err.statusCode) {
+    } catch (err) {
+      const { statusCode, message } = normalizeError(err);
+      if (statusCode) {
         throw err;
       }
-      res.status(err.statusCode || 500).json({
-        error: err.message || 'Failed to get users',
+      res.status(statusCode || 500).json({
+        error: message || 'Failed to get users',
         requestId
       });
     }
@@ -198,12 +216,13 @@ router.get('/admin/list',
         requestId
       });
 
-    } catch (err: any) {
-      if (err.statusCode) {
+    } catch (err) {
+      const { statusCode, message } = normalizeError(err);
+      if (statusCode) {
         throw err;
       }
-      res.status(err.statusCode || 500).json({
-        error: err.message || 'Failed to get users',
+      res.status(statusCode || 500).json({
+        error: message || 'Failed to get users',
         requestId
       });
     }
@@ -265,12 +284,13 @@ router.post('/admin/create',
         requestId
       });
 
-    } catch (err: any) {
-      if (err.statusCode) {
+    } catch (err) {
+      const { statusCode, message } = normalizeError(err);
+      if (statusCode) {
         throw err;
       }
-      res.status(err.statusCode || 500).json({
-        error: err.message || 'Failed to create user',
+      res.status(statusCode || 500).json({
+        error: message || 'Failed to create user',
         requestId
       });
     }
@@ -315,12 +335,13 @@ router.get('/admin/users/:id',
         requestId
       });
 
-    } catch (err: any) {
-      if (err.statusCode) {
+    } catch (err) {
+      const { statusCode, message } = normalizeError(err);
+      if (statusCode) {
         throw err;
       }
-      res.status(err.statusCode || 500).json({
-        error: err.message || 'Failed to get user',
+      res.status(statusCode || 500).json({
+        error: message || 'Failed to get user',
         requestId
       });
     }
@@ -374,12 +395,13 @@ router.put('/admin/users/:id',
         requestId
       });
 
-    } catch (err: any) {
-      if (err.statusCode) {
+    } catch (err) {
+      const { statusCode, message } = normalizeError(err);
+      if (statusCode) {
         throw err;
       }
-      res.status(err.statusCode || 500).json({
-        error: err.message || 'Failed to update user',
+      res.status(statusCode || 500).json({
+        error: message || 'Failed to update user',
         requestId
       });
     }
@@ -436,12 +458,13 @@ router.delete('/admin/users/:id',
         requestId
       });
 
-    } catch (err: any) {
-      if (err.statusCode) {
+    } catch (err) {
+      const { statusCode, message } = normalizeError(err);
+      if (statusCode) {
         throw err;
       }
-      res.status(err.statusCode || 500).json({
-        error: err.message || 'Failed to delete user',
+      res.status(statusCode || 500).json({
+        error: message || 'Failed to delete user',
         requestId
       });
     }
@@ -481,12 +504,13 @@ router.put('/admin/users/:id/password',
         requestId
       });
 
-    } catch (err: any) {
-      if (err.statusCode) {
+    } catch (err) {
+      const { statusCode, message } = normalizeError(err);
+      if (statusCode) {
         throw err;
       }
-      res.status(err.statusCode || 500).json({
-        error: err.message || 'Failed to update password',
+      res.status(statusCode || 500).json({
+        error: message || 'Failed to update password',
         requestId
       });
     }

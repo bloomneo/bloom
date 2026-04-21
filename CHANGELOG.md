@@ -2,6 +2,30 @@
 
 All notable changes to Bloom Framework will be documented in this file.
 
+## [4.2.2] - 2026-04-21
+
+Drops historical voilajsx references and tightens error handling in
+the inherited user admin routes.
+
+### Removed
+
+- **`@voilajsx/helix` references** in README, package.json description,
+  and llms.txt. The 1.5.0 scope change is far enough in the rear-view
+  that active docs should read as a `@bloomneo/bloom` package from
+  the start; the historical note stays in CHANGELOG for context. Note
+  that `@bloomneo/uikit` and `@bloomneo/appkit` SKILL.md files still
+  carry "never import from @voilajsx/uikit" warnings — those are
+  package-level and require their own releases to clean up.
+
+### Changed
+
+- **`(err: any)` → typed error handling** in
+  `templates/adminapp/src/api/features/user/user.route.ts`. Ten catch
+  blocks now use a shared `normalizeError(err: unknown)` helper that
+  extracts `{ statusCode, message }` from `Error` subclasses (appkit's
+  `error.*` factories) and degrades gracefully for non-Error throws.
+  Catches regressions that would otherwise slip past strict TS.
+
 ## [4.2.1] - 2026-04-21
 
 Security hardening pass on the `adminapp` template, closing gaps

@@ -2,6 +2,14 @@
 
 All notable changes to Bloom Framework will be documented in this file.
 
+## [4.2.4] - 2026-04-23
+
+### Docs
+
+- README: added `adminapp` scaffold command to Quick Start section.
+- README: documented `ADMIN_USER_ROLES`, `ADMIN_ENABLE_AUDIT_LOG`, and
+  `ADMIN_DASHBOARD_WIDGETS` environment variables in the Configuration section.
+
 ## [4.2.3] - 2026-04-21
 
 ### Changed

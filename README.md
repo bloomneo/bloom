@@ -58,6 +58,13 @@ npx prisma db push
 npm run db:seed
 npm run dev
 
+# Admin console app (auth + users + audit log + settings dashboard)
+bloom create my-adminapp adminapp
+cd my-adminapp
+npx prisma db push
+npm run db:seed
+npm run dev
+
 # Desktop app (Electron)
 bloom create my-desktop-app desktop-basicapp
 cd my-desktop-app
@@ -291,6 +298,15 @@ BLOOM_FRONTEND_KEY=your-secret-key
 
 # API Configuration
 VITE_API_URL=http://localhost:3000
+```
+
+For **adminapp**, additional variables are generated in `.env`:
+
+```env
+# Admin Configuration
+ADMIN_USER_ROLES=admin.system:100,moderator.manage:50,user.basic:10
+ADMIN_ENABLE_AUDIT_LOG=true
+ADMIN_DASHBOARD_WIDGETS=users,signups,activity
 ```
 
 ### TypeScript Configuration

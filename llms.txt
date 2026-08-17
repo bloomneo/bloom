@@ -1,4 +1,4 @@
-# @bloomneo/bloom v4.2.4
+# @bloomneo/bloom v5.0.0
 
 Scaffolding CLI for full-stack apps combining `@bloomneo/appkit` (Express
 backend) and `@bloomneo/uikit` (React frontend) with Feature-Based
@@ -118,7 +118,15 @@ Adding a new page = creating a file. Don't edit the page-router.
 
 ## Migration
 
-Current release: **4.2.4**. Docs-only patch: README gains an `adminapp`
+Current release: **5.0.0**. Fixes a live performance bug in every scaffolded
+app: the router's `{ eager: true }` glob statically imported every page,
+forcing all routes into the entry chunk and defeating code splitting. Also
+adds `_`-prefix private files, `ROUTE_BASE` (a feature's URL no longer has to
+be its folder name), one canonical router across all six templates, and the
+`@bloomneo/uikit/theme` CSS import that activates uikit 3.0's palette
+lockdown. Pins move to uikit `^3.0.1` / appkit `^5.1.1`.
+
+Prior release: **4.2.4**. Docs-only patch: README gains an `adminapp`
 Quick Start example and documents the `ADMIN_USER_ROLES`,
 `ADMIN_ENABLE_AUDIT_LOG`, and `ADMIN_DASHBOARD_WIDGETS` env vars in the
 Configuration section.

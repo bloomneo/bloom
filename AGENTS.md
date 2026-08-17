@@ -1,8 +1,8 @@
 # AGENTS.md — @bloomneo/bloom
 
-> Rules for AI coding agents using `bloom` (v4.2.4) to scaffold full-stack
+> Rules for AI coding agents using `bloom` (v5.0.0) to scaffold full-stack
 > applications that combine `@bloomneo/appkit` (Express backend, pinned
-> `^4.0.0`) and `@bloomneo/uikit` (React frontend, pinned `^2.1.3`) via
+> `^5.1.1`) and `@bloomneo/uikit` (React frontend, pinned `^3.0.1`) via
 > Feature-Based Component Architecture (FBCA).
 >
 > Read this FIRST. If the project is already scaffolded, also read
@@ -79,7 +79,7 @@ Picking notes:
 4. For `userapp`, run `npx prisma db push` + edit `.env` before
    `npm run dev`.
 5. Pin `@bloomneo/appkit` to `^4.0.0` and `@bloomneo/uikit` to
-   `^2.1.3` (what the 4.x templates ship). Don't change them unless
+   `^3.0.1` (what the 4.x templates ship). Don't change them unless
    you're tracking a coordinated major.
 
 ## Never do

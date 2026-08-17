@@ -1,8 +1,22 @@
 /**
  * Main Styles Entry Point
- * Includes UIKit styles (which includes Tailwind) and custom styles
+ *
+ * Order matters. `@bloomneo/uikit/theme` must come AFTER `tailwindcss`: it
+ * defines the design tokens and clears Tailwind's default palette, so
+ * `bg-primary` works and `bg-blue-600` compiles to nothing.
+ *
+ * That lockdown only takes effect here, in YOUR build. A prebuilt stylesheet
+ * cannot constrain the Tailwind run that scans your source, which is why this
+ * is a CSS import rather than a JS one.
+ *
+ * Migrating an app full of hardcoded colours? Swap the theme line for
+ * `@import "@bloomneo/uikit/styles/permissive";` to restore the old palette
+ * while you convert, then switch back.
  */
 
 /* Tailwind CSS v4+ - REQUIRED */
 @import "tailwindcss";
+
+/* UIKit design tokens + palette lockdown - REQUIRED, must follow tailwindcss */
+@import "@bloomneo/uikit/theme";
 

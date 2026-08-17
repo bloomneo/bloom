@@ -30,11 +30,19 @@ import { Outlet, Routes, Route, useLocation } from 'react-router-dom';
 /* Route discovery                                                            */
 /* -------------------------------------------------------------------------- */
 
-// Eager glob — used when <PageRouter eager />
-const eagerPageFiles = import.meta.glob('../features/*/pages/**/*.{tsx,jsx}', { eager: true });
-
-// Lazy glob — default. Each match returns a `() => import(...)` factory.
-const lazyPageFiles = import.meta.glob('../features/*/pages/**/*.{tsx,jsx}');
+// `_`-prefixed files (and anything under a `_`-prefixed directory) are private
+// co-located components, never routes. Excluding them from the glob keeps them
+// out of the route-split bundle as dynamic imports — their consumers import
+// them statically — and stops the dormant junk routes the pattern would
+// otherwise create for every helper beside a page.
+//
+// NOTE: import.meta.glob needs a literal argument, so the pattern is inlined.
+// The pathSegments `_` check in pathFromFile() is the matching runtime guard.
+const lazyPageFiles = import.meta.glob([
+  '../features/*/pages/**/*.{tsx,jsx}',
+  '!**/_*.{tsx,jsx}',
+  '!**/_*/**',
+]);
 
 type LoadedModule = { default: React.ComponentType<unknown> };
 
@@ -43,6 +51,27 @@ interface DiscoveredRoute {
   component: React.ComponentType<unknown>;
 }
 
+/**
+ * Per-feature route base overrides.
+ *
+ * By default a feature's folder name IS its URL prefix, which forces every
+ * page that needs a top-level URL into `main/`. One production app ended up
+ * with 120 of its 164 pages in that single folder — the convention that
+ * promised feature isolation produced one mega-feature instead.
+ *
+ * Declare an override here and a feature can own any prefix, including '/':
+ *
+ *   const ROUTE_BASE: Record<string, string> = {
+ *     students: '/',        // features/students/pages/index.tsx  →  /students... no: →  /
+ *     billing:  '/account', // features/billing/pages/plan.tsx    →  /account/plan
+ *   };
+ *
+ * `main` defaults to '/' exactly as before, so existing apps are unaffected.
+ */
+const ROUTE_BASE: Record<string, string> = {
+  main: '/',
+};
+
 function pathFromFile(filePath: string): string | null {
   const match = filePath.match(/\.\.\/features\/([^/]+)\/pages\/(.+)\.tsx?$/);
   if (!match) return null;
@@ -50,11 +79,29 @@ function pathFromFile(filePath: string): string | null {
   const [, feature, nestedPath] = match;
   const pathSegments = nestedPath.split('/');
 
+  // Co-location convention: any file or folder starting with `_` is a private
+  // helper, not a route (e.g. panels/_shared.tsx). The glob above already
+  // filters these; this is the runtime guard that keeps them out if the glob
+  // pattern is ever loosened.
+  if (pathSegments.some((seg) => seg.startsWith('_'))) return null;
+
   const segmentToRoute = (segment: string) => {
     if (segment.startsWith('[...') && segment.endsWith(']')) return '*';
     if (segment.startsWith('[') && segment.endsWith(']')) return ':' + segment.slice(1, -1);
     return segment;
   };
+
+  const base = ROUTE_BASE[feature];
+  if (base !== undefined) {
+    const prefix = base === '/' ? '' : base.replace(/\/$/, '');
+    if (pathSegments.length === 1 && pathSegments[0] === 'index') return prefix || '/';
+    const rest = pathSegments
+      .map((seg) => (seg === 'index' ? '' : seg.toLowerCase()))
+      .filter(Boolean)
+      .map(segmentToRoute)
+      .join('/');
+    return `${prefix}/${rest}`.replace(/\/{2,}/g, '/') || '/';
+  }
 
   if (feature === 'main') {
     if (pathSegments.length === 1 && pathSegments[0] === 'index') return '/';
@@ -81,16 +128,6 @@ function sortRoutes(routes: DiscoveredRoute[]): DiscoveredRoute[] {
     if (b.path === '/') return -1;
     return b.path.length - a.path.length;
   });
-}
-
-function generateEagerRoutes(): DiscoveredRoute[] {
-  const routes: DiscoveredRoute[] = [];
-  Object.entries(eagerPageFiles).forEach(([filePath, mod]) => {
-    const path = pathFromFile(filePath);
-    if (!path) return;
-    routes.push({ path, component: (mod as LoadedModule).default });
-  });
-  return sortRoutes(routes);
 }
 
 function generateLazyRoutes(): DiscoveredRoute[] {
@@ -230,7 +267,13 @@ export interface PageRouterProps {
    *  Only used for routes that don't belong to a layout group — a layout
    *  is expected to manage its own Suspense boundary around <Outlet />. */
   fallback?: ReactNode;
-  /** Disable code splitting and load every page eagerly. Default: false. */
+  /**
+   * Retained for API compatibility; code splitting is now always on.
+   * True eager loading meant a second `{ eager: true }` glob that statically
+   * imported EVERY page, forcing all routes into the entry chunk and defeating
+   * the React.lazy splitting below — a multi-MB first load on every page.
+   * @deprecated no longer has any effect
+   */
   eager?: boolean;
   /** Layout groups. Pages whose path matches a layout's `match` render
    *  as nested routes inside that layout, sharing its chrome across
@@ -243,14 +286,14 @@ export const PageRouter: React.FC<PageRouterProps> = ({
   errorBoundary,
   onError,
   fallback,
-  eager = false,
+  eager: _eager = false,   // accepted for API compatibility; no longer used
   layouts = [],
 }) => {
   // Memoize so routes aren't regenerated on every render. The discovered set
   // is static (it's resolved at build time by Vite's glob), so empty deps are safe.
   const routes = useMemo(
-    () => (eager ? generateEagerRoutes() : generateLazyRoutes()),
-    [eager]
+    () => generateLazyRoutes(),
+    []
   );
 
   // Dev-only one-shot log so devs can see what got discovered, without

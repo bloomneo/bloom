@@ -1,0 +1,43 @@
+// ── added by the `admin` layer ────────────────────────────────────────────
+// Appended to the base schema rather than replacing it, so this composes with
+// whatever the auth layer (and any future layer) already declared.
+
+// Append-only trail of consequential actions. Written by audit.service.ts,
+// never updated or deleted — an audit log you can edit is not an audit log.
+model AuditLog {
+  id          String   @id @default(cuid())
+  actorId     String?
+  actorType   String   @default("user") // 'user' | 'admin' | 'system'
+  action      String // e.g. 'user.create', 'settings.update', 'login.failure'
+  entityType  String? // e.g. 'user', 'setting', 'session'
+  entityId    String? // stringified — entity PKs may vary by model
+  oldValue    Json?
+  newValue    Json?
+  description String?
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  @@index([actorId])
+  @@index([action])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// App settings — a simple key-value store. Strings only; parse at the edge if
+// you need numbers or booleans.
+//
+// `isPublic` controls whether the value is exposed through the
+// unauthenticated /api/settings/public endpoint. Default false: a setting is
+// private until someone decides otherwise, so adding one cannot leak it.
+model AppSetting {
+  key         String   @id
+  value       String
+  isPublic    Boolean  @default(false)
+  description String?
+  updatedAt   DateTime @updatedAt
+  updatedBy   String?
+
+  @@map("app_settings")
+}

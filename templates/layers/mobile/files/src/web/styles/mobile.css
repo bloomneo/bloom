@@ -1,0 +1,86 @@
+/**
+ * Mobile platform styles.
+ *
+ * Imported by styles/index.css when the mobile layer is installed.
+ *
+ * ── Safe areas ────────────────────────────────────────────────────────────
+ * Without this, a full-height layout runs UNDER the notch and the home
+ * indicator: the header is half-hidden behind the status bar and the last row
+ * of any list sits beneath the gesture bar where it cannot be tapped. It looks
+ * fine in a browser and in the simulator's non-notched devices, which is what
+ * makes it easy to ship.
+ *
+ * `env(safe-area-inset-*)` only reports real values when the viewport meta
+ * carries `viewport-fit=cover` — the layer patches index.html for that.
+ */
+
+:root {
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+}
+
+/* The app shell's sticky header sits at the very top of the viewport, so it is
+   the element the status bar overlaps. Padding rather than margin keeps its
+   background painted behind the status bar instead of leaving a strip. */
+body {
+  padding-left: var(--safe-left);
+  padding-right: var(--safe-right);
+}
+
+header[class*="sticky"] {
+  padding-top: var(--safe-top);
+  height: calc(3.5rem + var(--safe-top));
+}
+
+main {
+  padding-bottom: calc(1rem + var(--safe-bottom));
+}
+
+/*
+ * Overlays that reach the screen edge need the insets too.
+ *
+ * A Radix Sheet/Dialog is `position: fixed` against the VIEWPORT, so the
+ * padding on <body> above does not apply to it — its first row renders under
+ * the notch. On a phone the drawer's first nav item is the one people reach
+ * for first, and it is the one that gets clipped.
+ *
+ * Targeted by role rather than by class: Radix sets role="dialog" on both, and
+ * a class hook would break the moment the component's internals change.
+ */
+[role='dialog'] {
+  padding-top: var(--safe-top);
+  padding-bottom: var(--safe-bottom);
+}
+
+/* Toasts anchor to the bottom edge, where the home indicator lives. */
+[data-sonner-toaster] {
+  bottom: calc(1rem + var(--safe-bottom)) !important;
+}
+
+/*
+ * Native-feeling touches. Each one is a thing people notice only when it is
+ * missing — a web page pretending to be an app.
+ */
+* {
+  /* The grey flash Android draws on every tap. */
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  /* Long-press should not select UI text, but inputs and prose still must. */
+  -webkit-user-select: none;
+  user-select: none;
+  /* Rubber-band scrolling past the end of the page reveals the webview
+     background and breaks the illusion of a native screen. */
+  overscroll-behavior-y: none;
+}
+
+input,
+textarea,
+[contenteditable],
+p, li, dd, code, pre, blockquote {
+  -webkit-user-select: text;
+  user-select: text;
+}

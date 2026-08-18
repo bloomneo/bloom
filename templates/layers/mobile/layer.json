@@ -1,0 +1,32 @@
+{
+  "name": "mobile",
+  "description": "Capacitor wrapper \u2014 packages the same web build as native iOS and Android apps.",
+  "requires": [],
+  "dependencies": {
+    "@capacitor/android": "^6.2.0",
+    "@capacitor/app": "^6.0.2",
+    "@capacitor/core": "^6.2.0",
+    "@capacitor/ios": "^6.2.0",
+    "@capacitor/keyboard": "^6.0.3",
+    "@capacitor/splash-screen": "^6.0.3",
+    "@capacitor/status-bar": "^6.0.2"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.2.0"
+  },
+  "scripts": {
+    "mobile:add:ios": "npx cap add ios",
+    "mobile:add:android": "npx cap add android",
+    "mobile:sync": "npm run build:web && npx cap sync",
+    "mobile:ios": "npm run mobile:sync && npx cap open ios",
+    "mobile:android": "npm run mobile:sync && npx cap open android"
+  },
+  "env": {},
+  "next": [
+    "npm run mobile:add:ios      # generates ios/ (needs Xcode)",
+    "npm run mobile:add:android  # generates android/ (needs Android Studio)",
+    "npm run mobile:ios          # build, sync, open in Xcode",
+    "",
+    "Live reload on a device: CAP_SERVER_URL=http://<your-lan-ip>:5173 npx cap sync"
+  ]
+}

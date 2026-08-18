@@ -1,0 +1,145 @@
+/**
+ * AppLayoutRoute — the application shell.
+ *
+ * This is a ROUTE, not a wrapper component, and the distinction matters:
+ *
+ *   <Route element={<AppLayoutRoute />}>      ← mounts once
+ *     <Route path="/" element={<Home />} />   ← swaps inside <Outlet />
+ *   </Route>
+ *
+ * Because the shell mounts once and survives navigation, anything it holds
+ * survives too: scroll position, an open menu, a websocket, a data cache. A
+ * wrapper component re-mounts on every route change and loses all of it.
+ *
+ * ── Why this file exists rather than a <PageLayout> from the library ──
+ *
+ * UIKit 4.0 removed its layout components. Not because they were broken —
+ * because every application built on them replaced them within weeks. App
+ * chrome is where product identity lives, and a generic header is the first
+ * thing anyone rewrites. So the shell is yours: roughly 90 lines, all of it
+ * readable, none of it fighting a library's assumptions.
+ *
+ * Pages render through <Outlet /> and own their own <PageHeader>. Do not add
+ * a page title here — the page knows its title, the shell does not.
+ */
+import * as React from 'react';
+import { NavLink, Outlet, Link } from 'react-router-dom';
+import { Button, Sheet, SheetContent, SheetTrigger } from '@bloomneo/uikit';
+import { Menu } from 'lucide-react';
+import { brand } from './brand';
+import { ThemeControls } from './ThemeControls';
+
+function Logo({ className = '' }: { className?: string }) {
+  return (
+    <Link to="/" className={`flex items-center gap-2.5 ${className}`}>
+      <span className="grid size-8 place-items-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">
+        {brand.shortName.charAt(0)}
+      </span>
+      <span className="font-semibold tracking-tight">{brand.name}</span>
+    </Link>
+  );
+}
+
+function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
+  return (
+    <>
+      {brand.nav.map((item) => (
+        <NavLink
+          key={item.to}
+          to={item.to}
+          onClick={onNavigate}
+          className={({ isActive }) =>
+            [
+              // h-8 so nav links and the icon buttons share one height —
+              // otherwise their hover backgrounds sit 2px out of line.
+              'inline-flex h-8 items-center rounded-md px-3 text-sm transition-colors',
+              isActive
+                ? 'bg-accent text-accent-foreground font-medium'
+                : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
+            ].join(' ')
+          }
+        >
+          {item.label}
+        </NavLink>
+      ))}
+    </>
+  );
+}
+
+export function AppLayoutRoute() {
+  const [menuOpen, setMenuOpen] = React.useState(false);
+
+  return (
+    <div className="flex min-h-screen flex-col bg-background text-foreground">
+      <header className="sticky top-0 z-30 border-b border-border bg-background/85 backdrop-blur">
+        <div className="mx-auto flex h-14 max-w-6xl items-center gap-6 px-4 sm:px-6">
+          <Logo />
+
+          {brand.nav.length > 0 && (
+            <nav className="hidden items-center gap-1 md:flex" aria-label="Main">
+              <NavLinks />
+            </nav>
+          )}
+
+          <div className="ml-auto flex items-center gap-1">
+            <ThemeControls />
+
+            {/* The same navigation becomes a slide-over below md. One source,
+                two presentations — not two hand-maintained menus. Nothing to
+                show when nav is empty, so the trigger disappears with it. */}
+            {brand.nav.length > 0 && (
+            <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" aria-label="Open menu" className="size-8 md:hidden">
+                  <Menu className="size-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-72">
+                <nav className="mt-8 flex flex-col gap-1" aria-label="Mobile">
+                  <NavLinks onNavigate={() => setMenuOpen(false)} />
+                </nav>
+              </SheetContent>
+            </Sheet>
+            )}
+          </div>
+        </div>
+      </header>
+
+      {/* Pages render here. They return plain content and own their header. */}
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-10">
+        <Outlet />
+      </main>
+
+      <footer className="border-t border-border bg-muted/40">
+        <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+          {brand.footer.length > 0 && (
+            <div className="mb-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="lg:col-span-2">
+                <Logo />
+                <p className="mt-3 max-w-xs text-sm text-muted-foreground">{brand.tagline}</p>
+              </div>
+              {brand.footer.map((col) => (
+                <div key={col.heading}>
+                  <h2 className="text-sm font-medium">{col.heading}</h2>
+                  <ul className="mt-3 space-y-2">
+                    {col.links.map((l) => (
+                      <li key={l.label}>
+                        <Link to={l.to} className="text-sm text-muted-foreground hover:text-foreground">
+                          {l.label}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="flex flex-col gap-2 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+            <span>© {new Date().getFullYear()} {brand.name}</span>
+            <span>{brand.tagline}</span>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}

@@ -339,7 +339,24 @@ export const PageRouter: React.FC<PageRouterProps> = ({
         {Array.from(grouped.entries()).map(([layout, layoutRoutes], i) => (
           <Route key={`layout-${i}`} element={<layout.Layout />}>
             {layoutRoutes.map(({ path, component: Component }) => (
-              <Route key={path} path={path} element={<Component />} />
+              // Every page is React.lazy, so each needs a Suspense boundary
+              // above it. This used to be left to the layout ("the layout is
+              // expected to own its own Suspense"), and when a layout omitted
+              // one the page suspended with no boundary in the tree: React
+              // committed nothing and the app rendered a blank white screen
+              // with no error in the console. A convention that fails silently
+              // is not a convention — so the router guarantees it here. A
+              // layout that already has its own Suspense still works; nesting
+              // boundaries is harmless.
+              <Route
+                key={path}
+                path={path}
+                element={
+                  <Suspense fallback={lazyFallback}>
+                    <Component />
+                  </Suspense>
+                }
+              />
             ))}
           </Route>
         ))}

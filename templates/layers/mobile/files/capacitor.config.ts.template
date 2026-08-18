@@ -1,0 +1,45 @@
+import type { CapacitorConfig } from '@capacitor/cli';
+
+/**
+ * Capacitor configuration.
+ *
+ * ── On `server.url` ───────────────────────────────────────────────────────
+ * It is set from an ENV VAR and is absent by default. Committing a live-reload
+ * URL is a real hazard: `server.url` overrides the bundled `webDir`, so a
+ * release built from a config containing `http://localhost:5173` ships an app
+ * that shows a blank screen on every device that is not the developer's — and
+ * it does so silently, because the binary is otherwise valid.
+ *
+ * For live reload during development:
+ *   CAP_SERVER_URL=http://192.168.1.20:5173 npx cap sync ios
+ *
+ * Use the LAN address, not localhost — localhost on a phone is the phone.
+ * The Android emulator is the exception: it maps the host to 10.0.2.2.
+ */
+const serverUrl = process.env.CAP_SERVER_URL;
+
+const config: CapacitorConfig = {
+  appId: 'com.example.{{PROJECT_PKG}}',
+  appName: '{{PROJECT_TITLE}}',
+
+  // The same `dist/` the web build produces. There is no mobile-specific
+  // source tree — `npx cap sync` copies this directory into the native shell.
+  webDir: 'dist',
+
+  ...(serverUrl ? { server: { url: serverUrl, cleartext: true } } : {}),
+
+  plugins: {
+    SplashScreen: {
+      // The web app paints almost immediately, so a timed splash is dead time
+      // the user waits through. Hide it as soon as React mounts — see mobile.ts.
+      launchAutoHide: false,
+    },
+    Keyboard: {
+      // `native` lets the OS resize the webview. `body` resizing fights with
+      // the safe-area insets below and leaves a gap above the keyboard.
+      resize: 'native',
+    },
+  },
+};
+
+export default config;

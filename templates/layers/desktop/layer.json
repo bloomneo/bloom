@@ -1,0 +1,24 @@
+{
+  "name": "desktop",
+  "description": "Electron wrapper \u2014 packages the same web build and API as a native desktop app.",
+  "requires": [],
+  "dependencies": {},
+  "devDependencies": {
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8",
+    "wait-on": "^8.0.1"
+  },
+  "scripts": {
+    "dev:desktop": "concurrently \"npm run dev:web\" \"wait-on tcp:5173 && electron electron/main.js\"",
+    "build:desktop": "npm run build && electron-builder",
+    "start:desktop": "electron electron/main.js"
+  },
+  "env": {},
+  "next": [
+    "npm run dev:desktop     # web + API + an Electron window",
+    "npm run build:desktop   # packaged app in release/"
+  ],
+  "packageJson": {
+    "main": "electron/main.js"
+  }
+}

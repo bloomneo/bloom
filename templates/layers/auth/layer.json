@@ -1,0 +1,29 @@
+{
+  "name": "auth",
+  "description": "Email/password auth: login, register, password reset, email verification, AuthGuard, and the Prisma User model.",
+  "requires": [],
+  "dependencies": {
+    "@prisma/client": "^6.2.1",
+    "bcryptjs": "^2.4.3"
+  },
+  "devDependencies": {
+    "prisma": "^6.2.1",
+    "@types/bcryptjs": "^2.4.6"
+  },
+  "scripts": {
+    "db:push": "prisma db push",
+    "db:seed": "node prisma/seeding/user.seed.js",
+    "db:studio": "prisma studio"
+  },
+  "env": {
+    "DATABASE_URL": "file:./dev.db",
+    "BLOOM_AUTH_SECRET": "{{GENERATE:auth_:36}}",
+    "VITE_FRONTEND_KEY": "{{GENERATE:bloom_:24}}",
+    "DEFAULT_USER_PASSWORD": "admin123"
+  },
+  "next": [
+    "npx prisma db push      # create the database",
+    "npm run db:seed         # add the default admin user",
+    "Sign in at /login with admin@example.com / admin123"
+  ]
+}

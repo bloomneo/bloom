@@ -54,3 +54,4 @@ scripts/
 # Temporary files
 temp/
 tmp/
+*.tgz

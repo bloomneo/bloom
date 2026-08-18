@@ -1,0 +1,43 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  // SQLite so `bloom create --auth` works with no database server to install:
+  // `npx prisma db push` creates dev.db in place and you can sign in.
+  //
+  // For Postgres, change this to `postgresql` and point DATABASE_URL at your
+  // server. The schema below uses no provider-specific types, so nothing else
+  // has to change.
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  // Primary key is a CUID (short, URL-safe, Prisma-native). Adopted as the
+  // Bloom 4.1 framework-wide default so user IDs don't leak sequence
+  // information and all templates share the same User shape.
+  id                 String    @id @default(cuid())
+  email              String    @unique
+  password           String
+  name               String?
+  phone              String?
+  role               String    @default("user")
+  level              String    @default("basic")
+  tenantId           String?
+  isVerified         Boolean   @default(false)
+  isActive           Boolean   @default(true)
+  lastLogin          DateTime?
+  resetToken         String?
+  resetTokenExpiry   DateTime?
+  verificationToken  String?
+  verificationExpiry DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@index([tenantId]) // MANDATORY: AppKit performance index
+  @@map("users")
+}

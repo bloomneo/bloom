@@ -7,12 +7,14 @@
 
 import { execSync } from 'child_process';
 import {
+  appendFileSync,
   copyFileSync,
   existsSync,
   mkdirSync,
   readFileSync,
   writeFileSync,
   readdirSync,
+  rmSync,
   statSync,
 } from 'fs';
 import { dirname, join } from 'path';
@@ -21,11 +23,115 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+const LAYER_FLAGS = new Set(['--auth', '--admin', '--desktop', '--mobile']);
+
+/*
+ * Preset names, kept because they are what people already type.
+ *
+ * Each is a shorthand for a set of layers over the `app` base — NOT a separate
+ * template directory. The six frozen directories these names used to point at
+ * are superseded: they duplicated the whole source tree per combination, so a
+ * fix had to land in six places and `userapp + desktop` did not exist at all.
+ *
+ * `--legacy` still resolves to the old directories for one release, for anyone
+ * mid-project who needs the exact tree they started from.
+ */
+const PRESETS = {
+  basicapp: [],
+  userapp: ['auth'],
+  adminapp: ['auth', 'admin'],
+  'desktop-basicapp': ['desktop'],
+  'desktop-userapp': ['auth', 'desktop'],
+  'mobile-basicapp': ['mobile'],
+};
 const command = process.argv[2];
 const projectName = process.argv[3];
-const templateType = process.argv[4] || 'basicapp'; // Default to basicapp
+
+/*
+ * The template is the next POSITIONAL argument, not simply argv[4] — otherwise
+ * `bloom create my-app --admin` reads "--admin" as a template name and dies
+ * with "Invalid template". Flags may appear anywhere.
+ *
+ * The default depends on whether layers were requested: `--auth`/`--admin`
+ * compose onto the `app` base, whereas a bare `bloom create x` still means the
+ * legacy basicapp until those templates are retired.
+ */
+const positionals = process.argv.slice(4).filter((a) => !a.startsWith('-'));
+
+/*
+ * Every preset builds on `app`. Only `--legacy` reaches the frozen directory
+ * of the same name.
+ */
+const requestedTemplate = positionals[0];
+const templateType =
+  process.argv.includes('--legacy')
+    ? requestedTemplate || 'basicapp'
+    : requestedTemplate && requestedTemplate in PRESETS
+      ? 'app'
+      : requestedTemplate || 'app';
 const verbose = process.argv.includes('--verbose');
 const skipInstall = process.argv.includes('--skip-install') || process.argv.includes('--no-install');
+
+/**
+ * Optional layers, applied over the base template in this order.
+ *
+ * Order matters: a layer may replace a file the previous one wrote. `admin`
+ * ships a `shared/layouts.tsx` registering both the auth and admin shells, so
+ * it has to land after `auth`.
+ *
+ * `--admin` implies `--auth`: an admin console without a sign-in page is not a
+ * thing anyone wants, and the admin shell imports `useAuth`.
+ */
+const LAYER_ORDER = ['auth', 'admin', 'desktop', 'mobile'];
+
+/**
+ * Expand the requested layers with whatever they depend on.
+ *
+ * `--admin` alone is a reasonable thing to type, but the admin console is
+ * built on the auth layer's User model and AuthGuard, so it cannot stand on
+ * its own. Rather than hardcode that pair, each layer declares its own
+ * `requires` in layer.json and this pulls them in transitively — so adding a
+ * layer never means editing this file.
+ *
+ * The result is re-sorted into LAYER_ORDER, which is what makes application
+ * order deterministic: a later layer may overwrite an earlier layer's file,
+ * and that only means something if the sequence is fixed.
+ */
+function expandLayerRequires(requested) {
+  const resolved = new Set();
+  const visit = (name, trail) => {
+    if (resolved.has(name)) return;
+    if (trail.includes(name)) {
+      throw new Error(`Circular layer dependency: ${[...trail, name].join(' -> ')}`);
+    }
+    const layer = readLayer(name);
+    if (!layer) return; // unknown layer — reported later, by the caller
+    for (const dep of layer.meta.requires || []) visit(dep, [...trail, name]);
+    resolved.add(name);
+  };
+  for (const name of requested) visit(name, []);
+  return LAYER_ORDER.filter((l) => resolved.has(l));
+}
+
+const useLegacy = process.argv.includes('--legacy');
+
+if (useLegacy) {
+  console.warn(
+    '⚠️  --legacy uses the frozen pre-5.0 template directories.\n' +
+      '   They duplicate the whole source tree per combination and receive fixes\n' +
+      '   only for security. They will be removed in 6.0. Drop the flag to get\n' +
+      '   the same app composed from layers.\n',
+  );
+}
+
+/*
+ * Layers come from BOTH the preset name and any explicit flags, so
+ * `bloom create x userapp --admin` is a coherent thing to type.
+ */
+const requestedLayers = expandLayerRequires([
+  ...(useLegacy ? [] : PRESETS[positionals[0]] ?? []),
+  ...LAYER_ORDER.filter((l) => process.argv.includes(`--${l}`)),
+]);
 
 // Normalize help flags so `bloom --help`, `bloom -h`, and `bloom help`
 // all print the usage screen + exit 0 (success, not an error).
@@ -52,9 +158,52 @@ function processTemplateFile(sourcePath, destPath, projectName, verbose = false,
     const actualProjectName = projectName === '.' ? process.cwd().split('/').pop() : projectName;
 
     // Template placeholders and their replacements
+    // A CSS class name and a theme id, so it must be a safe slug: lowercase,
+    // alphanumeric and dashes, never leading with a digit. `styles/brand.css`
+    // declares `.theme-{{PROJECT_SLUG}}` and `shared/brand.ts` passes the same
+    // value to <ThemeProvider theme=…>, so the two must agree exactly.
+    const projectSlug =
+      String(actualProjectName)
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .replace(/^(\d)/, 'app-$1') || 'app';
+
+    // Human-readable display name: `bloom-labs` -> `Bloom Labs`. Used for
+    // brand.name and the browser title, where the raw directory name reads as
+    // a filesystem artefact rather than a product. Small words stay lowercase
+    // the way a title normally would.
+    const SMALL = new Set(['a', 'an', 'and', 'as', 'at', 'by', 'for', 'in', 'of', 'on', 'or', 'the', 'to']);
+    const projectTitle = String(actualProjectName)
+      .replace(/[-_.]+/g, ' ')
+      .replace(/([a-z])([A-Z])/g, '$1 $2')
+      .trim()
+      .split(/\s+/)
+      .map((w, i) =>
+        i > 0 && SMALL.has(w.toLowerCase())
+          ? w.toLowerCase()
+          : w.charAt(0).toUpperCase() + w.slice(1),
+      )
+      .join(' ') || actualProjectName;
+
+    /*
+     * A slug that is legal as a Java / reverse-DNS package segment.
+     *
+     * Bundle identifiers (`com.example.<pkg>`) are Java package names on
+     * Android and reverse-DNS on iOS. Neither permits the hyphens a kebab-case
+     * project slug is full of, and neither may start with a digit. Capacitor
+     * rejects the whole `cap add` with "Must be in Java package form with no
+     * dashes" — after the project has already been scaffolded.
+     */
+    const projectPkg =
+      projectSlug.replace(/[^a-z0-9]/gi, '').toLowerCase().replace(/^[0-9]+/, '') || 'app';
+
     const replacements = {
       '{{PROJECT_NAME}}': actualProjectName,
       '{{projectName}}': actualProjectName,
+      '{{PROJECT_SLUG}}': projectSlug,
+      '{{PROJECT_PKG}}': projectPkg,
+      '{{PROJECT_TITLE}}': projectTitle,
       '{{DEFAULT_THEME}}': 'base',
       '{{DEFAULT_MODE}}': 'light',
       ...extraReplacements
@@ -94,6 +243,166 @@ function convertToESM(packageObj) {
 /**
  * Copy Bloom template files to the generated project
  */
+/**
+ * Apply an optional layer on top of the base template.
+ *
+ * A layer is an overlay: `templates/layers/<name>/files/` is copied over the
+ * scaffolded project, so a layer can both ADD files and REPLACE base ones.
+ * `shared/layouts.tsx` is deliberately replaceable that way — the auth layer
+ * ships a version that registers the auth shell, and admin one that registers
+ * both. Later layers win, so apply order is base -> auth -> admin.
+ *
+ * `layer.json` declares dependencies, scripts and env the layer needs. They are
+ * merged into the generated package.json rather than duplicated in a template,
+ * which is what stops six templates drifting apart the way they did before.
+ */
+/**
+ * Copy a directory tree, processing `.template` files through the placeholder
+ * substitution and copying everything else verbatim.
+ *
+ * Shared by the base template and every layer, so a layer can both ADD files
+ * and REPLACE base ones — which is how `shared/layouts.tsx` gains an auth shell
+ * when you scaffold with `--auth`.
+ */
+function copyTree(sourceRoot, destRoot, verbose = false, extraReplacements = {}) {
+  let filesCopied = 0;
+
+  function walk(sourcePath, destPath) {
+    for (const item of readdirSync(sourcePath)) {
+      const sourceItem = join(sourcePath, item);
+      const stat = statSync(sourceItem);
+
+      if (stat.isDirectory()) {
+        const destItem = join(destPath, item);
+        if (!existsSync(destItem)) mkdirSync(destItem, { recursive: true });
+        walk(sourceItem, destItem);
+        continue;
+      }
+      if (!stat.isFile()) continue;
+
+      // A plain package.json in a template is superseded by package.json.template.
+      // NOTE: this used to `return` rather than `continue`, which exited the whole
+      // walk — so every file after it in that directory was silently skipped.
+      if (item === 'package.json') {
+        if (verbose) console.log(`🔍 [DEBUG] Skipped ${item} (package.json.template wins)`);
+        continue;
+      }
+
+      if (item.endsWith('.template')) {
+        const destItem = join(destPath, item.replace(/\.template$/, ''));
+        processTemplateFile(sourceItem, destItem, projectName, verbose, extraReplacements);
+      } else {
+        copyFileSync(sourceItem, join(destPath, item));
+      }
+      filesCopied++;
+    }
+  }
+
+  walk(sourceRoot, destRoot);
+  return filesCopied;
+}
+
+function readLayer(name) {
+  const dir = join(__dirname, '../templates/layers', name);
+  const manifest = join(dir, 'layer.json');
+  if (!existsSync(manifest)) return null;
+  return { name, dir, meta: JSON.parse(readFileSync(manifest, 'utf8')) };
+}
+
+function applyLayer(layer, verbose, replacements) {
+  const filesDir = join(layer.dir, 'files');
+  if (existsSync(filesDir)) {
+    copyTree(filesDir, process.cwd(), verbose, replacements);
+  }
+  appendPrismaModels(layer, verbose);
+  if (verbose) console.log(`🔍 [DEBUG] Applied layer: ${layer.name}`);
+}
+
+/**
+ * Fold a layer's `prisma/schema.append.prisma` into the project's schema.
+ *
+ * Layers compose, so a layer cannot ship a whole schema — `admin` needs the
+ * `User` model that `auth` declares, and replacing the file would delete it.
+ * Each layer instead contributes only its own models and they are concatenated
+ * in layer order.
+ *
+ * copyTree has already placed the fragment in the project, so this reads it
+ * from there (not from the template) and removes it afterwards: leaving a
+ * stray .prisma file next to schema.prisma makes `prisma generate` ambiguous.
+ */
+function appendPrismaModels(layer, verbose) {
+  const fragment = join(process.cwd(), 'prisma', 'schema.append.prisma');
+  const schema = join(process.cwd(), 'prisma', 'schema.prisma');
+  if (!existsSync(fragment)) return;
+
+  if (!existsSync(schema)) {
+    // No base schema to extend — a layer ordering bug, and one that would
+    // otherwise surface much later as a confusing `prisma db push` failure.
+    throw new Error(
+      `Layer "${layer.name}" contributes Prisma models but no prisma/schema.prisma exists. ` +
+        `It likely needs a \`requires\` entry for the layer that creates it.`,
+    );
+  }
+
+  const body = readFileSync(fragment, 'utf8').trimEnd();
+  appendFileSync(schema, `\n\n${body}\n`);
+  rmSync(fragment);
+  if (verbose) console.log(`🔍 [DEBUG] Appended ${layer.name} models to prisma/schema.prisma`);
+}
+
+/** Merge a layer's declared deps/scripts into the project's package.json. */
+function mergeLayerPackageJson(layers, verbose) {
+  if (!layers.length || !existsSync('package.json')) return;
+  const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
+  for (const { meta } of layers) {
+    for (const field of ['dependencies', 'devDependencies', 'scripts']) {
+      if (!meta[field]) continue;
+      pkg[field] = { ...(pkg[field] || {}), ...meta[field] };
+    }
+    /*
+     * Top-level keys a layer needs to set on package.json itself — `main` for
+     * Electron, `type`, a tool's config block. Kept as an explicit escape
+     * hatch rather than merging the whole manifest, so a typo in layer.json
+     * cannot silently overwrite `name` or `version`.
+     */
+    if (meta.packageJson) {
+      for (const [key, value] of Object.entries(meta.packageJson)) {
+        if (['name', 'version', 'dependencies', 'devDependencies', 'scripts'].includes(key)) {
+          throw new Error(
+            `Layer manifest may not set packageJson.${key} — use the dedicated field, or leave it to the project.`,
+          );
+        }
+        pkg[key] = value;
+      }
+    }
+  }
+  // Keep dependency lists sorted so a diff between two scaffolds is readable.
+  for (const field of ['dependencies', 'devDependencies', 'scripts']) {
+    if (!pkg[field]) continue;
+    pkg[field] = Object.fromEntries(Object.entries(pkg[field]).sort(([a], [b]) => a.localeCompare(b)));
+  }
+  writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+  if (verbose) console.log('🔍 [DEBUG] Merged layer dependencies into package.json');
+}
+
+/** Write .env from the layers' declared env, generating any secrets. */
+function writeLayerEnv(layers, verbose) {
+  const entries = [];
+  for (const { name, meta } of layers) {
+    if (!meta.env) continue;
+    entries.push(`# ── ${name} ${'─'.repeat(Math.max(0, 66 - name.length))}`);
+    for (const [key, raw] of Object.entries(meta.env)) {
+      const gen = String(raw).match(/^\{\{GENERATE:([a-z_]*):(\d+)\}\}$/);
+      entries.push(`${key}=${gen ? generateRandomSecret(gen[1], Number(gen[2])) : raw}`);
+    }
+    entries.push('');
+  }
+  if (!entries.length) return;
+  const header = ['# Generated by `bloom create`. Secrets are unique to this project.', ''];
+  writeFileSync('.env', header.concat(entries).join('\n'));
+  if (verbose) console.log('🔍 [DEBUG] Wrote .env from layer manifests');
+}
+
 function copyBloomTemplate(templateType, verbose = false, extraReplacements = {}) {
   try {
     const templatePath = join(__dirname, '../templates', templateType);
@@ -104,47 +413,8 @@ function copyBloomTemplate(templateType, verbose = false, extraReplacements = {}
       return;
     }
 
-    let filesCopied = 0;
+    const filesCopied = copyTree(templatePath, './', verbose, extraReplacements);
 
-    // Recursively copy template files, processing .template files
-    function copyRecursive(sourcePath, destPath) {
-      const items = readdirSync(sourcePath);
-
-      for (const item of items) {
-        const sourceItem = join(sourcePath, item);
-        const stat = statSync(sourceItem);
-
-        if (stat.isDirectory()) {
-          const destItem = join(destPath, item);
-          if (!existsSync(destItem)) {
-            mkdirSync(destItem, { recursive: true });
-            if (verbose) console.log(`🔍 [DEBUG] Created directory: ${destItem}`);
-          }
-          copyRecursive(sourceItem, destItem);
-        } else if (stat.isFile()) {
-          // Process package.json.template, skip regular package.json
-          if (item === 'package.json') {
-            if (verbose) console.log(`🔍 [DEBUG] Skipped ${item} (will use package.json.template instead)`);
-            return;
-          }
-
-          // Handle .template files with placeholder processing
-          if (item.endsWith('.template')) {
-            const destItem = join(destPath, item.replace('.template', ''));
-            processTemplateFile(sourceItem, destItem, projectName, verbose, extraReplacements);
-            filesCopied++;
-            if (verbose) console.log(`🔍 [DEBUG] Processed template file: ${item} -> ${item.replace('.template', '')}`);
-          } else {
-            const destItem = join(destPath, item);
-            copyFileSync(sourceItem, destItem);
-            filesCopied++;
-            if (verbose) console.log(`🔍 [DEBUG] Copied file: ${item}`);
-          }
-        }
-      }
-    }
-
-    copyRecursive(templatePath, './');
     console.log('📋 Applied Bloom template files');
     if (verbose) console.log(`🔍 [DEBUG] Total files copied: ${filesCopied}`);
 
@@ -353,9 +623,9 @@ if (command === 'create') {
   }
 
   // Validate template type
-  const validTemplates = ['basicapp', 'userapp', 'adminapp', 'desktop-basicapp', 'desktop-userapp', 'mobile-basicapp'];
-  if (!validTemplates.includes(templateType)) {
-    console.error(`❌ Invalid template "${templateType}". Available templates: ${validTemplates.join(', ')}`);
+  const validNames = ['app', ...Object.keys(PRESETS)];
+  if (requestedTemplate && !validNames.includes(requestedTemplate)) {
+    console.error(`❌ Unknown template "${requestedTemplate}". Available: ${validNames.join(', ')}`);
     process.exit(1);
   }
 
@@ -420,6 +690,17 @@ if (command === 'create') {
 
     // Copy complete Bloom template (includes both frontend and backend)
     copyBloomTemplate(templateType, verbose, extraReplacements);
+
+    // Layers go on top, in dependency order, each able to add or replace files.
+    const layers = requestedLayers.map(readLayer).filter(Boolean);
+    for (const layer of layers) {
+      applyLayer(layer, verbose, extraReplacements);
+      console.log(`🧩 Added layer: ${layer.name} — ${layer.meta.description}`);
+    }
+    if (layers.length) {
+      mergeLayerPackageJson(layers, verbose);
+      writeLayerEnv(layers, verbose);
+    }
 
     // Create .env file with random values for userapp + adminapp.
     // adminapp uses the same env shape (plus ADMIN_* flags) so it shares

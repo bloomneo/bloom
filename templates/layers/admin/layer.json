@@ -1,0 +1,20 @@
+{
+  "name": "admin",
+  "description": "Admin console: user management, an append-only audit trail, and editable app settings — all behind a role gate.",
+  "requires": ["auth"],
+  "dependencies": {
+    "recharts": "^2.15.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "db:seed:admin": "node prisma/seeding/settings.seed.js"
+  },
+  "env": {
+    "BLOOM_ADMIN_ROLES": "admin,superadmin"
+  },
+  "next": [
+    "npx prisma db push      # add the audit_logs and app_settings tables",
+    "npm run db:seed:admin   # load the default settings",
+    "Sign in as an admin user and open /admin"
+  ]
+}

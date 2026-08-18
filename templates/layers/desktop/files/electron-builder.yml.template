@@ -1,0 +1,34 @@
+# electron-builder configuration.
+#
+# A file rather than a `build` block in package.json: the block would have to
+# be merged into a package.json the layer does not own, and a merge conflict
+# there is far harder to see than a file that either exists or does not.
+appId: com.example.{{PROJECT_SLUG}}
+productName: {{PROJECT_TITLE}}
+
+directories:
+  output: release
+
+# Only the built output ships — never src/. `npm run build` produces both
+# halves: dist/ (the web bundle) and dist/api/ (the compiled server).
+files:
+  - dist/**/*
+  - electron/**/*
+  - package.json
+
+# node_modules is resolved by electron-builder from package.json rather than
+# copied wholesale; listing it above would bundle devDependencies too.
+asar: true
+
+# The API is spawned as a child process, and child_process cannot execute a
+# file inside an asar archive. Unpacking dist/api puts a real file on disk;
+# without it the window opens and every request fails with ECONNREFUSED.
+asarUnpack:
+  - dist/api/**
+
+mac:
+  category: public.app-category.productivity
+win:
+  target: nsis
+linux:
+  target: AppImage

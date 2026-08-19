@@ -78,9 +78,5 @@
   },
   "dependencies": {
     "fs-extra": "^11.2.0"
-  },
-  "peerDependencies": {
-    "@bloomneo/uikit": "^3.0.1",
-    "@bloomneo/appkit": "^5.1.1"
   }
 }

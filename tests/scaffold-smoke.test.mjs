@@ -183,14 +183,30 @@ test('desktop-userapp scaffolds with Electron + SQLite + auth', () => {
   }
 });
 
-test('mobile-basicapp scaffolds WITHOUT appkit (UI-only)', () => {
+/*
+ * CHANGED IN 5.1: the mobile preset now composes onto the `app` base, so it
+ * DOES carry src/api and appkit.
+ *
+ * That is deliberate, not an oversight. The pre-5.1 mobile template was UI
+ * only, which meant a mobile app and the API it talks to could not live in one
+ * repo — every project had to stand a second one up by hand. The API is not
+ * bundled into the native app (vite builds src/web to dist, and `cap sync`
+ * copies only dist), it is simply there to deploy to a server.
+ */
+test('mobile preset composes onto the app base and carries the API', () => {
   const { tmp, projectRoot } = scaffold('mobile-basicapp');
   try {
-    assertCommonShape(projectRoot, 'smoke-mobile-basicapp', { expectAppkit: false });
+    assertCommonShape(projectRoot, 'smoke-mobile-basicapp', { expectAppkit: true });
+    assert.ok(existsSync(join(projectRoot, 'src', 'web')), 'has src/web');
     assert.ok(
-      existsSync(join(projectRoot, 'src', 'mobile')) ||
-        existsSync(join(projectRoot, 'src', 'web')),
-      'mobile template has src/mobile or src/web',
+      existsSync(join(projectRoot, 'capacitor.config.ts')),
+      'mobile layer contributed capacitor.config.ts',
+    );
+    // The native bundle must come from the shared web build, never a
+    // mobile-only source tree — that duplication is what 5.1 removed.
+    assert.ok(
+      !existsSync(join(projectRoot, 'src', 'mobile')),
+      'no separate src/mobile tree',
     );
   } finally {
     rmSync(tmp, { recursive: true, force: true });

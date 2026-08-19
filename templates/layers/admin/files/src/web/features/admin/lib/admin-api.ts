@@ -1,120 +1,59 @@
 /**
- * adminFetch — thin fetch helper for `/api/admin/*`, `/api/audit/*`,
- * `/api/settings/admin/*` calls. Exists because three admin pages
- * would otherwise duplicate the same boilerplate:
+ * Admin API helpers — a thin shim over the app-wide client.
  *
- *   1. Prepend `VITE_API_URL` so the request crosses from the vite
- *      dev server (e.g. :5174) to the API (:3100). Relative URLs hit
- *      vite, which returns HTML — the failure mode is
- *      "JSON.parse: unexpected character" rather than a useful error.
- *   2. Attach `X-Frontend-Key` — server.ts rejects /api/* requests
- *      that don't carry this header.
- *   3. Attach `Authorization: Bearer <token>` when the user is
- *      logged in (all /admin/* pages require an admin role).
+ * ── Why this is no longer its own implementation ──────────────────────────
+ * It used to duplicate the base URL, the frontend key, the Authorization
+ * header and the error shape. That duplication was the tell: the base template
+ * had no shared client, so every surface that needed authenticated fetch grew
+ * its own — and they drifted. This one carried `credentials: 'include'`, which
+ * is invalid against `Access-Control-Allow-Origin: *` and made every admin
+ * request fail after a successful preflight, with nothing in the server log.
  *
- * Returns the raw Response so callers can branch on `res.ok` or
- * extract error bodies however they want. Most callers will just
- * `.then(r => r.json())`.
+ * Now there is one implementation in `@/shared/api`, and these two names exist
+ * only so the admin pages keep compiling. New code should import `api`
+ * directly — it takes a typed `ApiRoute`, which these do not.
  *
- * @file src/web/features/admin/lib/admin-api.ts
- *
- * @see ../../../../../docs/admin-patterns.md §4 admin-api, §10 common traps
- * @see https://dev.bloomneo.com/adminapp/admin-api
- *
- * @llm-rule WHEN: Any admin page needs to read or write server state
- * @llm-rule AVOID: Hand-rolling fetch('/api/...') — missing X-Frontend-Key returns an opaque 403 and relative URLs hit Vite (HTML response → "JSON.parse: unexpected character")
- * @llm-rule PREFER: adminFetchJson for GETs/PUTs/POSTs that want parsed-or-throw; adminFetch when the caller needs the raw Response
+ * @deprecated Use `api` from `@/shared/api`.
  */
+import { request, type ApiRouteLoose } from '@/shared/api';
 
-const baseUrl =
-  (import.meta as unknown as { env: Record<string, string> }).env
-    .VITE_API_URL ?? 'http://localhost:3000';
-
-const frontendKey =
-  (import.meta as unknown as { env: Record<string, string> }).env
-    .VITE_FRONTEND_KEY ?? '';
-
-/** Same storage key the auth feature uses (config.auth.storage.token). */
-const AUTH_TOKEN_KEY = 'auth_token';
-
-export interface AdminFetchInit extends RequestInit {
-  /** Append a query-string object. Values get URI-encoded. */
-  query?: Record<string, string | number | undefined>;
-}
-
-export async function adminFetch(
-  path: string,
-  init: AdminFetchInit = {},
-): Promise<Response> {
-  const { query, headers, ...rest } = init;
-
-  // Compose URL with optional query string. Undefined values skipped.
-  let url = `${baseUrl}${path}`;
-  if (query) {
-    const params = new URLSearchParams();
-    for (const [k, v] of Object.entries(query)) {
-      if (v !== undefined && v !== '') params.set(k, String(v));
-    }
-    const qs = params.toString();
-    if (qs) url += (url.includes('?') ? '&' : '?') + qs;
-  }
-
-  // Compose headers: start with caller-provided, then layer our
-  // required ones. Caller can override by passing them too, but it's
-  // rare and usually wrong.
-  const finalHeaders: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...(headers as Record<string, string>),
-  };
-  if (frontendKey) finalHeaders['X-Frontend-Key'] = frontendKey;
-
-  const token =
-    typeof window !== 'undefined'
-      ? localStorage.getItem(AUTH_TOKEN_KEY)
-      : null;
-  if (token) finalHeaders['Authorization'] = `Bearer ${token}`;
-
-  /*
-   * Deliberately NOT `credentials: 'include'`.
-   *
-   * Auth here is the Bearer token above, not a cookie, so credentials buy
-   * nothing — and they cost something: a credentialed request is invalid
-   * against `Access-Control-Allow-Origin: *`, which is what AppKit serves in
-   * development. The browser then fails the request AFTER a successful
-   * preflight, surfacing only "TypeError: Failed to fetch" with no status and
-   * nothing in the server log.
-   *
-   * If you move to cookie auth, add it back AND pin the server's CORS origin
-   * to an explicit host — the two changes go together.
-   */
-  return fetch(url, {
+/** @deprecated Use `api.get`/`api.post`/… from `@/shared/api`. */
+export async function adminFetchJson<T = unknown>(
+  path: ApiRouteLoose,
+  init: RequestInit & { query?: Record<string, string | number | undefined> } = {},
+): Promise<T> {
+  const { body, ...rest } = init;
+  return request<T>(path as never, {
     ...rest,
-    headers: finalHeaders,
+    ...(typeof body === 'string' ? { body: JSON.parse(body) } : {}),
   });
 }
 
 /**
- * Convenience wrapper that does the JSON parse + throws on non-OK
- * responses. Most admin pages want this shape.
+ * @deprecated Use `api` from `@/shared/api`.
+ *
+ * Returns a Response-shaped object rather than a real Response: callers only
+ * ever read `.ok` and `.status`, and the shared client already threw on
+ * failure by the time this returns.
  */
-export async function adminFetchJson<T = unknown>(
-  path: string,
-  init?: AdminFetchInit,
-): Promise<T> {
-  const res = await adminFetch(path, init);
-  if (!res.ok) {
-    // Try to pull an error message out of the JSON body; fall back
-    // to status text. The route handlers in appkit/error throw
-    // AppError which serializes as { error, message } — we surface
-    // message preferentially.
-    let detail = res.statusText;
-    try {
-      const body = await res.json();
-      detail = body?.message ?? body?.error ?? detail;
-    } catch {
-      // not JSON — keep statusText
-    }
-    throw new Error(`${res.status} ${detail}`);
+type ResponseLike = {
+  ok: boolean;
+  status: number;
+  statusText: string;
+  /** `any` so existing call sites can read fields off the parsed body. */
+  json: () => Promise<any>;
+};
+
+export async function adminFetch(
+  path: ApiRouteLoose,
+  init: RequestInit & { query?: Record<string, string | number | undefined> } = {},
+): Promise<ResponseLike> {
+  try {
+    const data = await adminFetchJson<unknown>(path, init);
+    return { ok: true, status: 200, statusText: 'OK', json: async () => data };
+  } catch (err) {
+    const status = (err as { status?: number }).status ?? 500;
+    const message = (err as Error).message;
+    return { ok: false, status, statusText: message, json: async () => ({ message }) };
   }
-  return (await res.json()) as T;
 }

@@ -52,6 +52,30 @@ export async function createApiRouter() {
           join(featuresPath, featureName, `${featureName}.route.js`)
         ];
 
+        /*
+         * Warn about route files this loop will never load.
+         *
+         * Discovery matches exactly `<feature>/<feature>.route.ts`. Any other
+         * `.route.ts` in the folder is ignored — and used to be ignored
+         * silently, so the endpoint simply 404'd with nothing in the log to
+         * explain it. An agent debugging that has no signal at all to work
+         * from, and a human wastes the same time more suspiciously.
+         */
+        try {
+          const siblings = await readdir(join(featuresPath, featureName));
+          for (const f of siblings) {
+            if (!/\.route\.(ts|js)$/.test(f)) continue;
+            if (f === `${featureName}.route.ts` || f === `${featureName}.route.js`) continue;
+            logger.warn(
+              `  ⚠️  ${featureName}/${f} is NOT mounted — discovery only loads ` +
+                `${featureName}.route.ts. Move these handlers into that file, or ` +
+                `give them their own feature folder.`,
+            );
+          }
+        } catch {
+          // unreadable folder is reported by the loop below
+        }
+
         let loaded = false;
         for (const routeFile of routeFiles) {
           try {

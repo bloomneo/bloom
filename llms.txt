@@ -1,4 +1,4 @@
-# @bloomneo/bloom v5.1.0
+# @bloomneo/bloom v5.2.0
 
 Scaffolding CLI for full-stack apps combining `@bloomneo/appkit` (Express
 backend) and `@bloomneo/uikit` (React frontend) with Feature-Based
@@ -118,26 +118,26 @@ Adding a new page = creating a file. Don't edit the page-router.
 
 ## Migration
 
-Current release: **5.1.0**. Replaces the six frozen template directories with
-one `app` base plus composable layers — `auth`, `admin`, `desktop` (Electron),
-`mobile` (Capacitor). Each old directory held a full copy of the source tree,
-so fixes had to land six times and untried combinations (auth + mobile, admin
-+ desktop) did not exist. Preset names still work and now resolve to layers;
-`--legacy` reaches the frozen directories for one more release and they are
-removed in 6.0.
+Current release: **5.2.0**. Closes the class of mistake that cost the most time
+building with 5.1 — a plausible, wrong STRING that compiles cleanly and fails at
+runtime with an error pointing nowhere near the cause.
 
-Layers compose without editing base files: four build-time registries
-(`import.meta.glob`, eager) let a layer contribute nav entries, route shells,
-React providers and platform init by dropping one file.
+`scripts/gen-api-routes.mjs` derives an `ApiRoute` union from the route files
+(FBCA makes the mapping derivable: `features/<n>/<n>.route.ts` mounts at
+`/api/<n>`). It regenerates on install, dev, build and typecheck, so it cannot
+drift. `shared/api.ts` is the one authenticated client — it takes an `ApiRoute`,
+owns the base URL and the JWT, and detects the HTML-instead-of-JSON response a
+wrong base URL produces, replacing "Unexpected token '<'" with a message naming
+the cause. `VITE_API_URL` now ships in every generated `.env`.
 
-BEHAVIOUR CHANGE: the `mobile-basicapp` preset now carries `src/api` and
-appkit. The pre-5.1 mobile template was UI-only, which meant a mobile app and
-the API it talks to could not share a repo. The API is NOT bundled into the
-native app — vite builds `src/web` to `dist` and `cap sync` copies only `dist`.
+Two silent failures made loud: the API router warns when a `.route.ts` it will
+never mount sits in a feature folder, and the admin layer's `adminFetch` is now
+a thin deprecated shim over the shared client rather than a second
+implementation that had already drifted.
 
-Also adds public pages (about, contact, and four legal-page skeletons), a
-desktop sidebar collapse, and fixes a login response that leaked reset and
-verification tokens. Pins move to uikit `^4.1.6` / appkit `^5.1.1`.
+AGENTS.md is rewritten as rules rather than reference, and points agents at the
+`.d.ts` (UIKit's complete public API is ~1.3k tokens) before the prose docs
+(~23k tokens). Every rule in it maps to a mistake that actually happened.
 
 Prior release: **4.2.4**. Docs-only patch: README gains an `adminapp`
 Quick Start example and documents the `ADMIN_USER_ROLES`,

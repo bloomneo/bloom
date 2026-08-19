@@ -1,0 +1,18 @@
+/**
+ * GENERATED — do not edit. Run `npm run gen:routes`.
+ *
+ * Regenerated automatically on `npm install`, `npm run dev` and `npm run build`,
+ * so it cannot drift from the routes the API actually serves.
+ *
+ * This checked-in copy is the seed for a fresh clone: it lets `tsc` run before
+ * anyone has started the dev server.
+ */
+
+export type ApiRoute =
+  | '/api/welcome'
+  | `/api/welcome/${string}`;
+
+/** Every route, for runtime assertions and tooling. */
+export const API_ROUTES = [
+  '/api/welcome',
+] as const;

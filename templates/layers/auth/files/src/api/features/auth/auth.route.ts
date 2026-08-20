@@ -209,4 +209,11 @@ router.post('/reset-password', authRateLimit, async (req: Request, res: Response
   }
 });
 
+/**
+ * Deliberately public, and necessarily so: login, register and password
+ * reset cannot require the token they exist to issue. Individual routes
+ * that DO need a session guard themselves.
+ */
+export const isPublic = true;
+
 export default router;

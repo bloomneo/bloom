@@ -33,4 +33,10 @@ router.get('/:name', error.asyncRoute(async (req, res) => {
   res.json(result);
 }));
 
+/**
+ * Deliberately public: this is the scaffold's demo endpoint, and a new
+ * project should be able to curl it before any user exists.
+ */
+export const isPublic = true;
+
 export default router;

@@ -11,7 +11,7 @@
 import express from 'express';
 import { fileURLToPath, pathToFileURL } from 'url';
 import { dirname, join } from 'path';
-import { readdir } from 'fs/promises';
+import { readdir, readFile } from 'fs/promises';
 import { loggerClass } from '@bloomneo/appkit/logger';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -51,6 +51,42 @@ export async function createApiRouter() {
           join(featuresPath, featureName, `${featureName}.route.ts`),
           join(featuresPath, featureName, `${featureName}.route.js`)
         ];
+
+        /*
+         * Warn when a feature exposes routes with no auth guard at all.
+         *
+         * This is the last silent failure in a scaffolded Bloom app: a route
+         * file written without `router.use(auth.requireLoginToken())` starts
+         * cleanly, mounts with a normal log line, and serves whatever it
+         * queries to anyone who asks. Nothing in typecheck, the build or the
+         * boot sequence objects. For an agent that is the worst possible
+         * shape — every signal reports success.
+         *
+         * Detection reads the SOURCE rather than inspecting the mounted
+         * router, because appkit's guards are anonymous closures that are
+         * indistinguishable at runtime from any other middleware — a router
+         * carrying only a logger would look guarded.
+         *
+         * Opt out for genuinely public surfaces with `export const isPublic
+         * = true`. A check that cannot be opted out of is a check that gets
+         * commented out wholesale.
+         */
+        try {
+          const source = await readFile(routeFiles[0], 'utf8').catch(() => readFile(routeFiles[1], 'utf8'));
+          const hasGuard = /\bauth\s*\.\s*require[A-Z]\w*\s*\(/.test(source);
+          const optedOut = /\bexport\s+const\s+isPublic\s*=\s*true/.test(source);
+
+          if (!hasGuard && !optedOut) {
+            logger.warn(
+              `  ⚠️  /api/${featureName} has NO auth guard — every route in it is public.\n` +
+                `      Add \`router.use(auth.requireLoginToken())\` near the top of ` +
+                `${featureName}.route.ts,\n` +
+                `      or declare it deliberately public with \`export const isPublic = true\`.`,
+            );
+          }
+        } catch {
+          // unreadable source is already reported by the mount loop below
+        }
 
         /*
          * Warn about route files this loop will never load.

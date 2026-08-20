@@ -162,4 +162,11 @@ router.post(
   }),
 );
 
+/**
+ * Deliberately public: a contact form is submitted by people who are not
+ * signed in. The recipient address stays server-side, so publishing the
+ * endpoint does not publish where it goes.
+ */
+export const isPublic = true;
+
 export default router;

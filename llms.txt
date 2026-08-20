@@ -1,4 +1,4 @@
-# @bloomneo/bloom v5.2.0
+# @bloomneo/bloom v5.2.1
 
 Scaffolding CLI for full-stack apps combining `@bloomneo/appkit` (Express
 backend) and `@bloomneo/uikit` (React frontend) with Feature-Based
@@ -118,7 +118,25 @@ Adding a new page = creating a file. Don't edit the page-router.
 
 ## Migration
 
-Current release: **5.2.0**. Closes the class of mistake that cost the most time
+Current release: **5.2.1**. Closes the last silent failure in a scaffolded app.
+A feature router written without an auth guard used to start cleanly, mount with
+a normal log line, and serve whatever it queried to anyone — nothing in
+typecheck, build or boot objected. The API router now reads each route file at
+discovery and warns, naming the file and both fixes:
+
+    ⚠️  /api/leaky has NO auth guard — every route in it is public.
+        Add `router.use(auth.requireLoginToken())` near the top of leaky.route.ts,
+        or declare it deliberately public with `export const isPublic = true`.
+
+Detection reads the SOURCE rather than the mounted router, because appkit's
+guards are anonymous closures indistinguishable at runtime from any other
+middleware — a router carrying only a logger would look guarded.
+
+`export const isPublic = true` is the opt-out, and welcome, auth and
+contact-message now declare it: a check that cannot be opted out of is one that
+gets commented out wholesale.
+
+Prior release: **5.2.0**. Closes the class of mistake that cost the most time
 building with 5.1 — a plausible, wrong STRING that compiles cleanly and fails at
 runtime with an error pointing nowhere near the cause.
 

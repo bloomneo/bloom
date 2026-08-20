@@ -113,6 +113,7 @@ export async function createApiRouter() {
         }
 
         let loaded = false;
+        let loadError: Error | null = null;
         for (const routeFile of routeFiles) {
           try {
             const fileUrl = pathToFileURL(routeFile).href;
@@ -124,12 +125,37 @@ export async function createApiRouter() {
             loaded = true;
             break;
           } catch (error) {
-            // Continue to next file type
+            /*
+             * Keep the real reason.
+             *
+             * A missing file and a file that threw while loading are very
+             * different problems, and this loop used to flatten both into
+             * "Could not load route". The thrown case is where the useful
+             * message lives — appkit's guards validate their arguments and
+             * report precisely (`Invalid role.level for middleware:
+             * "administrator"`), and discarding that leaves an agent with a
+             * generic warning and nowhere to look.
+             */
+            const isMissingFile =
+              (error as NodeJS.ErrnoException)?.code === 'ERR_MODULE_NOT_FOUND' &&
+              String((error as Error)?.message ?? '').includes(routeFile);
+            if (!isMissingFile) loadError = error as Error;
           }
         }
 
         if (!loaded) {
-          logger.warn(`⚠️  Could not load route for feature "${featureName}"`);
+          if (loadError) {
+            logger.warn(
+              `⚠️  /api/${featureName} failed to load — the feature is NOT mounted.\n` +
+                `      ${loadError.message.split('\n')[0]}\n` +
+                `      in ${featureName}/${featureName}.route.ts`,
+            );
+          } else {
+            logger.warn(
+              `⚠️  features/${featureName}/ has no ${featureName}.route.ts — nothing was mounted. ` +
+                `Discovery looks for that exact filename.`,
+            );
+          }
         }
       }
     }

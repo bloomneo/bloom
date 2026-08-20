@@ -1,4 +1,4 @@
-# @bloomneo/bloom v5.2.1
+# @bloomneo/bloom v5.2.2
 
 Scaffolding CLI for full-stack apps combining `@bloomneo/appkit` (Express
 backend) and `@bloomneo/uikit` (React frontend) with Feature-Based
@@ -118,7 +118,22 @@ Adding a new page = creating a file. Don't edit the page-router.
 
 ## Migration
 
-Current release: **5.2.1**. Closes the last silent failure in a scaffolded app.
+Current release: **5.2.2**. Stops the API router discarding the reason a feature
+failed to load. A route file that threw during import was reported as
+"Could not load route for feature X" — flattening a missing file and a broken
+one into the same sentence, and throwing away the useful part. AppKit's guards
+validate their arguments and report precisely; that message was being swallowed.
+
+Now the two cases are distinguished and the underlying error survives:
+
+    ⚠️  /api/badrole failed to load — the feature is NOT mounted.
+        [@bloomneo/appkit/auth] Invalid role.level for middleware: "administrator". See: …
+        in badrole/badrole.route.ts
+
+    ⚠️  features/nofile/ has no nofile.route.ts — nothing was mounted.
+        Discovery looks for that exact filename.
+
+Prior release: **5.2.1**. Closes the last silent failure in a scaffolded app.
 A feature router written without an auth guard used to start cleanly, mount with
 a normal log line, and serve whatever it queried to anyone — nothing in
 typecheck, build or boot objected. The API router now reads each route file at

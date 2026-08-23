@@ -2,6 +2,31 @@
 
 All notable changes to Bloom Framework will be documented in this file.
 
+## [5.3.1] - 2026-08-23
+
+### Fixed
+
+- **Scaffolded apps shipped without a `.gitignore`.** The deprecated frozen
+  templates each carried one, but the `app` base every preset has composed from
+  since 5.1 did not — so a new project's first `git init && git add .` staged
+  `node_modules` and the `.env` that `bloom create` had just written real
+  secrets into: `BLOOM_AUTH_SECRET`, which signs every JWT the app issues, and
+  `BLOOM_FRONTEND_KEY`, which gates the API.
+
+  Shipped as `.gitignore.template` — npm strips a bare `.gitignore` from a
+  published tarball, which is why every other template uses that suffix too.
+
+  It deliberately does not ignore two things. `public/` holds the favicon and
+  the self-hosted fonts; the bare `public` line that widely-copied Node
+  gitignores inherit from Gatsby would drop them with no error, just a page
+  quietly falling back to the system font stack. `prisma/migrations/` is schema
+  history — ignoring it leaves a clone able to read the schema and unable to
+  rebuild the database that matches it.
+
+  Verified by scaffolding an app, adding a junk `node_modules` file, and running
+  `git add -A`: 112 files staged, zero of them `.env` or `node_modules`, with
+  `public/` present.
+
 ## [5.3.0] - 2026-08-23
 
 ### Added

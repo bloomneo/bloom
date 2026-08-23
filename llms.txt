@@ -1,4 +1,4 @@
-# @bloomneo/bloom v5.3.0
+# @bloomneo/bloom v5.3.1
 
 Scaffolding CLI for full-stack apps combining `@bloomneo/appkit` (Express
 backend) and `@bloomneo/uikit` (React frontend) with Feature-Based
@@ -118,7 +118,22 @@ Adding a new page = creating a file. Don't edit the page-router.
 
 ## Migration
 
-Current release: **5.3.0**. Closes the last blind spot in the log: a browser
+Current release: **5.3.1**. Scaffolded apps now ship a `.gitignore`.
+
+The `app` base did not have one — only the deprecated frozen templates did — so
+every app composed since 5.1 was created without it. The first `git init && git
+add .` in a new project therefore committed `node_modules` and the `.env` that
+`bloom create` had just generated real secrets into: BLOOM_AUTH_SECRET, which
+signs every JWT the app issues, and BLOOM_FRONTEND_KEY, which gates the API.
+
+The file is `.gitignore.template`, because npm strips a bare `.gitignore` from a
+published tarball. It deliberately does NOT ignore `public/` (the favicon and
+self-hosted fonts live there — a bare `public` line inherited from Gatsby
+boilerplate would drop them silently) or `prisma/migrations/`.
+
+### 5.3.0
+
+Closes the last blind spot in the log: a browser
 crash now reaches the server.
 
 `PageRouter` has always accepted an `onError` callback and no template ever

@@ -9,7 +9,7 @@
  */
 
 import 'dotenv/config';
-import express from 'express';
+import express, { type Request } from 'express';
 import cors from 'cors';
 import path from 'path';
 import fs from 'fs';
@@ -18,6 +18,7 @@ import { loggerClass } from '@bloomneo/appkit/logger';
 import { errorClass } from '@bloomneo/appkit/error';
 import { configClass } from '@bloomneo/appkit/config';
 import { createApiRouter } from './lib/api-router.js';
+import { randomUUID } from 'node:crypto';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -42,14 +43,37 @@ function checkFrontendExists(distPath: string): boolean {
 const app = express();
 const PORT = config.get('server.port', process.env.PORT || 3000);
 
+/** Express's Request with the id the correlation middleware attaches. */
+type RequestWithId = Request & { requestId?: string };
+
 // Middleware (following AppKit recommended order)
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Request logging middleware
-app.use((req, _res, next) => {
+/*
+ * ── Request correlation ────────────────────────────────────────────────────
+ *
+ * Every request gets an id, echoed back as `x-request-id` and attached to the
+ * log line it produces. Without one, a browser-side failure and the server log
+ * that explains it are two facts with nothing joining them — you are left
+ * matching timestamps by eye, and on a busy log that is guesswork.
+ *
+ * With it, `shared/api.ts` puts the id on the thrown ApiError, so the message
+ * a user or an agent sees names the exact line to grep for.
+ *
+ * An inbound x-request-id is honoured so a proxy or a caller can supply its own
+ * and the trace survives the hop.
+ */
+app.use((req, res, next) => {
+  const incoming = req.get('x-request-id');
+  const requestId = incoming && incoming.length <= 200 ? incoming : randomUUID();
+
+  (req as RequestWithId).requestId = requestId;
+  res.setHeader('x-request-id', requestId);
+
   logger.info('Incoming request', {
+    requestId,
     method: req.method,
     url: req.url,
     userAgent: req.get('User-Agent'),
@@ -58,26 +82,50 @@ app.use((req, _res, next) => {
   next();
 });
 
-// Frontend key protection for API routes (excluding /api root and /health)
+/*
+ * ── Frontend key: decided once, at boot ────────────────────────────────────
+ *
+ * This block used to skip the check only when NODE_ENV was exactly the string
+ * "development", and otherwise warn that the key was missing in production.
+ *
+ * Node does not default NODE_ENV to anything — it is undefined unless someone
+ * sets it, and no dev script here does. So a plain `npm run dev` took neither
+ * branch as intended: the skip did not fire, and the warning named PRODUCTION
+ * on a developer's laptop, once per request, forever.
+ *
+ * Two things were wrong with that, and the second is the worse one:
+ *   1. it named the wrong environment, and
+ *   2. it repeated a STATIC FACT — whether an env var is set — every request.
+ *
+ * A warning that fires on every request is one you learn to scroll past, and
+ * the next real warning goes with it. Configuration is settled at boot, so it
+ * is reported at boot, once, and the request path stays quiet.
+ */
+const FRONTEND_KEY = process.env.BLOOM_FRONTEND_KEY;
+// Anything not explicitly production counts as development — the safe reading
+// of an unset NODE_ENV: quiet locally, never skips the check in production.
+const IS_PRODUCTION = process.env.NODE_ENV === 'production';
+
+if (!IS_PRODUCTION) {
+  logger.info('🔓 Frontend key check disabled (NODE_ENV is not "production")');
+} else if (!FRONTEND_KEY) {
+  logger.warn(
+    '⚠️  BLOOM_FRONTEND_KEY is not set while NODE_ENV=production — the API is ' +
+    'accepting requests from any origin. Set BLOOM_FRONTEND_KEY to enforce it.',
+  );
+}
+
 app.use('/api', (req, res, next) => {
   // Skip for specific endpoints
-  if (req.path === '/' || req.path === '') {
-    logger.info('🔓 Frontend key check skipped for /api root');
-    return next();
-  }
+  if (req.path === '/' || req.path === '') return next();
 
-  // Skip in development environment
-  if (process.env.NODE_ENV === 'development') {
-    logger.info('🔓 Frontend key check skipped (development mode)');
-    return next();
-  }
+  if (!IS_PRODUCTION) return next();
 
   const frontendKey = req.headers['x-frontend-key'] as string;
-  const expectedKey = process.env.BLOOM_FRONTEND_KEY;
+  const expectedKey = FRONTEND_KEY;
 
-  // Warn if no key is configured in production
+  // Already reported at boot; not repeated per request.
   if (!expectedKey) {
-    logger.warn('⚠️ BLOOM_FRONTEND_KEY not configured in production environment');
     return next(); // Fail gracefully
   }
 

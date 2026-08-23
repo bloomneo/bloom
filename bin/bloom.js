@@ -537,6 +537,19 @@ BLOOM_AUTH_SECRET=${authSecret}
 # expected Vite build. Pair with VITE_FRONTEND_KEY above.
 BLOOM_FRONTEND_KEY=${frontendKey}
 
+# AppKit logger scope. 'minimal' prints the message only; every structured
+# field a log call passes — method, url, requestId — is dropped.
+#
+# That is the right default for a deployed service and the wrong one while you
+# are debugging: `logger.info('Incoming request', { method, url, requestId })`
+# renders as the bare words "Incoming request", and nothing tells you the rest
+# was captured and discarded. 'full' prints the fields, which is what makes the
+# x-request-id on a failed response findable in the log.
+#
+# Left as 'full' for development. Deployments set their own environment and get
+# 'minimal' automatically from NODE_ENV=production.
+BLOOM_LOGGER_SCOPE=full
+
 DEFAULT_USER_PASSWORD=${defaultPassword}
 
 # Security Configuration

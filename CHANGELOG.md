@@ -2,6 +2,42 @@
 
 All notable changes to Bloom Framework will be documented in this file.
 
+## [5.2.5] - 2026-08-23
+
+### Fixed
+
+- **Every structured log field was being discarded.** AppKit's logger defaults
+  to `minimal` scope, which prints the message and drops the metadata object.
+  So `logger.info('Incoming request', { method, url, ip })` — and all 42 such
+  call sites in the template — rendered as the bare words `Incoming request`.
+  The fields were captured and thrown away, and nothing said so.
+
+  `BLOOM_LOGGER_SCOPE` now ships in the generated `.env`, set to `full` for
+  development and documented in place, so the knob is visible where it is used.
+  Deployments set their own environment and still get `minimal` from
+  `NODE_ENV=production`.
+
+- **A per-request warning that named the wrong environment.** The frontend-key
+  gate skipped only when `NODE_ENV` was exactly `"development"`. Node does not
+  default `NODE_ENV` to anything, and no dev script sets it, so a plain
+  `npm run dev` took neither branch as intended: the skip never fired and the
+  warning claimed PRODUCTION on a developer's laptop — once per request.
+
+  Worse than the wrong label was the repetition: whether an env var is set is a
+  static fact, and a warning that fires on every request is one you learn to
+  scroll past. The check is now decided once, at boot, and the request path
+  stays quiet. Anything not explicitly production counts as development, which
+  is the safe reading of an unset `NODE_ENV`.
+
+### Added
+
+- **Request correlation.** Every request gets an id, echoed as `x-request-id`
+  and attached to its log line; an inbound `x-request-id` is honoured so a trace
+  survives a proxy hop. `shared/api.ts` reads it off the response and puts it on
+  the thrown `ApiError`, so a client-side failure names the exact server log
+  line to grep for. Previously the two halves of a failure had nothing joining
+  them but timestamps.
+
 ## [5.2.4] - 2026-08-23
 
 ### Fixed

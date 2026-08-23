@@ -1,4 +1,4 @@
-# @bloomneo/bloom v5.2.4
+# @bloomneo/bloom v5.2.5
 
 Scaffolding CLI for full-stack apps combining `@bloomneo/appkit` (Express
 backend) and `@bloomneo/uikit` (React frontend) with Feature-Based
@@ -118,8 +118,22 @@ Adding a new page = creating a file. Don't edit the page-router.
 
 ## Migration
 
-Current release: **5.2.4**. Fixes a dev-server bug where a newly created page
-file did not become a route until the server was restarted.
+Current release: **5.2.5**. Makes the logs usable: structured fields are no
+longer discarded by default, every request carries a correlation id, and a
+per-request warning that named the wrong environment now fires once at boot.
+
+Structured fields were being dropped because AppKit's logger defaults to
+`minimal` scope, which prints the message and discards the metadata object —
+so `logger.info('Incoming request', { method, url })` rendered as the bare
+words. `BLOOM_LOGGER_SCOPE=full` now ships in the generated `.env`, documented
+in place. Every request also carries an `x-request-id`, echoed to the response
+and attached to its log line; `shared/api.ts` puts it on the thrown `ApiError`,
+so a browser-side failure names the server log line to grep for.
+
+### 5.2.4
+
+Fixed a dev-server bug where a newly created page file did not become a route
+until the server was restarted.
 
 Page discovery is `import.meta.glob`, which Vite resolves once, when it
 transforms `page-router.tsx`. Create `features/billing/pages/plan.tsx` while the

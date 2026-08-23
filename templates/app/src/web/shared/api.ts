@@ -34,8 +34,20 @@ const BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
 const TOKEN_KEY = 'auth_token';
 
 export class ApiError extends Error {
-  constructor(readonly status: number, message: string, readonly body?: unknown) {
-    super(message);
+  constructor(
+    readonly status: number,
+    message: string,
+    readonly body?: unknown,
+    /**
+     * The server's `x-request-id` for the failed call.
+     *
+     * This is the join between the two halves of a failure: the message a user
+     * reports, and the server log line that explains it. Without it you are
+     * matching timestamps by eye. With it, `grep <id>` lands on the request.
+     */
+    readonly requestId?: string,
+  ) {
+    super(requestId ? `${message} [request ${requestId}]` : message);
     this.name = 'ApiError';
   }
 }
@@ -76,8 +88,12 @@ export async function request<T = unknown>(path: ApiRoute, opts: Options = {}): 
    * the symptom and hides the cause. Check the content type first and say what
    * actually happened.
    */
+  const requestId = res.headers.get('x-request-id') ?? undefined;
+
   const contentType = res.headers.get('content-type') ?? '';
   if (contentType.includes('text/html')) {
+    // No request id is quoted here on purpose: an HTML answer means the request
+    // never reached the API, so there is no server log line to point at.
     throw new ApiError(
       res.status,
       `Expected JSON from ${url} but got HTML. The API base URL is probably wrong — ` +
@@ -87,7 +103,12 @@ export async function request<T = unknown>(path: ApiRoute, opts: Options = {}): 
 
   if (!res.ok) {
     const detail = await res.json().catch(() => null);
-    throw new ApiError(res.status, detail?.message ?? detail?.error ?? res.statusText, detail);
+    throw new ApiError(
+      res.status,
+      detail?.message ?? detail?.error ?? res.statusText,
+      detail,
+      requestId,
+    );
   }
 
   return res.status === 204 ? (undefined as T) : ((await res.json()) as T);

@@ -1,4 +1,4 @@
-# @bloomneo/bloom v5.2.5
+# @bloomneo/bloom v5.2.6
 
 Scaffolding CLI for full-stack apps combining `@bloomneo/appkit` (Express
 backend) and `@bloomneo/uikit` (React frontend) with Feature-Based
@@ -118,7 +118,16 @@ Adding a new page = creating a file. Don't edit the page-router.
 
 ## Migration
 
-Current release: **5.2.5**. Makes the logs usable: structured fields are no
+Current release: **5.2.6**. Makes the log readable: one line per request,
+carrying method, path, status, duration and a correlation id, logged on
+completion so it can report an outcome. Narration of steps that succeeded is
+gone, along with a probe that reported three database failures at every healthy
+boot. Requires `@bloomneo/appkit` >= 5.1.2, which renders log metadata inline
+instead of dropping it.
+
+### 5.2.5
+
+Made the logs usable: structured fields are no
 longer discarded by default, every request carries a correlation id, and a
 per-request warning that named the wrong environment now fires once at boot.
 

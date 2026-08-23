@@ -31,7 +31,7 @@
   },
   "dependencies": {
     "@bloomneo/uikit": "^4.1.6",
-    "@bloomneo/appkit": "^5.1.1",
+    "@bloomneo/appkit": "^5.1.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router-dom": "^6.26.0",

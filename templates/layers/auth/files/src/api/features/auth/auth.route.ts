@@ -6,12 +6,53 @@
 import { Router, Request, Response } from 'express';
 import { errorClass } from '@bloomneo/appkit/error';
 import { securityClass } from '@bloomneo/appkit/security';
+import { loggerClass } from '@bloomneo/appkit/logger';
 import { authService } from './auth.service.js';
 
 // Initialize AppKit modules
 const router = Router();
 const error = errorClass.get();
 const security = securityClass.get();
+const logger = loggerClass.get('auth-routes');
+
+/**
+ * The id server.ts attaches to every request.
+ *
+ * The handlers below used to read it off a metadata property that nothing ever
+ * set, falling back to the string 'unknown' — so every successful register and
+ * login answered with `requestId: "unknown"`, a field that promised a trace and
+ * returned a placeholder.
+ */
+type RequestWithId = Request & { requestId?: string };
+
+/**
+ * Report a route failure at a level that matches what actually happened.
+ *
+ * Every catch here used to write straight to the console, which had two faults.
+ *
+ * It bypassed the logger, so the line carried no timestamp, no component tag
+ * and no level — it could not be filtered, and it did not look like any other
+ * line in the log.
+ *
+ * And it dumped a full stack trace for outcomes that are not faults at all. A
+ * mistyped password is a 400 and an entirely ordinary event; printing twelve
+ * lines of stack for one is how a log stops being read, and how the 500 that
+ * actually mattered goes past unnoticed.
+ *
+ * 4xx is the caller's problem: one warn line. 5xx is ours: an error, with the
+ * stack, because then the stack is the point.
+ */
+function reportRouteError(action: string, err: any): void {
+  const status = err?.statusCode ?? 500;
+  const detail = err?.message ?? String(err);
+
+  if (status >= 500) {
+    logger.error(`${action} failed: ${detail}`);
+    if (err?.stack) logger.error(String(err.stack));
+  } else {
+    logger.warn(`${action} rejected (${status}): ${detail}`);
+  }
+}
 
 // Rate limiting for auth endpoints using AppKit security - moderate limits for development
 const authRateLimit = security.requests(10, 15 * 60 * 1000, {
@@ -23,7 +64,7 @@ const authRateLimit = security.requests(10, 15 * 60 * 1000, {
  */
 router.post('/register', authRateLimit, async (req: Request, res: Response) => {
   try {
-    const requestId = (req as any).requestMetadata?.requestId || 'unknown';
+    const requestId = (req as RequestWithId).requestId;
     const result = await authService.register(req.body);
 
     res.status(201).json({
@@ -32,7 +73,7 @@ router.post('/register', authRateLimit, async (req: Request, res: Response) => {
     });
 
   } catch (err: any) {
-    console.error('Registration error:', err);
+    reportRouteError('registration', err);
     res.status(err.statusCode || 500).json({
       error: 'REGISTRATION_FAILED',
       message: err.message || 'Registration failed',
@@ -45,7 +86,7 @@ router.post('/register', authRateLimit, async (req: Request, res: Response) => {
  */
 router.post('/login', authRateLimit, async (req: Request, res: Response) => {
   try {
-    const requestId = (req as any).requestMetadata?.requestId || 'unknown';
+    const requestId = (req as RequestWithId).requestId;
     const result = await authService.login(req.body);
 
     res.json({
@@ -54,7 +95,7 @@ router.post('/login', authRateLimit, async (req: Request, res: Response) => {
     });
 
   } catch (err: any) {
-    console.error('Login error:', err);
+    reportRouteError('login', err);
     res.status(err.statusCode || 500).json({
       error: 'LOGIN_FAILED',
       message: err.message || 'Login failed',
@@ -97,7 +138,7 @@ router.post('/verify-email', async (req: Request, res: Response) => {
       user: result.user,
     });
   } catch (err: any) {
-    console.error('Email verification error:', err);
+    reportRouteError('email verification', err);
     res.status(500).json({
       error: 'INTERNAL_ERROR',
       message: err.message || 'Email verification failed',
@@ -129,7 +170,7 @@ router.post('/resend-verification', async (req: Request, res: Response) => {
       message: 'Verification email sent successfully',
     });
   } catch (err: any) {
-    console.error('Resend verification error:', err);
+    reportRouteError('resend verification', err);
     res.status(500).json({
       error: 'INTERNAL_ERROR',
       message: err.message || 'Failed to resend verification email',
@@ -161,7 +202,7 @@ router.post('/forgot-password', authRateLimit, async (req: Request, res: Respons
       message: 'If an account exists with this email, a password reset link has been sent',
     });
   } catch (err: any) {
-    console.error('Forgot password error:', err);
+    reportRouteError('forgot password', err);
     res.status(500).json({
       error: 'INTERNAL_ERROR',
       message: err.message || 'Failed to process forgot password request',
@@ -201,7 +242,7 @@ router.post('/reset-password', authRateLimit, async (req: Request, res: Response
       message: 'Password reset successfully',
     });
   } catch (err: any) {
-    console.error('Reset password error:', err);
+    reportRouteError('reset password', err);
     res.status(500).json({
       error: 'INTERNAL_ERROR',
       message: err.message || 'Failed to reset password',

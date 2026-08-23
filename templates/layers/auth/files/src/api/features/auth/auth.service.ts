@@ -58,9 +58,6 @@ export function toPublicUser(user: {
   };
 }
 
-
-
-
 // Initialize AppKit modules following the pattern
 const logger = loggerClass.get('auth-service');
 const error = errorClass.get();
@@ -70,7 +67,6 @@ export const authService = {
   // User registration service
   async register(data: AuthRegisterRequest): Promise<AuthRegisterResponse> {
     try {
-      logger.info('Processing user registration', { email: data.email, role: data.role, level: data.level });
 
       // Validate input
       if (!data.email || !this.validateEmail(data.email)) {
@@ -149,7 +145,6 @@ export const authService = {
   // User login service
   async login(data: AuthLoginRequest): Promise<AuthLoginResponse> {
     try {
-      logger.info('Processing user login', { email: data.email });
 
       // Validate input
       if (!data.email || !this.validateEmail(data.email)) {
@@ -171,8 +166,6 @@ export const authService = {
         throw error.badRequest('Invalid email or password');
       }
 
-      logger.info('User found, verifying password', { userId: user.id, email: data.email });
-
       // Verify password using AppKit auth (compatible with all hashing methods)
       const isPasswordValid = await auth.comparePassword(data.password, user.password);
 
@@ -181,20 +174,11 @@ export const authService = {
         throw error.badRequest('Invalid email or password');
       }
 
-      logger.info('Password verified, checking user status', { userId: user.id, isActive: user.isActive });
-
       // Check if user is active
       if (!user.isActive) {
         logger.warn('Inactive user login attempt', { email: data.email, userId: user.id });
         throw error.badRequest('Account is deactivated');
       }
-
-      logger.info('User is active, generating JWT token', {
-        userId: user.id,
-        role: user.role,
-        level: user.level,
-        roleLevel: `${user.role}.${user.level}`
-      });
 
       // Generate JWT token with detailed error handling
       let token;
@@ -204,7 +188,6 @@ export const authService = {
           role: user.role,
           level: user.level
         });
-        logger.info('JWT token generated successfully', { userId: user.id });
       } catch (tokenErr: any) {
         logger.error('JWT token generation failed', {
           userId: user.id,
@@ -231,6 +214,18 @@ export const authService = {
       // Whitelist the fields that may leave the server — see toPublicUser.
       const userWithoutPassword = toPublicUser(user);
 
+      /*
+       * One line per completed flow, not one per step.
+       *
+       * A successful login used to emit six: processing, user found, password
+       * verified, user active, token generated, completed. Every one of them
+       * described a step that WORKED, and each failure branch already logs its
+       * own warn — so the narration only ever padded the happy path, six lines
+       * deep, on the busiest endpoint an app has.
+       *
+       * server.ts already records the request with its status and duration.
+       * What belongs here is the thing that line cannot know: who logged in.
+       */
       logger.info('User login completed', { userId: user.id, email: data.email });
       return {
         message: 'Login successful',

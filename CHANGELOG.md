@@ -2,6 +2,50 @@
 
 All notable changes to Bloom Framework will be documented in this file.
 
+## [5.2.6] - 2026-08-23
+
+### Changed
+
+- **One line per request, logged on completion.** The request log fired on
+  arrival, so it could not carry a status or a duration — the log could not say
+  whether anything had SUCCEEDED. It now logs on `finish`:
+
+      GET /api/customers -> 200 23ms req=db4a8f82
+
+  The level tracks the status (5xx error, 4xx warn), so filtering by level
+  yields real signal instead of a stream of INFO with the failures buried in it.
+
+- **Facts moved into the message, out of the metadata object.** Under the
+  default scope the object was dropped; under `full` it printed thirteen lines
+  per request, four of them identical every time. Seven requests came to 321
+  lines. For an agent reading back its own server output, that is the context
+  window spent on boilerplate.
+
+- **Narration removed.** A successful login emitted six lines describing steps
+  that worked; the failure branches already logged their own warnings. Now one
+  line per completed flow, plus the request line. Health checks and SPA routes
+  no longer log at all — a load balancer polling `/health` is not news.
+
+### Fixed
+
+- **A log line that named a route which does not exist.** The scaffold's example
+  feature logged `GET /api/{featureName} request received` — its own placeholder,
+  left in a runtime string. A log that lies is worse than one that is quiet, and
+  this is the file every new feature is copied from.
+
+- **`requestId: "unknown"` in every auth response.** Register and login read the
+  id from a property nothing ever set, so the fallback always won and both
+  endpoints returned a field that promised a trace and delivered a placeholder.
+  They now use the id `server.ts` attaches.
+
+- **Stack traces for ordinary outcomes.** Six auth handlers wrote straight to
+  the console, bypassing the logger — no timestamp, no component, no level —
+  and dumped a full stack for a mistyped password, which is a 400. 4xx is now
+  one warn line; 5xx keeps the stack, because there the stack is the point.
+
+- The frontend-key success case logged on every authenticated request in
+  production, hiding the two failure warnings next to it.
+
 ## [5.2.5] - 2026-08-23
 
 ### Fixed

@@ -1,7 +1,7 @@
 /**
  * FBCA Backend API Server with AppKit integration
- * @module {{projectName}}/server
- * @file {{projectName}}/src/api/server.ts
+ * @module bloomneo/server
+ * @file bloomneo/src/api/server.ts
  *
  * @llm-rule WHEN: Creating backend APIs with Feature-Based Component Architecture
  * @llm-rule AVOID: Using without AppKit modules - breaks structured logging and error handling
@@ -72,13 +72,53 @@ app.use((req, res, next) => {
   (req as RequestWithId).requestId = requestId;
   res.setHeader('x-request-id', requestId);
 
-  logger.info('Incoming request', {
-    requestId,
-    method: req.method,
-    url: req.url,
-    userAgent: req.get('User-Agent'),
-    ip: req.ip
+  /*
+   * ── Why the facts live in the MESSAGE, not the metadata object ────────────
+   *
+   * The obvious version of this passes the method, url, id and ip as a second
+   * argument, and that is what shipped. Two problems, both visible only in real
+   * output:
+   *
+   *   Under the default 'minimal' scope the metadata object is DROPPED, so it
+   *   printed three bare words and refused to say which request they described.
+   *
+   *   Under 'full' it printed thirteen lines per request, four of them
+   *   (service, version, environment, component) identical on every line.
+   *   Seven requests came to 321 lines of log.
+   *
+   * Neither is readable, and for an agent reading back its own server output
+   * the second is worse than the first: it burns the context window on
+   * boilerplate. Putting the facts in the message string gives one line that
+   * survives BOTH scopes intact.
+   *
+   * ── Logged on finish, not on arrival ──────────────────────────────────────
+   *
+   * The old line fired when the request arrived, so it could not carry a status
+   * or a duration — the log could not tell you whether anything SUCCEEDED. This
+   * waits for 'finish', the only point where the outcome is known.
+   *
+   * Format, kept deterministic so it greps cleanly:
+   *     GET /api/customers -> 200 23ms req=db4a8f82
+   *
+   *     grep 'req=db4a8f82'    one request, end to end
+   *     grep -- '-> 5'         every server error
+   *
+   * The level tracks the status, so filtering by level yields real signal
+   * rather than a stream of INFO with the failures buried in it.
+   */
+  const startedAt = process.hrtime.bigint();
+
+  res.on('finish', () => {
+    const ms = Number(process.hrtime.bigint() - startedAt) / 1e6;
+    const line =
+      `${req.method} ${req.originalUrl} -> ${res.statusCode} ` +
+      `${ms.toFixed(1)}ms req=${requestId.slice(0, 8)}`;
+
+    if (res.statusCode >= 500) logger.error(line);
+    else if (res.statusCode >= 400) logger.warn(line);
+    else logger.info(line);
   });
+
   next();
 });
 
@@ -131,7 +171,7 @@ app.use('/api', (req, res, next) => {
 
   // Check if frontend key is provided and matches
   if (!frontendKey) {
-    logger.warn('❌ Frontend key missing in request headers', { url: req.url });
+    logger.warn(`frontend-key missing: ${req.method} ${req.originalUrl}`);
     return res.status(403).json({
       error: 'Frontend access key required',
       message: 'API access requires valid frontend key in X-Frontend-Key header'
@@ -139,23 +179,30 @@ app.use('/api', (req, res, next) => {
   }
 
   if (frontendKey !== expectedKey) {
-    logger.warn('❌ Invalid frontend key provided', {
-      url: req.url,
-      providedKey: frontendKey.substring(0, 8) + '...'
-    });
+    // Only a prefix of the offered key is logged — enough to tell a stale build
+    // from a hostile caller, not enough to be a secret sitting in the log.
+    logger.warn(
+      `frontend-key invalid: ${req.method} ${req.originalUrl} ` +
+      `offered=${frontendKey.slice(0, 8)}…`,
+    );
     return res.status(403).json({
       error: 'Invalid frontend access key',
       message: 'The provided frontend key is not valid'
     });
   }
 
-  logger.info('✅ Frontend key validated successfully', { url: req.url });
+  /*
+   * The success case is deliberately silent. It fired on EVERY authenticated
+   * request in production, which is the shape of noise that hides the two
+   * warnings above it — the only two lines here anyone needs to see.
+   */
   next();
 });
 
 // Health check with AppKit integration
 app.get('/health', error.asyncRoute(async (_req, res) => {
-  logger.info('Health check requested');
+  // Deliberately silent: a load balancer polls this every few seconds,
+  // and the request middleware records it with a status and duration.
 
   const healthData = {
     status: 'ok',
@@ -180,7 +227,12 @@ async function startServer() {
     const frontendExists = checkFrontendExists(distPath);
     const isApiOnlyMode = process.env.NODE_ENV !== 'production' && process.env.API_ONLY === 'true';
 
-    logger.info('Frontend check:', { distPath, frontendExists, isApiOnlyMode });
+    // Facts in the message: under the default scope the metadata object is
+    // dropped, and this line then reads "Frontend check:" followed by nothing.
+    logger.info(
+      `frontend: ${frontendExists ? `found at ${distPath}` : 'not built'}` +
+      `${isApiOnlyMode ? ' (API_ONLY set)' : ''}`,
+    );
 
     if (frontendExists && !isApiOnlyMode) {
       // Serve static files from dist directory (production frontend)
@@ -188,12 +240,11 @@ async function startServer() {
       app.use(express.static(distPath));
 
       // SPA fallback - serve index.html for all non-API routes
-      app.get('*', (req, res) => {
+      app.get('*', (_req, res) => {
         const indexPath = path.join(distPath, 'index.html');
-        logger.info('Serving SPA route', { path: req.path });
         res.sendFile(indexPath, (err) => {
           if (err) {
-            logger.error('Failed to serve index.html', { error: err });
+            logger.error(`Failed to serve index.html from ${indexPath}: ${err.message}`);
             res.status(404).json({
               error: 'Frontend not found',
               message: 'Frontend files exist but failed to serve'
@@ -214,21 +265,20 @@ async function startServer() {
     app.use(error.handleErrors());
 
     app.listen(PORT, () => {
-      if (frontendExists) {
-        logger.info(`🚀 Full-stack server running on http://localhost:${PORT}`);
-        logger.info(`🌐 Frontend: http://localhost:${PORT}`);
-      } else {
-        logger.info(`🔧 API-only server running on http://localhost:${PORT}`);
-        logger.info(`🌐 Root: http://localhost:${PORT} → redirects to /api`);
-      }
-      logger.info(`📚 API routes: http://localhost:${PORT}/api`);
-      logger.info(`💊 Health check: http://localhost:${PORT}/health`);
-      logger.info('Server initialization completed successfully');
+      // One line, because it is one fact: the server is up, in this mode, here.
+      const mode = frontendExists ? 'full-stack' : 'api-only';
+      logger.info(`ready ${mode} on http://localhost:${PORT} (api /api, health /health)`);
     });
 
   } catch (err: any) {
-    logger.error('Failed to start server', { error: err });
-    logger.error('❌ Server startup failed:', { error: err.message });
+    /*
+     * The reason goes in the MESSAGE. Both of these passed the error as
+     * metadata, which the default 'minimal' scope drops — so a server that
+     * refused to boot printed a bare sentence and discarded the one fact
+     * worth having.
+     */
+    logger.error(`Server startup failed: ${err?.message ?? err}`);
+    if (err?.stack) logger.error(String(err.stack));
     process.exit(1);
   }
 }

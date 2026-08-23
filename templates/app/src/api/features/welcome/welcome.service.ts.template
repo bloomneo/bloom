@@ -1,7 +1,7 @@
 /**
  * Welcome Feature Service - Business logic with AppKit integration
- * @module {{projectName}}/welcome-service
- * @file {{projectName}}/src/api/features/{featureName}/{featureName}.service.ts
+ * @module bloomneo/welcome-service
+ * @file bloomneo/src/api/features/{featureName}/{featureName}.service.ts
  *
  * @llm-rule WHEN: Need business logic layer with validation, logging, and config
  * @llm-rule AVOID: Direct database calls from routes - always use service layer
@@ -24,21 +24,24 @@ export const welcomeService = {
    */
   async getHello(): Promise<WelcomeResponse> {
     try {
-      logger.info('Processing basic hello request');
-
       // Get default welcome from config (with fallback)
       const defaultWelcome = config.get('welcome.default', 'hello') as string;
 
-      const result: WelcomeResponse = {
+      return {
         message: defaultWelcome,
         timestamp: new Date().toISOString()
       };
 
-      logger.info('Basic hello request completed', { result });
-      return result;
-
     } catch (err) {
-      logger.error('Failed to process basic hello request', { error: err });
+      /*
+       * The reason goes in the MESSAGE, not a metadata object.
+       *
+       * The default logger scope prints the message and drops the metadata, so
+       * passing the error as `{ error: err }` logs a sentence that says
+       * something failed and refuses to say what — precisely inverting which
+       * half you needed. Interpolate it.
+       */
+      logger.error(`welcome.getHello failed: ${(err as Error)?.message ?? err}`);
       throw error.serverError('Failed to generate welcome message');
     }
   },
@@ -48,16 +51,15 @@ export const welcomeService = {
    */
   async getHelloWithName(name: string): Promise<PersonalizedWelcomeResponse> {
     try {
-      logger.info('Processing personalized hello request', { name });
-
-      // Validate input
+      // Validate input. These warns survive the default scope because the
+      // offending value is in the message — that is the whole convention.
       if (!name || typeof name !== 'string') {
-        logger.warn('Invalid name provided', { name });
+        logger.warn(`welcome: rejected non-string name (${typeof name})`);
         throw error.badRequest('Name must be a valid string');
       }
 
       if (name.length > 100) {
-        logger.warn('Name too long', { name, length: name.length });
+        logger.warn(`welcome: rejected name of ${name.length} chars (max 100)`);
         throw error.badRequest('Name must be less than 100 characters');
       }
 
@@ -71,7 +73,6 @@ export const welcomeService = {
         timestamp: new Date().toISOString()
       };
 
-      logger.info('Personalized hello request completed', { name, result });
       return result;
 
     } catch (err: any) {
@@ -81,7 +82,7 @@ export const welcomeService = {
       }
 
       // Convert other errors to server errors
-      logger.error('Failed to process personalized hello request', { name, error: err });
+      logger.error(`welcome.getHelloWithName failed for "${name}": ${err?.message ?? err}`);
       throw error.serverError('Failed to generate personalized welcome message');
     }
   }

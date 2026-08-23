@@ -13,7 +13,7 @@
  * provider mounted here survive navigation between dashboard pages.
  */
 import * as React from 'react';
-import { NavLink, Outlet, useLocation, Link } from 'react-router-dom';
+import { NavLink, Outlet, useLocation, useMatch, Link } from 'react-router-dom';
 import {
   Button, Sheet, SheetContent, SheetTrigger,
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent,
@@ -110,6 +110,18 @@ function SidebarBrand({ collapsed }: { collapsed?: boolean }) {
  * CSS, so it cannot be read out twice — the Tooltip carries the accessible
  * name instead. `title` is deliberately not used: it duplicates the tooltip
  * and appears after a browser-controlled delay nobody can style.
+ *
+ * ── Why className is a string, never NavLink's ({ isActive }) => … form ──
+ * Collapsed, this row is wrapped in <TooltipTrigger asChild>, and Radix's Slot
+ * merges props by CONCATENATING className values. A function does not survive
+ * that: it is stringified, so the anchor renders
+ *   class="({ isActive })=>[ 'flex items-center …"
+ * and not one class matches. The row loses `flex`, the icon sits flush-left,
+ * and every collapsed icon is 12px off the rail's centre.
+ *
+ * Nothing throws and nothing type-errors — the failure is purely visual, and
+ * only in the collapsed state, which is why it survived so long. useMatch gives
+ * the same active flag without handing a function to Slot.
  */
 function NavRow({
   to, label, icon: Icon, end, collapsed, onNavigate,
@@ -121,21 +133,21 @@ function NavRow({
   collapsed?: boolean;
   onNavigate?: () => void;
 }) {
+  const isActive = Boolean(useMatch({ path: to, end: end ?? false }));
+
   const row = (
     <NavLink
       to={to}
       end={end}
       onClick={onNavigate}
       aria-label={collapsed ? label : undefined}
-      className={({ isActive }) =>
-        [
-          'flex items-center rounded-md py-2 text-sm transition-colors',
-          collapsed ? 'justify-center px-0' : 'gap-3 px-3',
-          isActive
-            ? 'bg-sidebar-primary font-medium text-sidebar-primary-foreground'
-            : 'text-sidebar-foreground/75 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
-        ].join(' ')
-      }
+      className={[
+        'flex items-center rounded-md py-2 text-sm transition-colors',
+        collapsed ? 'w-full justify-center px-0' : 'gap-3 px-3',
+        isActive
+          ? 'bg-sidebar-primary font-medium text-sidebar-primary-foreground'
+          : 'text-sidebar-foreground/75 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+      ].join(' ')}
     >
       <Icon className="size-4 shrink-0" />
       {!collapsed && label}

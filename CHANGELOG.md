@@ -6,6 +6,21 @@ All notable changes to Bloom Framework will be documented in this file.
 
 ### Fixed
 
+- **Collapsed-sidebar icons sat 12px off centre.** `NavRow` passed NavLink's
+  function form of `className`. Collapsed, the row is wrapped in
+  `<TooltipTrigger asChild>`, and Radix's Slot merges props by CONCATENATING
+  className values — a function does not survive that. It was stringified, so
+  the anchor rendered `class="({ isActive })=>[ 'flex items-center …"` and not
+  one class matched: the row lost `flex`, and every icon fell to the left edge
+  of the rail.
+
+  Nothing threw and nothing type-errored — the failure was purely visual and
+  only in the collapsed state. `NavRow` now derives `isActive` from `useMatch`
+  and passes a plain string, which Slot merges correctly.
+
+  Only the auth layer's `DashboardLayoutRoute` was affected; the `AppLayoutRoute`
+  templates use the same function form but no Tooltip, so they are unchanged.
+
 - **A new page file did not become a route until the dev server restarted.**
   Page discovery is `import.meta.glob`, which Vite resolves once — when it
   transforms `page-router.tsx`. Creating a page while the server was running

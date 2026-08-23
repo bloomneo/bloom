@@ -400,6 +400,18 @@ function writeLayerEnv(layers, verbose) {
     '# ── app ────────────────────────────────────────────────────────────────',
     'VITE_API_URL=http://localhost:3000',
     '',
+    "# AppKit's logger defaults to 'minimal' scope, which prints the message and",
+    '# DROPS the metadata object — so a call like',
+    "#     logger.info('Incoming request', { method, url, requestId })",
+    '# renders as the bare words "Incoming request", with nothing to say the rest',
+    '# was captured and discarded. Right for a deployed service, wrong while you',
+    '# are debugging.',
+    '#',
+    "# 'full' prints the fields, which is what makes the x-request-id on a failed",
+    '# response findable in the log. Deployments set their own environment and',
+    "# still get 'minimal' from NODE_ENV=production.",
+    'BLOOM_LOGGER_SCOPE=full',
+    '',
   ];
   for (const { name, meta } of layers) {
     if (!meta.env) continue;
@@ -541,7 +553,8 @@ BLOOM_FRONTEND_KEY=${frontendKey}
 # field a log call passes — method, url, requestId — is dropped.
 #
 # That is the right default for a deployed service and the wrong one while you
-# are debugging: `logger.info('Incoming request', { method, url, requestId })`
+# are debugging: a call like
+#     logger.info('Incoming request', { method, url, requestId })
 # renders as the bare words "Incoming request", and nothing tells you the rest
 # was captured and discarded. 'full' prints the fields, which is what makes the
 # x-request-id on a failed response findable in the log.

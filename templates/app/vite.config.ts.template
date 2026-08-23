@@ -13,6 +13,18 @@ export default defineConfig({
   // base: '/', // Uncomment this line to make the default asset loading to '/' rather than relative paths
   plugins: [react(), tailwindcss()],
   root: 'src/web',
+
+  /*
+   * Vite's `envDir` defaults to `root`. With root at src/web, Vite looks for
+   * src/web/.env and never reads the project's own .env — so every VITE_*
+   * variable silently falls back to whatever default the code supplies.
+   *
+   * That is exactly the failure this template ships VITE_API_URL to prevent,
+   * and it hid for two releases because the fallback (localhost:3000) happened
+   * to match where the API runs by default. It only surfaced on a real project
+   * whose API was on another port.
+   */
+  envDir: __dirname,
   // `root` is src/web, so a relative publicDir would resolve to src/web/public.
   // The template keeps static assets at the project root, so point at it
   // explicitly. This was `false`, which meant /public was never served at all —

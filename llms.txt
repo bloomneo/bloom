@@ -1,4 +1,4 @@
-# @bloomneo/bloom v5.2.2
+# @bloomneo/bloom v5.2.3
 
 Scaffolding CLI for full-stack apps combining `@bloomneo/appkit` (Express
 backend) and `@bloomneo/uikit` (React frontend) with Feature-Based
@@ -118,7 +118,26 @@ Adding a new page = creating a file. Don't edit the page-router.
 
 ## Migration
 
-Current release: **5.2.2**. Stops the API router discarding the reason a feature
+Current release: **5.2.3**. Fixes a two-release-old bug where the project's own
+`.env` was never read by the web build.
+
+Vite's `envDir` defaults to `root`, and the template sets `root: 'src/web'` — so
+Vite looked for `src/web/.env`, never found one, and every `VITE_*` variable
+silently fell back to whatever default the code supplied. `VITE_API_URL`, added
+in 5.2 specifically to remove that guess, had never once been loaded.
+
+It hid because the fallback (`http://localhost:3000`) happened to match where the
+API runs by default. It only surfaced on a real project whose API was on another
+port — and when it did, it surfaced as exactly the error 5.2 added for it:
+
+    Expected JSON from http://localhost:3000/api/customers but got HTML.
+    The API base URL is probably wrong … Set VITE_API_URL in .env.
+
+The loud failure worked. The setting it pointed at did not. `envDir: __dirname`
+is the fix; verified by building with VITE_API_URL=http://localhost:9999 and
+confirming the value is inlined.
+
+Prior release: **5.2.2**. Stops the API router discarding the reason a feature
 failed to load. A route file that threw during import was reported as
 "Could not load route for feature X" — flattening a missing file and a broken
 one into the same sentence, and throwing away the useful part. AppKit's guards

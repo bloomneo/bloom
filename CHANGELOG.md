@@ -2,6 +2,25 @@
 
 All notable changes to Bloom Framework will be documented in this file.
 
+## [5.2.4] - 2026-08-23
+
+### Fixed
+
+- **A new page file did not become a route until the dev server restarted.**
+  Page discovery is `import.meta.glob`, which Vite resolves once — when it
+  transforms `page-router.tsx`. Creating a page while the server was running
+  never re-evaluated the glob, so the route simply did not exist.
+
+  The symptom was a silent 404. Worse, with a sibling dynamic route present, a
+  new `pages/new.tsx` was swallowed by `pages/[id].tsx` and the page reported
+  an invalid id for a file that was sitting correctly on disk. Nothing about
+  either symptom pointed at the dev server.
+
+  The template now ships a `bloom:page-router-hmr` plugin that watches the page
+  directories and invalidates the router whenever the set of page files changes,
+  logging `[bloom] page routes changed` when it does. Adding a page is a file
+  again — no restart.
+
 ## [4.2.4] - 2026-04-23
 
 ### Docs

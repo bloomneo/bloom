@@ -1,4 +1,4 @@
-# @bloomneo/bloom v5.2.3
+# @bloomneo/bloom v5.2.4
 
 Scaffolding CLI for full-stack apps combining `@bloomneo/appkit` (Express
 backend) and `@bloomneo/uikit` (React frontend) with Feature-Based
@@ -118,8 +118,25 @@ Adding a new page = creating a file. Don't edit the page-router.
 
 ## Migration
 
-Current release: **5.2.3**. Fixes a two-release-old bug where the project's own
-`.env` was never read by the web build.
+Current release: **5.2.4**. Fixes a dev-server bug where a newly created page
+file did not become a route until the server was restarted.
+
+Page discovery is `import.meta.glob`, which Vite resolves once, when it
+transforms `page-router.tsx`. Create `features/billing/pages/plan.tsx` while the
+dev server is running and the glob is never re-evaluated — the route does not
+exist. The symptom is a silent 404, and if a sibling dynamic route is present it
+is worse: a new `pages/new.tsx` is swallowed by `pages/[id].tsx`, so the app
+reports "invalid id" for a file sitting correctly on disk. Nothing in that points
+at the dev server.
+
+The template now ships a `bloom:page-router-hmr` Vite plugin that watches the
+page directories and invalidates the router when the set of page files changes.
+Adding a page is a file again, with no restart.
+
+### 5.2.3
+
+Fixed a two-release-old bug where the project's own `.env` was never read by the
+web build.
 
 Vite's `envDir` defaults to `root`, and the template sets `root: 'src/web'` — so
 Vite looked for `src/web/.env`, never found one, and every `VITE_*` variable

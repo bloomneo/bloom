@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite'
+import { defineConfig, type Plugin, type ViteDevServer } from 'vite'
 import react from '@vitejs/plugin-react-swc'
 import path from 'path'
 import tailwindcss from '@tailwindcss/vite'
@@ -9,9 +9,55 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 // https://vitejs.dev/config/
+/**
+ * Page discovery is `import.meta.glob`, which Vite resolves when it transforms
+ * page-router.tsx — ONCE. Create a new page while the dev server is running and
+ * the glob is never re-evaluated, so the route simply does not exist.
+ *
+ * The symptom is the worst kind: a silent 404. Or, if a sibling dynamic route
+ * exists, something more confusing still — a new `pages/new.tsx` gets swallowed
+ * by `pages/[id].tsx` and the page reports "invalid id" for a file that is
+ * sitting right there on disk, correctly written.
+ *
+ * Nothing about that points at the dev server. So watch the page directories
+ * and invalidate the router whenever the set of page files changes.
+ */
+function bloomPageRouterHmr(): Plugin {
+  const isPage = (file: string) => /[\\/]features[\\/][^\\/]+[\\/]pages[\\/].*\.(tsx|jsx)$/.test(file);
+
+  return {
+    name: 'bloom:page-router-hmr',
+    apply: 'serve',
+    configureServer(server: ViteDevServer) {
+      const refresh = (file: string) => {
+        if (!isPage(file)) return;
+
+        // Invalidate every module that ran the glob, then reload: the glob is
+        // baked into the transformed source, so re-running it means re-transforming.
+        let invalidated = 0;
+        for (const [id, mod] of server.moduleGraph.idToModuleMap) {
+          if (/page-router\.(tsx|jsx|ts|js)$/.test(id)) {
+            server.moduleGraph.invalidateModule(mod);
+            invalidated++;
+          }
+        }
+        if (!invalidated) return;
+
+        server.config.logger.info(
+          `  \x1b[32m[bloom]\x1b[0m page routes changed — reloading (${path.basename(file)})`,
+        );
+        server.ws.send({ type: 'full-reload', path: '*' });
+      };
+
+      server.watcher.on('add', refresh);
+      server.watcher.on('unlink', refresh);
+    },
+  };
+}
+
 export default defineConfig({
   // base: '/', // Uncomment this line to make the default asset loading to '/' rather than relative paths
-  plugins: [react(), tailwindcss()],
+  plugins: [react(), tailwindcss(), bloomPageRouterHmr()],
   root: 'src/web',
 
   /*

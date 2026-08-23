@@ -9,10 +9,12 @@
  */
 
 export type ApiRoute =
+  | '/api/client-error'
   | '/api/welcome'
   | `/api/welcome/${string}`;
 
 /** Every route, for runtime assertions and tooling. */
 export const API_ROUTES = [
+  '/api/client-error',
   '/api/welcome',
 ] as const;

@@ -1,4 +1,4 @@
-# @bloomneo/bloom v5.2.6
+# @bloomneo/bloom v5.3.0
 
 Scaffolding CLI for full-stack apps combining `@bloomneo/appkit` (Express
 backend) and `@bloomneo/uikit` (React frontend) with Feature-Based
@@ -118,7 +118,30 @@ Adding a new page = creating a file. Don't edit the page-router.
 
 ## Migration
 
-Current release: **5.2.6**. Makes the log readable: one line per request,
+Current release: **5.3.0**. Closes the last blind spot in the log: a browser
+crash now reaches the server.
+
+`PageRouter` has always accepted an `onError` callback and no template ever
+passed one, so a React render crash called nothing — the only other trace was a
+`console.error` behind a dev-only guard. In production a page could throw, blank
+out, and leave no record anywhere. That was the one failure the log could not
+see, and the one a user actually notices.
+
+The base now ships `POST /api/client-error`, and the browser reports to it from
+three places: the render boundary, `window.onerror`, and unhandled promise
+rejections. Reports are logged in the same format, through the same logger, and
+carry the id of the last API call the page made — so a crash and the request
+that caused it are one story. Reports are deduplicated per page load and capped,
+because a render loop throws the same error hundreds of times a second.
+
+For a render crash the log names the file and line:
+
+    client render: Cannot read properties of undefined page=/customers req=30ffe450
+      at CustomerDetail (/features/customers/pages/[id].tsx:88:14)
+
+### 5.2.6
+
+Made the log readable: one line per request,
 carrying method, path, status, duration and a correlation id, logged on
 completion so it can report an outcome. Narration of steps that succeeded is
 gone, along with a probe that reported three database failures at every healthy

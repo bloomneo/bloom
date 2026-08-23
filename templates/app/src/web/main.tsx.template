@@ -1,5 +1,5 @@
 /**
- * {{PROJECT_NAME}} — web entry.
+ * bloomneo — web entry.
  *
  * The provider tree is fixed and order-sensitive. Mount each of these exactly
  * once: ToastProvider and ConfirmProvider warn in development if duplicated,
@@ -10,7 +10,7 @@
  *       ToastProvider self-closing sibling, renders the toast viewport
  *         ConfirmProvider  wraps children, backs `useConfirm()`
  *
- * `theme={brand.themeId}` is what activates `.theme-{{PROJECT_SLUG}}` from
+ * `theme={brand.themeId}` is what activates `.theme-bloomneo` from
  * styles/brand.css. Setting that class on <html> by hand does NOT work —
  * ThemeProvider strips any `theme-*` class it did not set itself.
  *
@@ -38,6 +38,7 @@ import { brand } from '@/shared/brand';
 import { layouts } from '@/shared/layouts';
 import { PageRouter } from '@/lib/page-router';
 import { Providers } from '@/shared/providers';
+import { reportClientError, installGlobalErrorReporting } from '@/shared/reportError';
 
 /*
  * Native platform wiring, if a platform layer provided any.
@@ -60,6 +61,13 @@ for (const mod of Object.values(platformModules)) {
 const rootEl = document.getElementById('root');
 if (!rootEl) throw new Error('#root not found in index.html');
 
+/*
+ * Catch what the render boundary cannot see: errors thrown outside render, and
+ * promise rejections nobody handled. Installed before the first render so a
+ * crash during startup is still reported.
+ */
+installGlobalErrorReporting();
+
 createRoot(rootEl).render(
   <React.StrictMode>
     <ThemeProvider theme={brand.themeId} mode="light">
@@ -70,7 +78,23 @@ createRoot(rootEl).render(
             {/* Layer-contributed providers (auth, etc). Inside BrowserRouter
                 because some of them redirect and need router context. */}
             <Providers>
-              <PageRouter layouts={layouts} />
+              <PageRouter
+                layouts={layouts}
+                /*
+                 * PageRouter has always accepted this and no template ever
+                 * passed one, so a render crash called nothing and the only
+                 * other trace was a dev-only console line. In production a page
+                 * could throw, blank out, and leave no record anywhere.
+                 */
+                onError={(error, info) =>
+                  reportClientError({
+                    source: 'render',
+                    message: error.message,
+                    stack: error.stack,
+                    componentStack: info.componentStack ?? undefined,
+                  })
+                }
+              />
             </Providers>
           </BrowserRouter>
         </ConfirmProvider>

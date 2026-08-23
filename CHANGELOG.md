@@ -2,6 +2,41 @@
 
 All notable changes to Bloom Framework will be documented in this file.
 
+## [5.3.0] - 2026-08-23
+
+### Added
+
+- **Browser failures now reach the server log.** `PageRouter` had always
+  accepted an `onError` callback, and no template ever passed one — so a React
+  render crash called nothing, and the only other trace was a `console.error`
+  behind a `NODE_ENV` guard. In production a page could throw, blank out, and
+  leave no record anywhere. It was the single place the log could not see, and
+  the failure a user is most likely to notice.
+
+  The app base now ships `POST /api/client-error` (public, rate limited), and
+  the browser reports from three places: the render boundary, `window.onerror`,
+  and `unhandledrejection`. Reports go through the same logger in the same
+  format, so a crash sits in the stream next to the request that served it:
+
+      client render: Cannot read properties of undefined page=/customers req=30ffe450
+        at CustomerDetail (/features/customers/pages/[id].tsx:88:14)
+
+- **`lastRequestId()` in `shared/api.ts`.** A page that crashes has usually just
+  called the API, and that call is the likeliest cause. Reports carry the id of
+  the most recent API response, which is what joins the browser's account of a
+  failure to the server's.
+
+### Notes
+
+- The reporter is deliberately defensive: it never throws, never uses the `api`
+  client (which throws on failure and could re-enter the handler that called
+  it), deduplicates by signature per page load, and caps total reports. A render
+  loop throws the same error hundreds of times a second; forwarding all of them
+  would flood the log this release exists to make readable.
+- Component stacks are trimmed to the frames that identify the crash. The tail
+  (`Suspense`, `Outlet`, `Shell`, `AuthGuard`, `div`…) is identical for every
+  crash in an app and says nothing about the one in front of you.
+
 ## [5.2.6] - 2026-08-23
 
 ### Changed

@@ -33,6 +33,21 @@ const BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
 /** Same key the auth feature writes. Read here so no feature repeats it. */
 const TOKEN_KEY = 'auth_token';
 
+/*
+ * The x-request-id of the most recent API response.
+ *
+ * A page that crashes has usually just called the API, and that call is the
+ * likeliest cause. Remembering the id lets a client error report name the exact
+ * server log line that preceded it — which is the only thing that turns two
+ * separate records into one story.
+ */
+let _lastRequestId: string | undefined;
+
+/** The x-request-id of the last API response, if there has been one. */
+export function lastRequestId(): string | undefined {
+  return _lastRequestId;
+}
+
 export class ApiError extends Error {
   constructor(
     readonly status: number,
@@ -89,6 +104,7 @@ export async function request<T = unknown>(path: ApiRoute, opts: Options = {}): 
    * actually happened.
    */
   const requestId = res.headers.get('x-request-id') ?? undefined;
+  if (requestId) _lastRequestId = requestId;
 
   const contentType = res.headers.get('content-type') ?? '';
   if (contentType.includes('text/html')) {

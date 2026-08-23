@@ -36,6 +36,106 @@ All notable changes to Bloom Framework will be documented in this file.
   logging `[bloom] page routes changed` when it does. Adding a page is a file
   again — no restart.
 
+## [5.2.3] - 2026-08-23
+
+### Fixed
+
+- **The project's own `.env` was never read by the web build.** Vite's `envDir`
+  defaults to `root`, and the template sets `root: 'src/web'`, so Vite looked
+  for `src/web/.env`, never found one, and every `VITE_*` variable fell back to
+  whatever default the source supplied. `VITE_API_URL` — added in 5.2 precisely
+  so nobody would have to guess the API base — had never once been loaded.
+
+  It hid for two releases because the fallback (`http://localhost:3000`) is
+  where the API runs by default: every test passed because the wrong value
+  happened to be right. A real project on port 3200 exposed it.
+
+## [5.2.2] - 2026-08-20
+
+### Fixed
+
+- **Stopped swallowing the reason a feature failed to load.** A route file that
+  threw during import was reported as "Could not load route for feature X",
+  flattening two different problems into one sentence and discarding the useful
+  part. AppKit's guards already report precisely (an invented role string names
+  the role and links the docs); the router caught that and logged its own
+  generic warning over the top. The two cases are now separated, and a file that
+  threw surfaces the underlying message plus its filename.
+
+## [5.2.1] - 2026-08-20
+
+### Added
+
+- **A warning when a feature router has no auth guard.** A route file written
+  without `router.use(auth.requireLoginToken())` started cleanly, mounted with a
+  normal log line, and served whatever it queried to anyone who asked —
+  reproduced on a 5.2.0 scaffold returning every user row, password hashes
+  included, with a 200. Typecheck passed, the build passed, the boot sequence
+  said nothing. `api-router` now reads each route file at discovery and warns
+  when it contains no `auth.require*(` call and no `isPublic` declaration,
+  naming the file and both fixes.
+
+## [5.2.0] - 2026-08-19
+
+### Added
+
+- **Typed API routes.** `scripts/gen-api-routes.mjs` derives an `ApiRoute` union
+  from the route files — FBCA makes it derivable, since
+  `features/<n>/<n>.route.ts` mounts at `/api/<n>`. It regenerates on install,
+  dev, build and typecheck, so it cannot drift. `api.get('/api/user')` is now a
+  compile error.
+- **One authenticated client.** `shared/api.ts` takes an `ApiRoute`, owns the
+  base URL and the JWT, and detects the HTML-instead-of-JSON response a wrong
+  base URL produces — replacing `SyntaxError: Unexpected token '<'` with a
+  message that names the cause. `VITE_API_URL` now ships in every generated
+  `.env`.
+
+  The theme: structural mistakes (wrong prop, wrong method) die on contact with
+  the compiler and cost seconds. The mistakes that cost real time were plausible,
+  wrong STRINGS that compiled cleanly. Documentation does not close that gap —
+  docs are read during research, and this kind of error happens mid-sentence.
+
+## [5.1.0] - 2026-08-18
+
+### Changed
+
+- **Layer composition replaces the six frozen templates.** Each template
+  directory held a complete copy of the source tree, so a fix had to land in six
+  places, they drifted, and combinations nobody had pre-built (auth + mobile,
+  admin + desktop) simply did not exist. Replaced with one `app` base plus
+  composable `auth` / `admin` / `desktop` / `mobile` layers. Preset names still
+  work: `bloom create x adminapp` composes app+auth+admin. `--legacy` reaches the
+  frozen directories for one more release; they are DEPRECATED and go in 6.0.
+- Four build-time registries (`import.meta.glob`, eager) let a layer contribute
+  nav entries, route shells, React providers and platform init by dropping in one
+  file — no base file is edited. This removed two 340-line duplicate shells and a
+  duplicate `main.tsx`, the last of which had silently discarded a base change.
+
+### Fixed
+
+- Login leaked `resetToken` / `verificationToken` — the blacklist was replaced
+  with an explicit whitelist projection.
+- The admin console had no role gate; it is now gated at the shell, matching the
+  API.
+
+## [5.0.0] - 2026-08-17
+
+### Fixed
+
+- **Code splitting looked implemented and did nothing.** The router declared two
+  globs, and the `{ eager: true }` one statically imported every page, forcing
+  all routes into the entry chunk and defeating the `React.lazy` splitting
+  directly below it. On a 3-page scaffold: entry 33.35 kB → 22.29 kB with
+  per-route chunks appearing.
+- Every file under `pages/` was a route, so a helper beside a page
+  (`pages/panels/_shared.tsx`) silently published a URL. `_`-prefixed files and
+  directories are now private.
+- A feature's folder name was its URL prefix, forcing anything needing a
+  top-level route into `main/` — one production app put 120 of its 164 pages
+  there. `ROUTE_BASE` lets a feature declare its own prefix.
+- Six templates carried three different routers, so fixes landed in one and never
+  reached the others. All six now share the canonical version.
+
 ## [4.2.4] - 2026-04-23
 
 ### Docs

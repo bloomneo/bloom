@@ -2,6 +2,25 @@
 
 All notable changes to Bloom Framework will be documented in this file.
 
+## [5.3.2] - 2026-08-25
+
+### Fixed
+
+- **An unmatched `/api/*` path returned the single-page app, not a 404.** The
+  SPA fallback is a catch-all, and the comment above it said it served
+  index.html "for all non-API routes" — but nothing excluded `/api`, so any
+  path matching no route fell straight through. `GET /api/does-not-exist`
+  answered `200 text/html` with a full page.
+
+  It is the exact failure `shared/api.ts` had to grow a content-type check to
+  survive: the client asks for JSON, receives a webpage, and reports a parse
+  error far from the mistyped path that caused it. The client-side detection
+  stays — it also catches a wrong base URL — but the server no longer creates
+  the condition.
+
+  Found by deleting some routes from a real app and noticing the deleted paths
+  still answered 200.
+
 ## [5.3.1] - 2026-08-23
 
 ### Fixed

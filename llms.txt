@@ -1,4 +1,4 @@
-# @bloomneo/bloom v5.3.1
+# @bloomneo/bloom v5.3.2
 
 Scaffolding CLI for full-stack apps combining `@bloomneo/appkit` (Express
 backend) and `@bloomneo/uikit` (React frontend) with Feature-Based
@@ -118,7 +118,16 @@ Adding a new page = creating a file. Don't edit the page-router.
 
 ## Migration
 
-Current release: **5.3.1**. Scaffolded apps now ship a `.gitignore`.
+Current release: **5.3.2**. An unmatched `/api/*` path now returns a JSON 404
+instead of the single-page app.
+
+The SPA fallback is a catch-all and its comment claimed it served index.html
+"for all non-API routes", but nothing excluded /api — so a path matching no
+route fell through and answered 200 with a full HTML page. That is the exact
+failure `shared/api.ts` grew a content-type check to survive: ask for JSON, get
+a webpage, and report a parse error nowhere near the mistyped path.
+
+### 5.3.1 Scaffolded apps now ship a `.gitignore`.
 
 The `app` base did not have one — only the deprecated frozen templates did — so
 every app composed since 5.1 was created without it. The first `git init && git

@@ -11,10 +11,6 @@
 @frontendKey = bloom_rpqek3wa3mamvtdkiv378
 @token =
 
-### 1. Test route (verify user routes are working)
-GET {{baseUrl}}/api/user/test
-X-Frontend-Key: {{frontendKey}}
-
 # =============================================================================
 # PROFILE MANAGEMENT ROUTES - /api/user/*
 # =============================================================================

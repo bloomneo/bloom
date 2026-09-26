@@ -104,16 +104,6 @@ router.post('/login', authRateLimit, async (req: Request, res: Response) => {
 });
 
 /**
- * Test route to verify discovery and functionality
- */
-router.get('/test', (_req: Request, res: Response) => {
-  res.json({
-    message: 'Auth routes are working',
-    timestamp: new Date().toISOString(),
-  });
-});
-
-/**
  * Verify email with token
  */
 router.post('/verify-email', async (req: Request, res: Response) => {

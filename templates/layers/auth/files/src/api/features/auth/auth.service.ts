@@ -98,8 +98,12 @@ export const authService = {
           password: hashedPassword,
           name: data.name || null,
           phone: data.phone || null,
-          role: data.role || 'user',
-          level: data.level || 'basic',
+          // Self-registration always creates an ordinary user. The role is
+          // never read from the request: /register is public, so taking it
+          // from the body let anyone sign up as admin.system. Elevate users
+          // through the admin console, which checks the caller's own role.
+          role: 'user',
+          level: 'basic',
           isVerified: false,
           isActive: true
         },
@@ -137,7 +141,7 @@ export const authService = {
       if (err.statusCode) {
         throw err;
       }
-      logger.error('Failed to register user', { data, error: err });
+      logger.error('Failed to register user', { email: data.email, error: err?.message });
       throw error.serverError('Failed to register user');
     }
   },

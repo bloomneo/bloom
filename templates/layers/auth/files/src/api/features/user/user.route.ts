@@ -130,6 +130,41 @@ router.post('/change-password',
 );
 
 // =============================================================================
+// ADMIN SCOPE
+// =============================================================================
+
+/*
+ * Who the caller may manage. admin.system manages every user. Every other
+ * admin or moderator manages only users in their own tenant, and cannot set
+ * role, level or tenant — so a tenant admin can neither reach another tenant
+ * nor promote anyone to a role above their own. Without this, admin.tenant
+ * could list, edit, reset the password of, or promote any user anywhere.
+ */
+function callerScope(req: any): { isPlatform: boolean; tenantId: string | null } {
+  const caller = auth.getUser(req) as { role?: string; level?: string; tenantId?: string | null } | null;
+  const isPlatform = caller?.role === 'admin' && caller?.level === 'system';
+  return { isPlatform, tenantId: caller?.tenantId ?? null };
+}
+
+/** Throws 404 unless the caller may manage this user (404, not 403: don't confirm it exists). */
+async function assertCanManage(req: any, userId: string) {
+  const { isPlatform, tenantId } = callerScope(req);
+  if (isPlatform) return;
+  const target = await userService.getUserById(userId);
+  if (!target || !tenantId || target.tenantId !== tenantId) {
+    throw error.notFound('User not found');
+  }
+}
+
+/** The tenant to list: any (or ?tenantId=) for platform admins, their own for everyone else. */
+function listTenant(req: any): string | undefined {
+  const { isPlatform, tenantId } = callerScope(req);
+  if (isPlatform) return (req.query.tenantId as string) || undefined;
+  if (!tenantId) throw error.forbidden('Your account is not bound to a tenant');
+  return tenantId;
+}
+
+// =============================================================================
 // ADMIN ROUTES - /api/user/admin/*
 // =============================================================================
 
@@ -141,10 +176,8 @@ router.get('/admin/users',
   auth.requireUserRoles(['admin.tenant', 'admin.org', 'admin.system']),
   error.asyncRoute(async (req, res) => {
     const requestId = req.requestMetadata?.requestId || 'unknown';
-    const { tenantId } = req.query;
-
     try {
-      const users = await userService.getAllUsers(tenantId as string);
+      const users = await userService.getAllUsers(listTenant(req));
 
       res.json({
         message: 'Users retrieved successfully',
@@ -173,10 +206,8 @@ router.get('/admin/list',
   auth.requireUserRoles(['moderator.review', 'moderator.approve', 'moderator.manage', 'admin.tenant', 'admin.org', 'admin.system']),
   error.asyncRoute(async (req, res) => {
     const requestId = req.requestMetadata?.requestId || 'unknown';
-    const { tenantId } = req.query;
-
     try {
-      const users = await userService.getAllUsers(tenantId as string);
+      const users = await userService.getAllUsers(listTenant(req));
 
       res.json({
         message: 'Users retrieved successfully',
@@ -205,7 +236,8 @@ router.post('/admin/create',
   auth.requireUserRoles(['admin.tenant', 'admin.org', 'admin.system']),
   error.asyncRoute(async (req, res) => {
     const requestId = req.requestMetadata?.requestId || 'unknown';
-    const { name, email, phone, password, role, level, isActive, isVerified } = req.body;
+    const { name, email, phone, password, role, level, tenantId, isActive, isVerified } = req.body;
+    const scope = callerScope(req);
 
     try {
       if (!email) {
@@ -221,8 +253,11 @@ router.post('/admin/create',
         email,
         phone,
         password,
-        role: role || 'user',
-        level: level || 'basic',
+        // Only platform admins choose role, level and tenant. Everyone else
+        // creates ordinary users in their own tenant.
+        role: scope.isPlatform ? role || 'user' : 'user',
+        level: scope.isPlatform ? level || 'basic' : 'basic',
+        tenantId: scope.isPlatform ? tenantId ?? null : scope.tenantId,
         isActive: isActive !== undefined ? isActive : true,
         isVerified: isVerified !== undefined ? isVerified : false
       });
@@ -266,6 +301,7 @@ router.get('/admin/users/:id',
         });
       }
 
+      await assertCanManage(req, userId);
       const user = await userService.getUserById(userId);
 
       if (!user) {
@@ -305,7 +341,12 @@ router.put('/admin/users/:id',
     const userId = req.params.id;
 
     try {
-      const user = await userService.updateUser(userId, req.body);
+      await assertCanManage(req, userId);
+      const { name, phone, role, level, tenantId, isVerified, isActive } = req.body ?? {};
+      const changes = callerScope(req).isPlatform
+        ? { name, phone, role, level, tenantId, isVerified, isActive }
+        : { name, phone, isVerified, isActive };
+      const user = await userService.updateUser(userId, changes);
 
       res.json({
         message: 'User updated successfully',
@@ -347,6 +388,7 @@ router.delete('/admin/users/:id',
         });
       }
 
+      await assertCanManage(req, userId);
       await userService.deleteUser(userId);
 
       res.json({
@@ -378,6 +420,7 @@ router.put('/admin/users/:id/password',
     const { newPassword } = req.body;
 
     try {
+      await assertCanManage(req, userId);
       await userService.adminChangePassword(userId, newPassword);
 
       res.json({
@@ -396,16 +439,5 @@ router.put('/admin/users/:id/password',
     }
   })
 );
-
-/**
- * Test route to verify discovery and functionality
- */
-router.get('/test', (_req, res) => {
-  res.json({
-    message: 'User routes are working!',
-    timestamp: new Date().toISOString(),
-    status: 'success'
-  });
-});
 
 export default router;

@@ -58,7 +58,7 @@ export const userService = {
    */
   async updateProfile(userId: string, data: UserProfileUpdateRequest): Promise<UserResponse> {
     try {
-      logger.info('Processing update profile request', { userId, data });
+      logger.info('Processing update profile request', { userId, fields: Object.keys(data) });
 
       const user = await model.findById(userId);
       if (!user) {
@@ -74,7 +74,7 @@ export const userService = {
       if (err.statusCode) {
         throw err;
       }
-      logger.error('Failed to update user profile', { userId, data, error: err });
+      logger.error('Failed to update user profile', { userId, error: err?.message });
       throw error.serverError('Failed to update user profile');
     }
   },
@@ -137,6 +137,7 @@ export const userService = {
     password?: string;
     role?: string;
     level?: string;
+    tenantId?: string | null;
     isActive?: boolean;
     isVerified?: boolean;
   }): Promise<UserResponse> {
@@ -160,6 +161,7 @@ export const userService = {
         password: password, // This will be hashed by the model
         role: data.role || 'user',
         level: data.level || 'basic',
+        tenantId: data.tenantId ?? null,
         isActive: data.isActive !== undefined ? data.isActive : true,
         isVerified: data.isVerified !== undefined ? data.isVerified : false
       });
@@ -217,7 +219,7 @@ export const userService = {
    */
   async updateUser(id: string, data: UserUpdateRequest): Promise<UserResponse> {
     try {
-      logger.info('Processing admin update user request', { id, data });
+      logger.info('Processing admin update user request', { id, fields: Object.keys(data) });
 
       const user = await model.findById(id);
       if (!user) {

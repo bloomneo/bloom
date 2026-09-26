@@ -132,12 +132,19 @@ export const model = {
    * Update user profile
    */
   async update(id: string, data: UserUpdateRequest) {
-    logger.info('Updating user', { id, data });
+    // Copy only the updatable fields. Passing the object straight to Prisma
+    // let a request body set any column — password, email, anything.
+    const allowed: (keyof UserUpdateRequest)[] = ['name', 'phone', 'role', 'level', 'tenantId', 'isVerified', 'isActive'];
+    const fields: Partial<UserUpdateRequest> = {};
+    for (const key of allowed) {
+      if (data[key] !== undefined) (fields as any)[key] = data[key];
+    }
+    logger.info('Updating user', { id, fields: Object.keys(fields) });
     const db = await databaseClass.get();
 
     return await db.user.update({
       where: { id },
-      data,
+      data: fields,
       select: {
         id: true,
         email: true,

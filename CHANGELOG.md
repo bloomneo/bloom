@@ -34,6 +34,24 @@ All notable changes to Bloom Framework will be documented in this file.
   writes `ADMIN_USER_ROLES`. Apps created earlier can delete the unused
   `BLOOM_ADMIN_ROLES` line.
 
+### Security
+
+- **`POST /api/auth/register` took `role` and `level` from the request body.**
+  The route is public, so one request could create an `admin.system` account.
+  Self-registration now always creates `user.basic`; roles are granted through
+  the admin console. Apps created from 5.1–5.3.2 carry this code in
+  `src/api/features/auth/auth.service.ts` and must change it themselves.
+- **User administration was not scoped.** Any `admin.tenant` or `admin.org`
+  could list every user, edit any user (the update passed the request body
+  straight to Prisma, so any column including `password` could be set),
+  reset any password, delete any user, and create users with any role.
+  Now only `admin.system` manages users across tenants or sets role, level
+  and tenant; other admins and moderators manage users in their own tenant,
+  and the model copies only the updatable fields.
+- Registration and profile failures no longer log the request body (which
+  included the plaintext password).
+- Removed the public `/api/auth/test` and `/api/user/test` routes.
+
 ### Changed
 
 - Docs describe the layered presets as they are: `mobile-basicapp` and the

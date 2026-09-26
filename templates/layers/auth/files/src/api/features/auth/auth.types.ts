@@ -18,8 +18,6 @@ export interface AuthRegisterRequest {
   password: string;
   name?: string;
   phone?: string;
-  role?: string;
-  level?: string;
 }
 
 export interface AuthLoginResponse {

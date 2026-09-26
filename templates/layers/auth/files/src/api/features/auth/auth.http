@@ -12,10 +12,6 @@
 @verificationToken =
 @resetToken =
 
-### 1. Test route (verify auth routes are working)
-GET {{baseUrl}}/api/auth/test
-X-Frontend-Key: {{frontendKey}}
-
 ### 2. Register a new user
 POST {{baseUrl}}/api/auth/register
 Content-Type: application/json

@@ -18,7 +18,6 @@
   "env": {
     "DATABASE_URL": "file:./dev.db",
     "BLOOM_AUTH_SECRET": "{{GENERATE:auth_:36}}",
-    "VITE_FRONTEND_KEY": "{{GENERATE:bloom_:24}}",
     "DEFAULT_USER_PASSWORD": "admin123"
   },
   "next": [

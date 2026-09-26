@@ -28,3 +28,21 @@ jobs:
 
       - name: Scaffold smoke tests
         run: npm run test:smoke
+
+  # Installs every preset for real, typechecks it, and boots the web presets.
+  # The file-only smoke tests above could not catch a server.ts that failed
+  # to parse (5.3.2); this job can.
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+
+      - name: Scaffold, install, typecheck and boot every preset
+        run: npm run test:build
+        env:
+          BLOOM_SMOKE_BUILD: '1'

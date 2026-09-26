@@ -1,8 +1,8 @@
 # AGENTS.md — @bloomneo/bloom
 
-> Rules for AI coding agents using `bloom` (v5.3.2) to scaffold full-stack
+> Rules for AI coding agents using `bloom` (v5.3.3) to scaffold full-stack
 > applications that combine `@bloomneo/appkit` (Express backend, pinned
-> `^5.1.1`) and `@bloomneo/uikit` (React frontend, pinned `^3.0.1`) via
+> `^5.1.2`) and `@bloomneo/uikit` (React frontend, pinned `^4.1.6`) via
 > Feature-Based Component Architecture (FBCA).
 >
 > Read this FIRST. If the project is already scaffolded, also read
@@ -13,8 +13,10 @@
 
 A **scaffolding CLI**. Nothing more. It:
 
-1. Copies a template directory into a new project
-2. Replaces `{{PROJECT_NAME}}` placeholders
+1. Copies the `app` base into a new project, then applies the layers the
+   preset or flags ask for (`auth`, `admin`, `desktop`, `mobile`)
+2. Replaces `{{PROJECT_NAME}}` placeholders and writes `.env` with secrets
+   unique to the project
 3. Runs `npm install` (unless `--skip-install` is passed)
 4. The scaffolded project's postinstall hydrates `docs/` and `.claude/skills/`
    with the currently-installed appkit + uikit agent docs and skills
@@ -49,22 +51,22 @@ Global flags:
 
 ## Template picker (decision tree)
 
-| What the user wants | Template | Backend? | Database? | Notes |
+Every preset is the `app` base plus layers. Flags add layers to any preset.
+
+| What the user wants | Command | Layers | Database | Notes |
 |---|---|---|---|---|
-| Plain fullstack web app | `basicapp` | Express (appkit) | — | Default. Runs with `npm run dev`. |
-| Web app with auth + user admin | `userapp` | Express + Prisma | Postgres/SQLite via Prisma | Requires `npx prisma db push` before first run |
-| Cross-platform desktop app | `desktop-basicapp` | Embedded Express | — | Electron window + local backend |
-| Desktop app with auth + SQLite | `desktop-userapp` | Embedded Express | SQLite via better-sqlite3 | Setup wizard on first launch |
-| Native mobile (iOS + Android) | `mobile-basicapp` | **None** — UI only | — | Connect to a separate `basicapp` / `userapp` backend |
+| Plain fullstack web app | `bloom create x` (`basicapp`) | — | — | Default. Runs with `npm run dev`. |
+| Web app with auth + users | `bloom create x userapp` | auth | Prisma (SQLite by default) | `npx prisma db push` before first run |
+| Admin console | `bloom create x adminapp` | auth, admin | Prisma | Users, audit log, settings |
+| Desktop app | `bloom create x desktop-basicapp` | desktop | — | Electron wraps the same web build and API |
+| Desktop app with auth | `bloom create x desktop-userapp` | auth, desktop | Prisma | |
+| iOS + Android app | `bloom create x mobile-basicapp` | mobile | — | Capacitor wraps the same web build; the API runs on a server |
+| Any combination | `bloom create x --auth --mobile` | as flagged | | `--admin` implies `--auth` |
 
 Picking notes:
-- **Don't scaffold `mobile-basicapp` for a standalone app** — it has no
-  backend. If the user wants "a mobile app with auth," scaffold `userapp`
-  (web) + `mobile-basicapp` (UI shell) and point the mobile app at the
-  web app's API.
-- **Desktop templates embed Express** — you don't need a separate backend.
-- **For "fullstack with auth," prefer `userapp` over `basicapp`** —
-  `userapp` already wires Prisma + auth routes + admin panel.
+- **For "fullstack with auth," prefer `userapp` (or `adminapp`) over `basicapp`.**
+- **Mobile builds call the API over HTTP.** Deploy the API somewhere the
+  phone can reach and point `VITE_API_URL` at it.
 
 ## Always do
 
@@ -78,8 +80,8 @@ Picking notes:
    them via `import.meta.glob`.
 4. For `userapp`, run `npx prisma db push` + edit `.env` before
    `npm run dev`.
-5. Pin `@bloomneo/appkit` to `^4.0.0` and `@bloomneo/uikit` to
-   `^3.0.1` (what the 4.x templates ship). Don't change them unless
+5. Keep `@bloomneo/appkit` on `^5.1.2` and `@bloomneo/uikit` on
+   `^4.1.6` (what the 5.x templates ship). Don't change them unless
    you're tracking a coordinated major.
 
 ## Never do
@@ -96,7 +98,7 @@ Picking notes:
 4. Never use `bloom create` on an existing non-empty directory (other
    than `.`). It refuses and exits 1.
 5. Never pin appkit or uikit to `latest`. The templates pin to caret
-   ranges (`^4.0.0` appkit, `^2.0.1` uikit as of bloom 4.x) for a
+   ranges (`^5.1.2` appkit, `^4.1.6` uikit as of bloom 5.x) for a
    reason — breaking changes in the ecosystem need a coordinated
    bloom release, not silent drift via `latest`.
 

@@ -1,4 +1,4 @@
-# @bloomneo/bloom v5.3.2
+# @bloomneo/bloom v5.3.3
 
 Scaffolding CLI for full-stack apps combining `@bloomneo/appkit` (Express
 backend) and `@bloomneo/uikit` (React frontend) with Feature-Based
@@ -48,22 +48,25 @@ Prints the installed bloom version. Exits 0.
 
 ## Templates
 
-| Name | Surface | Backend | Data | First-run command |
+Every preset is the `app` base plus layers (`auth`, `admin`, `desktop`,
+`mobile`). Flags add layers to any preset: `bloom create x --auth --mobile`.
+
+| Name | Layers | Surface | Data | First-run command |
 |---|---|---|---|---|
-| `basicapp` | Web | Express (appkit) | — | `npm run dev` |
-| `userapp` | Web | Express + Prisma + auth | Prisma (Postgres/SQLite) | `npx prisma db push && npm run dev` |
-| `adminapp` | Web | Express + Prisma + auth + admin console | Prisma (Postgres) | `npx prisma db push && npm run dev` |
-| `desktop-basicapp` | Desktop (Electron) | Embedded Express | — | `npm run dev` |
-| `desktop-userapp` | Desktop (Electron) | Embedded Express | better-sqlite3 | `npm run dev` |
-| `mobile-basicapp` | Mobile (Capacitor) | **None (UI-only)** | — | `npx cap sync ios\|android` + native build |
+| `basicapp` | — | Web | — | `npm run dev` |
+| `userapp` | auth | Web | Prisma (SQLite by default) | `npx prisma db push && npm run dev` |
+| `adminapp` | auth, admin | Web + admin console | Prisma | `npx prisma db push && npm run db:seed && npm run dev` |
+| `desktop-basicapp` | desktop | Electron wrapper | — | `npm run dev:desktop` |
+| `desktop-userapp` | auth, desktop | Electron wrapper | Prisma | `npx prisma db push && npm run dev:desktop` |
+| `mobile-basicapp` | mobile | Capacitor wrapper (iOS/Android) | — | `npm run mobile:add:ios` then `npm run mobile:ios` |
 
 ### Template picker
 
 - **Plain fullstack web app** → `basicapp`
 - **Fullstack + auth + users** → `userapp`
-- **Admin console on top of userapp** (audit log, settings editor, dashboard, mobile bottom-nav, public marketing + legal pages) → `adminapp`
-- **Cross-platform desktop** → `desktop-basicapp` or `desktop-userapp`
-- **Native mobile (no backend)** → `mobile-basicapp` (needs a `basicapp` / `userapp` / `adminapp` deployed separately)
+- **Admin console** (users, audit log, settings, dashboard) → `adminapp`
+- **Desktop** → `desktop-basicapp` or `desktop-userapp` (Electron wraps the same web build and API)
+- **iOS + Android** → `mobile-basicapp` (Capacitor wraps the same web build; the API must run on a server the phone can reach)
 
 ---
 
@@ -73,8 +76,8 @@ Every template includes:
 
 - `AGENTS.md` — project-level agent rules (placeholders replaced at
   scaffold + re-filled by postinstall)
-- `package.json` — pins `@bloomneo/uikit@^2.0.1` + (where applicable)
-  `@bloomneo/appkit@^4.0.0`, plus a `postinstall` hook
+- `package.json` — pins `@bloomneo/uikit@^4.1.6` + `@bloomneo/appkit@^5.1.2`,
+  plus a `postinstall` hook
 - `scripts/copy-agent-docs.js` — postinstall script that populates:
   - `docs/appkit.md`, `docs/appkit-agents.md`
   - `docs/uikit.md`, `docs/uikit-agents.md`
@@ -91,6 +94,11 @@ Every template includes:
 --verbose           Debug logging during scaffold (stdio: inherit for npm install)
 --skip-install      Scaffold files only; skip npm install (CI / dry-run)
 --no-install        Alias for --skip-install
+--auth              Add the auth layer (users, login, Prisma)
+--admin             Add the admin layer (implies --auth)
+--desktop           Add the Electron wrapper
+--mobile            Add the Capacitor wrapper
+--legacy            Use the frozen pre-5.1 template directory (removed in 6.0)
 ```
 
 ---
@@ -118,7 +126,16 @@ Adding a new page = creating a file. Don't edit the page-router.
 
 ## Migration
 
-Current release: **5.3.2**. An unmatched `/api/*` path now returns a JSON 404
+Current release: **5.3.3**. Apps created by 5.3.2 did not compile: the `/api`
+404 handler in `server.ts` was never closed. 5.3.3 closes it, and every preset
+is now installed, typechecked and booted (development and production) in CI.
+Also: `.env` now carries `BLOOM_SERVICE_NAME` (production refused to start
+without it) and matching `BLOOM_FRONTEND_KEY` / `VITE_FRONTEND_KEY` values,
+the web client sends `X-Frontend-Key`, login tokens carry `tenantId`, secrets
+come from `crypto`, and the admin layer writes `ADMIN_USER_ROLES` (the name
+its code reads) instead of the unread `BLOOM_ADMIN_ROLES`.
+
+### 5.3.2 An unmatched `/api/*` path now returns a JSON 404
 instead of the single-page app.
 
 The SPA fallback is a catch-all and its comment claimed it served index.html

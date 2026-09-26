@@ -2,6 +2,49 @@
 
 All notable changes to Bloom Framework will be documented in this file.
 
+## [5.3.3] - 2026-09-26
+
+### Fixed
+
+- **Every app created by 5.3.2 failed to compile.** The `/api` 404 handler
+  added in 5.3.2 was never closed, so `server.ts` did not parse. The smoke
+  tests could not see it: they scaffolded with `--skip-install` and inspected
+  files, and nothing ever compiled what `bloom create` wrote.
+  `tests/scaffold-build.test.mjs` (`BLOOM_SMOKE_BUILD=1 npm run test:build`,
+  now a CI job) installs every preset, typechecks it, and boots the web
+  presets in development and production.
+- **A new app refused to start in production.** appkit requires
+  `BLOOM_SERVICE_NAME` when `NODE_ENV=production`; bloom never wrote it.
+  `.env` now carries it, set to the project name.
+- **The frontend key was never enforced.** The auth layer generated
+  `VITE_FRONTEND_KEY` but not `BLOOM_FRONTEND_KEY`, so the production gate
+  stayed open, and `shared/api.ts` / `reportError.ts` never sent the header,
+  so setting the server key would have rejected every typed API call. `.env`
+  now carries both with one generated value, for every preset, and the web
+  client sends `X-Frontend-Key`. The key ships in the browser bundle: it
+  deters casual scripted access and is not a secret.
+- **Login tokens carried no `tenantId`.** `auth.scopedWhere()` read that as a
+  platform account and returned `{}` — every tenant's rows. The auth layer now
+  puts `tenantId` (null for platform users) in the token.
+- **Secrets came from `Math.random()`.** `BLOOM_AUTH_SECRET` signs every JWT.
+  Generated secrets and temporary passwords now use `node:crypto`.
+- **The admin layer wrote a variable nothing read.** `layer.json` set
+  `BLOOM_ADMIN_ROLES=admin,superadmin`; the code reads `ADMIN_USER_ROLES` in
+  `role:level` form, so every app silently ran on the defaults. The layer now
+  writes `ADMIN_USER_ROLES`. Apps created earlier can delete the unused
+  `BLOOM_ADMIN_ROLES` line.
+
+### Changed
+
+- Docs describe the layered presets as they are: `mobile-basicapp` and the
+  desktop presets wrap the same web build and API (not a UI-only shell, not
+  SQLite with PIN recovery), `adminapp` is in the template table, version pins
+  match the templates (`appkit ^5.1.2`, `uikit ^4.1.6`), Capacitor is 6, and
+  `--auth/--admin/--desktop/--mobile/--legacy` are documented in help, README
+  and `llms.txt`.
+- Removed the unused `templates/package.json` and the unused `fs-extra`
+  dependency.
+
 ## [5.3.2] - 2026-08-25
 
 ### Fixed

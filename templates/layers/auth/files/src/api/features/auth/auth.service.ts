@@ -186,7 +186,10 @@ export const authService = {
         token = auth.generateLoginToken({
           userId: user.id,
           role: user.role,
-          level: user.level
+          level: user.level,
+          // Data scope. Without it every tenant-aware read has to look the
+          // user up again, and a route that forgets to has no tenant at all.
+          tenantId: user.tenantId ?? null,
         });
       } catch (tokenErr: any) {
         logger.error('JWT token generation failed', {

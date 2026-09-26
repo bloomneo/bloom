@@ -30,6 +30,13 @@ export type ApiRouteLoose = ApiRoute | (string & {});
  */
 const BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
 
+/*
+ * The server rejects /api calls without this header in production when
+ * BLOOM_FRONTEND_KEY is set. It ships in the bundle, so it deters casual
+ * scripted access; it is not a secret and never replaces auth.
+ */
+const FRONTEND_KEY = import.meta.env.VITE_FRONTEND_KEY as string | undefined;
+
 /** Same key the auth feature writes. Read here so no feature repeats it. */
 const TOKEN_KEY = 'auth_token';
 
@@ -88,6 +95,7 @@ export async function request<T = unknown>(path: ApiRoute, opts: Options = {}): 
     ...rest,
     headers: {
       'Content-Type': 'application/json',
+      ...(FRONTEND_KEY ? { 'X-Frontend-Key': FRONTEND_KEY } : {}),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(headers as Record<string, string>),
     },

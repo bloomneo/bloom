@@ -27,6 +27,7 @@ import { lastRequestId } from './api';
 
 const ENDPOINT: ApiRoute = '/api/client-error';
 const BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
+const FRONTEND_KEY = import.meta.env.VITE_FRONTEND_KEY as string | undefined;
 
 /** Signatures already sent — the same fault is reported once per page load. */
 const seen = new Set<string>();
@@ -66,7 +67,10 @@ export function reportClientError(report: ClientErrorReport): void {
 
     void fetch(`${BASE}${ENDPOINT}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(FRONTEND_KEY ? { 'X-Frontend-Key': FRONTEND_KEY } : {}),
+      },
       body,
       // Survives the page being torn down mid-report.
       keepalive: true,

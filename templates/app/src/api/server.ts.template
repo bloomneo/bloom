@@ -240,6 +240,7 @@ async function startServer() {
         error: 'NOT_FOUND',
         message: `No API route matches ${req.method} /api${req.path}`,
       });
+    });
 
     // Check if frontend build exists and we're not in API-only dev mode
     const distPath = path.join(__dirname, '../../dist');

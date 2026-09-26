@@ -6,6 +6,7 @@
  */
 
 import { execSync } from 'child_process';
+import { randomInt } from 'crypto';
 import {
   appendFileSync,
   copyFileSync,
@@ -52,9 +53,9 @@ const projectName = process.argv[3];
  * `bloom create my-app --admin` reads "--admin" as a template name and dies
  * with "Invalid template". Flags may appear anywhere.
  *
- * The default depends on whether layers were requested: `--auth`/`--admin`
- * compose onto the `app` base, whereas a bare `bloom create x` still means the
- * legacy basicapp until those templates are retired.
+ * With no template, `bloom create x` builds the `app` base (what basicapp
+ * means). Every preset composes onto that base; only `--legacy` reaches a
+ * frozen directory.
  */
 const positionals = process.argv.slice(4).filter((a) => !a.startsWith('-'));
 
@@ -386,7 +387,7 @@ function mergeLayerPackageJson(layers, verbose) {
 }
 
 /** Write .env from the layers' declared env, generating any secrets. */
-function writeLayerEnv(layers, verbose) {
+function writeLayerEnv(layers, verbose, serviceName = 'app') {
   /*
    * Base env, written whether or not any layer was applied.
    *
@@ -396,9 +397,14 @@ function writeLayerEnv(layers, verbose) {
    * names the symptom and hides the cause. shared/api.ts also detects that
    * case now, but the far better fix is for the value to be present.
    */
+  const frontendKey = generateRandomSecret('bloom_', 24);
   const entries = [
     '# ── app ────────────────────────────────────────────────────────────────',
     'VITE_API_URL=http://localhost:3000',
+    '',
+    '# Names this service in logs. appkit refuses to start in production',
+    '# without it.',
+    `BLOOM_SERVICE_NAME=${serviceName}`,
     '',
     '# AppKit logger scope.',
     '#',
@@ -410,6 +416,13 @@ function writeLayerEnv(layers, verbose) {
     '# costly otherwise: it repeats service/version/environment on every line and',
     '# runs about 13 lines per request.',
     'BLOOM_LOGGER_SCOPE=minimal',
+    '',
+    '# Frontend key. In production the API rejects /api calls whose',
+    '# X-Frontend-Key header does not match BLOOM_FRONTEND_KEY; the web client',
+    '# sends VITE_FRONTEND_KEY. Keep the two equal. It ships in the browser',
+    '# bundle, so it deters casual scripted access; it is not a secret.',
+    `BLOOM_FRONTEND_KEY=${frontendKey}`,
+    `VITE_FRONTEND_KEY=${frontendKey}`,
     '',
   ];
   for (const { name, meta } of layers) {
@@ -449,13 +462,15 @@ function copyBloomTemplate(templateType, verbose = false, extraReplacements = {}
 }
 
 /**
- * Generate cryptographically secure random strings for secrets
+ * Generate random strings for secrets (BLOOM_AUTH_SECRET signs every JWT).
+ * crypto.randomInt draws from the OS CSPRNG without modulo bias;
+ * Math.random() is predictable and must never produce a secret.
  */
 function generateRandomSecret(prefix = '', length = 32) {
   const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   let result = prefix;
   for (let i = 0; i < length; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
+    result += chars[randomInt(chars.length)];
   }
   return result;
 }
@@ -631,18 +646,26 @@ Templates:
   userapp             User management with auth, roles, and admin panel
   adminapp            Admin console — userapp + audit log, settings, dashboard,
                         mobile bottom-nav, public marketing + legal pages
-  desktop-basicapp    Electron desktop app with FBCA (cross-platform)
-  desktop-userapp     Desktop user management with SQLite and PIN recovery
-  mobile-basicapp     Mobile app for iOS/Android with Capacitor (UI-only)
+  desktop-basicapp    basicapp wrapped as an Electron desktop app
+  desktop-userapp     userapp wrapped as an Electron desktop app
+  mobile-basicapp     basicapp wrapped for iOS/Android with Capacitor
+
+Layers (add to any template; presets are named sets of these):
+  --auth              Email/password auth, users, Prisma
+  --admin             Admin console: users, audit log, settings (adds --auth)
+  --desktop           Electron wrapper around the same web build and API
+  --mobile            Capacitor wrapper for iOS and Android
 
 Flags:
   --verbose           Verbose logging during scaffold
   --skip-install      Scaffold files only; skip npm install (for CI / dry-run)
+  --legacy            Use the frozen pre-5.1 template directory (removed in 6.0)
 
 Examples:
   bloom create my-app                    # Create basicapp in my-app/ directory
   bloom create my-app basicapp           # Same as above
   bloom create . basicapp                # Install basicapp in current directory
+  bloom create my-app --auth --mobile    # Web app with auth, wrapped for iOS/Android
   bloom create my-app --skip-install     # Scaffold without running npm install
   bloom start                            # Start production server after build
 `);
@@ -669,7 +692,7 @@ if (command === 'create') {
   // Check if template exists
   const templatePath = join(__dirname, '../templates', templateType);
   if (!existsSync(templatePath)) {
-    console.error(`❌ Template "${templateType}" is not yet available. Currently available: basicapp, userapp, desktop-basicapp, desktop-userapp`);
+    console.error(`❌ Template "${templateType}" is not available. Available: ${['app', ...Object.keys(PRESETS)].join(', ')}`);
     process.exit(1);
   }
 
@@ -739,7 +762,7 @@ if (command === 'create') {
     }
     // Always: the base block carries VITE_API_URL, which every scaffold
     // needs whether or not a layer was applied.
-    writeLayerEnv(layers, verbose);
+    writeLayerEnv(layers, verbose, projectName === '.' ? process.cwd().split('/').pop() : projectName);
 
     // Create .env file with random values for userapp + adminapp.
     // adminapp uses the same env shape (plus ADMIN_* flags) so it shares

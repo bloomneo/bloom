@@ -7,6 +7,7 @@
  * @llm-rule NOTE: Implements profile management with AppKit database, logger, and error patterns
  */
 
+import { randomBytes } from 'node:crypto';
 import { loggerClass } from '@bloomneo/appkit/logger';
 import { errorClass } from '@bloomneo/appkit/error';
 import { model } from './user.model.js';
@@ -149,7 +150,7 @@ export const userService = {
       }
 
       // Use provided password or generate a temporary one
-      const password = data.password || Math.random().toString(36).slice(-12) + 'Temp1!';
+      const password = data.password || randomBytes(9).toString('base64url') + 'Temp1!';
 
       // Create user with provided data
       const user = await model.create({

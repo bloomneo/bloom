@@ -16,8 +16,13 @@ npm run dev          # API on http://localhost:3000, web on http://localhost:517
 npm run typecheck    # web and API
 npm run build        # web + API into dist/
 npm start            # production server (serves the web build too)
-npx bloom check      # every route has an auth decision; framework versions in step
+npx bloom check      # every route has an auth decision, every contract is served,
+                     # tenant tables have row-level security, versions in step
+npx bloom manifest   # after changing a contract: refresh bloom.manifest.json + AGENTS.md
 ```
+
+`.github/workflows/bloom-check.yml` runs `bloom check` on every push and pull
+request.
 
 ## Where things are
 
@@ -48,6 +53,7 @@ component. `/products` exists — no route table, no restart.
 2. Serve it from `src/api/features/products/products.route.ts`:
    `export default await contractRouter([route(listProducts, ({ user }) => …)])`.
 3. Call it from the web: `await client.call(listProducts)`.
+4. Run `npx bloom manifest` and `npx bloom check`.
 
 `route()` applies the contract's auth, tenant context and validation; the
 handler returns the body.

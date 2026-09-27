@@ -509,15 +509,18 @@ Usage:
   bloom create <project-name> [template]  Create new fullstack project
   bloom create . [template]               Install in current directory
   bloom start                             Start production server (requires build)
-  bloom check [--json] [--strict] [--no-db] [--probe <url>]
+  bloom check [--json] [--strict] [--no-db] [--probe <url>] [--destructive]
                                           Verify the app: route auth, served
                                           contracts, row-level security,
-                                          versions; --probe attacks a running
-                                          local app across tenants
-  bloom upgrade [--write] [--to <ver>]    Move a Bloom 5 app to 6: pins, the
+                                          versions, manifest; --probe attacks
+                                          a running local app across tenants
+                                          (--destructive also tries DELETE)
+  bloom upgrade [--write] [--to <ver>] [--json]
+                                          Move a Bloom 5 app to 6: pins, the
                                           api-router swap, a CI workflow; lists
                                           what must be done by hand. Dry run
-                                          unless --write (clean git tree)
+                                          unless --write (clean git tree, or
+                                          --force)
   bloom manifest [--check]                Write bloom.manifest.json and the
                                           generated AGENTS.md API section;
                                           --check exits 1 if out of date
@@ -628,8 +631,9 @@ if (command === 'create') {
     if (layers.length) {
       mergeLayerPackageJson(layers, verbose);
     }
-    // Always: the base block carries VITE_API_URL, the frontend key and the
-    // auth secret, which every scaffold needs whether or not a layer was applied.
+    // Always: the base block carries VITE_API_URL, the service name and the
+    // frontend key, which every scaffold needs whether or not a layer was
+    // applied. The auth secret comes with the auth layer.
     writeLayerEnv(layers, verbose, projectName === '.' ? process.cwd().split('/').pop() : projectName);
 
     if (skipInstall) {

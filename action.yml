@@ -1,7 +1,7 @@
 # bloom check as a GitHub Action.
 #
 #   - uses: actions/checkout@v4
-#   - uses: bloomneo/bloom@next          # pin a tag (e.g. v6.0.0) once released
+#   - uses: bloomneo/bloom@v6            # moved to each stable 6.x release; @next until 6.0.0
 #     with:
 #       strict: true
 #

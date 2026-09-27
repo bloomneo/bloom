@@ -12,7 +12,9 @@
 
 ## What bloom IS
 
-A **scaffolding CLI** (plus the route-contract API below). It:
+A **scaffolding CLI**, the **route-contract API** apps import, and the
+commands that keep an app honest afterwards (`bloom check`, `bloom manifest`,
+`bloom upgrade`). `bloom create`:
 
 1. Copies the `app` base into a new project, then applies the layers the
    preset or flags ask for (`auth`, `admin`, `desktop`, `mobile`)
@@ -21,6 +23,8 @@ A **scaffolding CLI** (plus the route-contract API below). It:
 3. Runs `npm install` (unless `--skip-install` is passed)
 4. The scaffolded project's postinstall hydrates `docs/` and `.claude/skills/`
    with the currently-installed appkit + uikit agent docs and skills
+5. Writes `bloom.manifest.json` and the generated API section of the app's
+   AGENTS.md (skipped with `--skip-install`)
 
 ## The starter (6.0)
 
@@ -34,7 +38,9 @@ What `bloom create` writes, and where each piece comes from:
 | Typed client | `src/web/shared/client.ts` (`createClient`) | `@bloomneo/bloom` |
 | File-based pages, lazy loading, 404, error boundary | `main.tsx`: `<PageRouter pages={pages} layouts={layouts} onError={…} />`; the glob in `src/web/pages.ts` | `@bloomneo/uikit/router` |
 | Signed-in shell (auth layer) | `shared/DashboardLayoutRoute.tsx`: `<AuthGuard><AppShell …/></AuthGuard>`, nav from `shared/nav.*.ts` | `AppShell` from `@bloomneo/uikit` |
-| Verification | `npx bloom check` | `@bloomneo/bloom` |
+| Request ids on every log line | `server.ts`: `app.use(requestId())` | `@bloomneo/appkit/server` |
+| Verification | `npx bloom check`; `.github/workflows/bloom-check.yml` runs it on every push and PR | `@bloomneo/bloom` (the `bloomneo/bloom@v6` action) |
+| The app's API for agents | `bloom.manifest.json` + the generated section in AGENTS.md (`npx bloom manifest`) | `@bloomneo/bloom` |
 
 The app no longer carries its own api-router or page-router; don't add one
 back.
@@ -84,19 +90,21 @@ const invoice = await api.call(getInvoice, { params: { id } });   // typed
 Run it in an app's root after every change. Each finding has a code, a
 location, the rule and the fix; exit code 1 means something must change.
 
-| Code | Meaning |
-|---|---|
-| `ROUTE_NO_AUTH_DECISION` | A route file has no auth guard and doesn't declare `export const isPublic = true` |
-| `RLS_TABLE_UNPROTECTED` | With `BLOOM_DB_TENANT=rls`: a table with the tenant column lacks enabled + forced row-level security and a policy |
-| `RLS_NOT_CHECKED` | The database check couldn't run (no `DATABASE_URL` or no Prisma client) |
-| `VERSIONS_OUT_OF_STEP` | appkit, uikit and bloom (6.x) aren't on one version |
-| `CONTRACTS_NONE` | Info: no routes are declared as contracts yet |
-| `CONTRACT_NOT_SERVED` | A contract in `src/**/*.contract.ts` has no `route(contract, handler)` in `src/api` |
-| `TENANT_CROSS_TENANT_*` | With `--probe`: one tenant read (or changed) another tenant's row on the running app |
-| `PROBE_INCONCLUSIVE` | With `--probe`: the probe couldn't log in or found nothing to probe. Not a pass |
-| `PROBE_NOT_RUN` | With `--probe`: `@bloomneo/appkit` isn't installed in the app |
-| `MANIFEST_STALE` | `bloom.manifest.json` or the generated AGENTS.md / llms.txt section no longer matches the code |
-| `MANIFEST_NOT_BUILT` | Warning: the app has a manifest but it couldn't be rebuilt (e.g. no `tsx`) |
+| Code | Severity | Meaning |
+|---|---|---|
+| `ROUTE_NO_AUTH_DECISION` | error | A route file has no auth guard and doesn't declare `export const isPublic = true` |
+| `CONTRACT_NOT_SERVED` | error | A contract in `src/**/*.contract.ts` has no `route(contract, handler)` in `src/api` |
+| `CONTRACTS_NONE` | info | No routes are declared as contracts yet |
+| `RLS_TABLE_UNPROTECTED` | error | With `BLOOM_DB_TENANT=rls`: a table with the tenant column lacks enabled + forced row-level security and a policy |
+| `RLS_NOT_CHECKED` | warning | The database check couldn't run (no `DATABASE_URL` or no Prisma client) |
+| `VERSIONS_OUT_OF_STEP` | warning | appkit, uikit and bloom (6.x) aren't on one version |
+| `MANIFEST_STALE` | error | `bloom.manifest.json` or the generated AGENTS.md / llms.txt section no longer matches the code |
+| `MANIFEST_NOT_BUILT` | warning | The app has a manifest but it couldn't be rebuilt (e.g. no `tsx`) |
+| `TENANT_CROSS_TENANT_READ` | error | With `--probe`: one tenant read another tenant's row on the running app |
+| `TENANT_CROSS_TENANT_WRITE` | error | With `--probe`: one tenant changed another tenant's row (PATCH) |
+| `TENANT_CROSS_TENANT_DELETE` | error | With `--probe --destructive`: one tenant deleted another tenant's row |
+| `PROBE_INCONCLUSIVE` | error | With `--probe`: the probe couldn't log in or found nothing to probe. Not a pass |
+| `PROBE_NOT_RUN` | warning | With `--probe`: `@bloomneo/appkit` isn't installed in the app |
 
 `--strict` makes warnings fail too. `--no-db` skips the database check.
 
@@ -113,10 +121,10 @@ tree required, `--force` overrides); `--to <version>` picks the version
 (default: this bloom's); `--json` for agents. Edits: version pins (+ `zod`,
 `tsx`, `@types/express`), `server.ts` onto `createApiRouter` from
 `@bloomneo/appkit/server`, a `bloom check` workflow. Everything else is
-listed by code with file, count and fix (`REMOVED_*`, `UPGRADE_REQ_ANY`,
-`UPGRADE_MIDDLEWARE_CAST`, `UPGRADE_OLD_API_ROUTER`, `UPGRADE_PAGE_ROUTER`,
-`UPGRADE_FROM_APPKIT_4`, `UPGRADE_FROM_UIKIT_2`, ...). Rerunning after
-`--write` plans no edits.
+listed by code with file, count and fix: `UPGRADE_*` for the app's own code
+and skipped majors, `REMOVED_*` for removed appkit / uikit APIs and env vars.
+Every code is in the table in [`MIGRATION-6.md`](./MIGRATION-6.md#what-bloom-upgrade-reports).
+Rerunning after `--write` plans no edits.
 
 ## `bloom manifest`
 
@@ -148,18 +156,24 @@ In CI: new apps ship `.github/workflows/bloom-check.yml`, which runs the
 bloom create <project-name> [template]   Scaffold a new project
 bloom create . [template]                Scaffold into the current directory
 bloom start                              Run a scaffolded project's prod server (requires prior build)
-bloom check [--json] [--strict] [--no-db] [--probe <url>]  Verify the app (run in the app root; CI and agents: --json)
+bloom check [--json] [--strict] [--no-db] [--probe <url>] [--destructive]
+                                         Verify the app (run in the app root; CI and agents: --json)
 bloom manifest [--check]                 Write bloom.manifest.json + the generated AGENTS.md API section
-bloom upgrade [--write] [--to <ver>]     Move a Bloom 5 app to 6 (dry run unless --write)
+bloom upgrade [--write] [--to <ver>] [--json]
+                                         Move a Bloom 5 app to 6 (dry run unless --write)
 bloom --help | -h | help                 Show usage
 bloom --version | -v | version           Print installed bloom version
 ```
 
-Global flags:
+`bloom create` flags:
 
 ```
+--auth           Add the auth layer (users, sign-in, Prisma)
+--admin          Add the admin layer (implies --auth)
+--desktop        Add the Electron wrapper
+--mobile         Add the Capacitor wrapper
 --verbose        Debug logging during scaffold
---skip-install   Scaffold files only; skip npm install (for CI / dry-run)
+--skip-install   Scaffold files only; skip npm install (for CI / dry-run; alias --no-install)
 ```
 
 ## Template picker (decision tree)
@@ -279,6 +293,8 @@ skill in `.claude/skills/`. That's the canonical reading order.
 - **[`llms.txt`](./llms.txt)** — machine-readable command + template
   reference
 - **[`README.md`](./README.md)** — human-facing quickstart
+- **[`MIGRATION-6.md`](./MIGRATION-6.md)** — 5 → 6: removals, replacements,
+  `bloom upgrade` codes
 - **[`CHANGELOG.md`](./CHANGELOG.md)** — release history
 - **appkit + uikit docs** — ship inside the scaffold's `node_modules`
   and are copied into `docs/` on every `npm install`

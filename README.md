@@ -1,6 +1,12 @@
 # Bloom Framework
 
-A full-stack framework that combines **@bloomneo/uikit** (React frontend) and **@bloomneo/appkit** (Express backend) with Feature-Based Component Architecture (FBCA). One CLI scaffolds web, desktop (Electron) and mobile (Capacitor) apps from the same project, and `@bloomneo/bloom` itself provides the route contracts both halves share.
+**Bloomneo makes business apps safe, consistent and maintainable, however much of the code AI writes.**
+
+- **Safe** — trust code you didn't write. The rules are enforced by the compiler (a route contract without an auth decision does not compile), the database (row-level security per tenant) and `bloom check`.
+- **Consistent** — one way to do each thing: one API router, one page router, one app shell, one way to declare a route.
+- **Maintainable** — stays simple as it grows. The routers and the shell live in `@bloomneo/appkit` and `@bloomneo/uikit`, so fixes reach apps through package updates, not copied templates.
+
+Bloom combines **@bloomneo/uikit** (React frontend) and **@bloomneo/appkit** (Express backend) with Feature-Based Component Architecture (FBCA). One CLI scaffolds web, desktop (Electron) and mobile (Capacitor) apps from the same project, and `@bloomneo/bloom` itself provides the route contracts both halves share.
 
 [![npm version](https://img.shields.io/npm/v/@bloomneo/bloom.svg)](https://www.npmjs.com/package/@bloomneo/bloom)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -17,12 +23,28 @@ bloom create my-app desktop-basicapp # desktop via Electron
 appkit, uikit and bloom are released together on one version (6.x). A new app
 pins all three to the same caret range.
 
+## Commands
+
+```
+bloom create <project-name> [template]   Scaffold a new project (flags: --auth --admin --desktop --mobile --skip-install --verbose)
+bloom create . [template]                Scaffold into the current directory
+bloom start                              Run the production server (after npm run build)
+bloom check [--json] [--strict] [--no-db] [--probe <url>] [--destructive]
+                                         Verify the app (run in the app root)
+bloom manifest [--check]                 Write bloom.manifest.json + the generated AGENTS.md API section
+bloom upgrade [--write] [--to <ver>] [--json]
+                                         Move a Bloom 5 app to 6 (dry run unless --write)
+bloom --help | --version
+```
+
 ## Features
 
 - **File-based pages** — `features/<name>/pages/**` become URLs through `@bloomneo/uikit/router`; the app keeps one glob.
 - **Feature-discovered API** — `features/<name>/<name>.route.ts` is mounted at `/api/<name>` by `@bloomneo/appkit/server`.
 - **Route contracts** — declare a route once (method, path, zod schemas, `auth`); the server enforces it and the client is typed from it.
-- **`bloom check`** — every route has an auth decision, tenant tables have row-level security, framework versions are in step.
+- **`bloom check`** — every route has an auth decision, every contract is served, tenant tables have row-level security, framework versions are in step; `--probe` tries cross-tenant reads on the running app. Ships as a GitHub Action.
+- **`bloom manifest`** — the app's API (contracts, features, tenant models) in `bloom.manifest.json` and AGENTS.md, kept in step by `bloom check`.
+- **`bloom upgrade`** — moves a Bloom 5 app to 6 with codemods and a list of what is left to decide.
 - **App shell** — the signed-in area is uikit's `AppShell` (sidebar, icon-rail collapse, mobile sheet, header).
 - **One log** — every request logged on completion with a request id; browser crashes reported to the same log.
 - **Desktop and mobile** — Electron and Capacitor wrap the same web build.
@@ -86,8 +108,10 @@ my-app/
 │       │   ├── api.ts               # path-based client for plain routers
 │       │   └── layouts.tsx          # layout registry (layout.*.tsx)
 │       └── main.tsx
-├── AGENTS.md                        # rules for coding agents
+├── AGENTS.md                        # rules for coding agents + the generated API section
+├── bloom.manifest.json              # contracts, features, tenant models (bloom manifest)
 ├── docs/                            # framework docs, copied on npm install
+├── .github/workflows/bloom-check.yml  # bloom check on every push and PR
 └── .env                             # generated, with secrets unique to the app
 ```
 
@@ -163,11 +187,24 @@ npx bloom check --strict   # warnings fail too
 npx bloom check --no-db    # skip the row-level security check
 BLOOM_CHECK_IDENTITIES='[{"label":"a","email":"a@x.test","password":"…"},{"label":"b","email":"b@x.test","password":"…"}]' \
   npx bloom check --probe http://localhost:3000   # try to read tenant A's rows as tenant B
+# add --destructive to also try DELETE (use a disposable database)
 ```
 
+It reports routes without an auth decision, contracts no route serves, tenant
+tables without row-level security (with `BLOOM_DB_TENANT=rls`), framework
+versions out of step, and a stale manifest. Every finding has a code
+(listed in [AGENTS.md](./AGENTS.md#bloom-check)), the file, the rule and the
+fix; exit code 1 means something must change.
+
+## bloom manifest
+
 `npx bloom manifest` writes `bloom.manifest.json` and an "API" section in
-your AGENTS.md from your contracts, so agents read the API from one place.
-`bloom check` fails when they drift from the code.
+your AGENTS.md (and llms.txt, if present) from your contracts, so agents read
+the API from one place. `bloom create` writes it; after changing a contract,
+run it again. `bloom check` fails when they drift from the code, and
+`bloom manifest --check` exits 1 without writing.
+
+## In CI
 
 In GitHub Actions (new apps ship this as `.github/workflows/bloom-check.yml`):
 
@@ -178,8 +215,20 @@ In GitHub Actions (new apps ship this as `.github/workflows/bloom-check.yml`):
     strict: true
 ```
 
-Each finding names the file, the rule and the fix; exit code 1 means something
-must change.
+Inputs: `strict`, `database` (run the RLS check; needs `DATABASE_URL`),
+`working-directory`, `install`, `node-version`. Findings become PR annotations
+and a job summary.
+
+## Upgrading from 5
+
+```bash
+npx @bloomneo/bloom@6 upgrade           # dry run
+npx @bloomneo/bloom@6 upgrade --write   # apply (clean git tree)
+```
+
+Pins the three packages to one 6.x version, moves `server.ts` onto appkit's
+`createApiRouter`, adds the check workflow, and lists what is left to you with
+the file and the fix. See [MIGRATION-6.md](./MIGRATION-6.md).
 
 ## Scripts
 
@@ -205,8 +254,9 @@ VITE_API_URL=http://localhost:3000
 BLOOM_SERVICE_NAME=my-app
 BLOOM_FRONTEND_KEY=bloom_…      # production rejects /api calls without it
 VITE_FRONTEND_KEY=bloom_…       # the web client sends it; keep the two equal
-BLOOM_AUTH_SECRET=auth_…        # signs every JWT
+BLOOM_AUTH_SECRET=auth_…        # auth layer: signs every JWT
 DATABASE_URL=file:./dev.db      # auth layer
+BLOOM_SECURITY_ENCRYPTION_KEY=… # admin layer: encrypts stored email credentials
 ```
 
 ## Links

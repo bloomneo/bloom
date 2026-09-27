@@ -1,3 +1,8 @@
+> **Historical.** Planning notes for the 4.1 `adminapp` template (April 2026),
+> kept for the record. They describe the frozen per-template directories and
+> uikit 2.x `PageLayout`, which are gone in 6.0; nothing here describes the
+> current code. See README.md, AGENTS.md and MIGRATION-6.md.
+
 # Adminapp Scaffold — Plan
 
 **Started:** 2026-04-18

@@ -2,9 +2,12 @@
 
 All notable changes to Bloom Framework will be documented in this file.
 
-## [6.0.0] - Unreleased
+## [6.0.0] - unreleased
 
-Work in progress on the `next` branch; see `MIGRATION-6.md`.
+appkit, uikit and bloom now release in lockstep on one version. bloom becomes
+an imported package (route contracts) as well as the CLI, and gains the
+commands that verify and upgrade an app. See `MIGRATION-6.md`; `npx
+@bloomneo/bloom@6 upgrade` moves a Bloom 5 app.
 
 ### Added
 
@@ -13,54 +16,82 @@ Work in progress on the `next` branch; see `MIGRATION-6.md`.
   `auth` required at the type level and checked again at load time for JS
   callers; `createClient` for typed calls (params, query, body, bearer
   token, frontend key, request ids, HTML-instead-of-JSON detection);
-  `validate`, `buildPath`, `isContract`, `isTenantScoped`. Covered by runtime
-  tests and a compile-time test (`tests/types/`) that proves the negative
-  cases fail to compile.
+  `ApiError`, `validate`, `buildPath`, `isContract`, `isTenantScoped` and the
+  contract types. Covered by runtime tests and a compile-time test
+  (`tests/types/`) that proves the negative cases fail to compile.
 
-- **`bloom check`** (`--json`, `--strict`, `--no-db`, `--probe <url>`): route files without
-  an auth decision (recognises every appkit guard, including app wrappers
-  like `requireLoginOrApiToken`), tenant tables without enabled + forced RLS
-  and a policy (queried through the app's own Prisma client, so bloom needs
-  no database driver), and 6.x version drift. Every finding carries a code,
-  a location, the rule and the fix. Run against the four production apps:
-  bloomneo-cloud and mishulegal pass; midhuna and oddits have public routes
-  that don't declare `isPublic`.
-  Contracts that no `route()` serves are an error (`CONTRACT_NOT_SERVED`).
-  `--probe <url>` runs appkit's cross-tenant probe against the running app
-  with users from `BLOOM_CHECK_IDENTITIES`; an inconclusive probe fails.
-
-- **GitHub Action** (`uses: bloomneo/bloom@v6`): runs the app's own
-  `bloom check --json`, fails the job on failure, and writes findings as PR
-  annotations and a job summary. New apps ship
-  `.github/workflows/bloom-check.yml` using it (strict). The release script
-  moves the `v<major>` tag on stable releases.
+- **`bloom check [--json] [--strict] [--no-db] [--probe <url>] [--destructive]`**:
+  route files without an auth decision (`ROUTE_NO_AUTH_DECISION`; recognises
+  every appkit guard, including app wrappers like `requireLoginOrApiToken`),
+  contracts no `route()` serves (`CONTRACT_NOT_SERVED`), tenant tables
+  without enabled + forced RLS and a policy (`RLS_TABLE_UNPROTECTED`, queried
+  through the app's own Prisma client, so bloom needs no database driver),
+  6.x version drift (`VERSIONS_OUT_OF_STEP`) and a stale manifest
+  (`MANIFEST_STALE`). `--probe <url>` runs appkit's cross-tenant probe
+  (`verifyClass`) against the running local app with the users in
+  `BLOOM_CHECK_IDENTITIES` (`TENANT_CROSS_TENANT_*`); an inconclusive probe
+  fails (`PROBE_INCONCLUSIVE`); `--destructive` also replays DELETE. Every
+  finding carries a code, a location, the rule and the fix; the codes are
+  listed in `AGENTS.md`. Run against the four production apps: bloomneo-cloud
+  and mishulegal pass; midhuna and oddits have public routes that don't
+  declare `isPublic`.
 
 - **`bloom manifest [--check]`**: writes `bloom.manifest.json` (contracts
   with auth, tenant scope and input/response types rendered as short TS
   types; features; tenant-scoped Prisma models) and a generated API section
-  in the app's AGENTS.md / llms.txt, keeping hand-written text. Deterministic
-  output. `bloom create` writes it after install; `bloom check` reports
-  `MANIFEST_STALE` / `MANIFEST_NOT_BUILT`.
+  in the app's AGENTS.md / llms.txt between `bloom:manifest` markers, keeping
+  hand-written text. Deterministic output. `bloom create` writes it after
+  install; `bloom check` reports `MANIFEST_STALE` / `MANIFEST_NOT_BUILT`.
+  `--check` writes nothing and exits 1 when stale.
 
 - **`bloom upgrade [--write] [--to <version>] [--json]`**: 5 → 6 codemods.
-  Dry run by default; `--write` needs a clean git tree. Pins the lockstep
-  versions, moves `server.ts` onto appkit's `createApiRouter`, adds the
-  check workflow, and lists the rest with fixes. Dry-run against the four
-  production apps: all four get the router swap; it also found midhuna and
-  oddits still importing `PageLayout` / `Header` / `HeaderNav` (removed in
-  uikit 4.0) and oddits skipping appkit 5's fail-closed tenant mode.
+  Dry run by default; `--write` needs a clean git tree (`--force`
+  overrides). Pins the lockstep versions (adding `zod`, `tsx`,
+  `@types/express`), moves `server.ts` onto appkit's `createApiRouter`, adds
+  the check workflow, and lists the rest by code with file, count and fix
+  (removed appkit/uikit APIs, `(req as any).user`, middleware casts, old
+  router copies, removed env vars, skipped 4.x/2.x majors); the codes are
+  listed in `MIGRATION-6.md`. Dry-run against the four production apps: all
+  four get the router swap; it also found midhuna and oddits still importing
+  `PageLayout` / `Header` / `HeaderNav` (removed in uikit 4.0) and oddits
+  skipping appkit 5's fail-closed tenant mode.
+
+- **GitHub Action** (`action.yml`, `uses: bloomneo/bloom@v6`): runs the
+  app's own `bloom check --json` (falling back to the published one), fails
+  the job on failure, and writes findings as PR annotations and a job
+  summary. Inputs: `strict`, `database`, `working-directory`, `install`,
+  `node-version`; output: `report`. New apps ship
+  `.github/workflows/bloom-check.yml` using it (strict). The release script
+  moves the `v<major>` tag on stable releases.
 
 - **The starter declares its routes as contracts.**
   `src/contracts/welcome.contract.ts` (public `GET /api/welcome` and
   `/api/welcome/:name`, zod params and response schemas) is served by a
   `contractRouter` and called from the home page through
   `src/web/shared/client.ts` (`createClient` with `VITE_API_URL`, the auth
-  token and the frontend key).
+  token and the frontend key). `@contracts/*` resolves in tsconfig and Vite.
 
-- **`bloom check` runs in CI against every booted web preset** and must
-  report `ok: true`.
+- **`scripts/release-lockstep.mjs`** (`npm run release`): releases appkit,
+  uikit and bloom on one version, rewriting each template's framework pins.
+
+- **CI**: `bloom check` runs against every booted web preset and must report
+  `ok: true`; `npm test` also runs the contract, check, manifest and upgrade
+  tests; `BLOOM_LOCAL_PACKS` builds presets against local framework tarballs.
 
 ### Changed
+
+- **The starter is built on the 6.0 framework pieces.** `server.ts` mounts
+  `createApiRouter` from `@bloomneo/appkit/server` (feature discovery,
+  `GET /api` index, JSON 404 for unmatched `/api/*`, boot warnings through
+  the app logger) and `requestId()` from the same module (every log line in a
+  request carries `req=<id>`); `main.tsx` renders `<PageRouter>` from
+  `@bloomneo/uikit/router` with the glob in `src/web/pages.ts` (the HMR
+  plugin now watches `pages.ts`); the auth layer's dashboard shell is uikit's
+  `AppShell` inside `AuthGuard`, and the admin console reuses it.
+
+- **`ApiRoute` lists plain-router routes only.** Contract routes are typed
+  by their contract and called with `client.call`; `shared/api.ts` stays for
+  plain routers and exports `getToken()`, shared with the contract client.
 
 - **Admin email settings are stored in the database, not `.env`.** The admin
   layer rewrote `.env` to change the email provider, which failed on
@@ -68,35 +99,25 @@ Work in progress on the `next` branch; see `MIGRATION-6.md`.
   `app_settings` under `email.*` (API key and SMTP password encrypted with
   `BLOOM_SECURITY_ENCRYPTION_KEY`, which the admin layer generates), are
   applied immediately with appkit's `emailClass.reset()`, and are re-applied
-  at boot. `lib/env-file.ts` is gone. Same endpoints and response shape.
-
-- The package now has an import entry (contracts); importing it no longer
-  runs the CLI (`main` pointed at `bin/bloom.js`).
-
-- **The starter is built on the 6.0 framework pieces.** `server.ts` mounts
-  `createApiRouter` from `@bloomneo/appkit/server` (the template's
-  `api-router.ts` is gone); `main.tsx` renders `<PageRouter>` from
-  `@bloomneo/uikit/router` with the glob in `src/web/pages.ts` (the
-  template's `page-router.tsx` is gone; the HMR plugin now watches
-  `pages.ts`); the auth layer's dashboard shell is uikit's `AppShell`
-  inside `AuthGuard`, and the admin console reuses it.
+  at boot. Same endpoints and response shape.
 
 - **Dependencies.** New apps pin `@bloomneo/appkit`, `@bloomneo/uikit` and
   `@bloomneo/bloom` to `^6.0.0-alpha.0` and add `zod`; `@types/react` and
-  `@types/react-dom` follow React 19. `scripts/release-lockstep.mjs` rewrites
-  the bloom pin too.
+  `@types/react-dom` follow React 19.
 
-- **`BLOOM_AUTH_SECRET` is in every app's `.env`**, not only the auth
-  layer's: appkit's `route()` initialises auth when it mounts, public
-  contracts included.
+- **One success message.** `bloom create` prints generic next steps (now
+  including `npx bloom check`), then each applied layer's `next` lines from
+  its `layer.json` (declared since 5.1 and never printed). The auth layer's
+  lines now name `/auth/login` and the seeded `admin.system@<slug>.com`.
 
-- **One success message.** `bloom create` prints generic next steps, then
-  each applied layer's `next` lines from its `layer.json` (declared since
-  5.1 and never printed). The auth layer's lines now name `/auth/login` and
-  the seeded `admin.system@<slug>.com`.
+- **The package has an import entry** (contracts, with types); importing it
+  no longer runs the CLI (`main` pointed at `bin/bloom.js`).
 
 - SQLite stays the zero-setup default; the docs name Postgres with
   `BLOOM_DB_TENANT=rls` as the production path for multi-tenant apps.
+
+- README, AGENTS.md and llms.txt describe the 6.0 starter, the contract API
+  and every command; `MIGRATION-6.md` ships in the package.
 
 ### Removed
 
@@ -105,13 +126,17 @@ Work in progress on the `next` branch; see `MIGRATION-6.md`.
   `mobile-basicapp`), with the CLI code only they used
   (`createUserappEnvFile`, `addViteApiUrl`, legacy placeholder secrets,
   per-template success messages). `--legacy` now exits 1 and points at
-  `@bloomneo/bloom@5`.
+  `@bloomneo/bloom@5`. The preset names stay.
+
+- **The app's own routers and middleware**: `src/api/lib/api-router.ts`,
+  `src/web/lib/page-router.tsx`, the `/api` 404 handler and the
+  hand-written request-id middleware in `server.ts` (all now in appkit and
+  uikit, above), and the admin layer's `src/api/lib/env-file.ts`.
 
 - **Unused dependencies in new apps**: `bcrypt`, `jsonwebtoken`, `helmet`,
   `morgan` and their types, the base's prisma 5 entries, the auth layer's
-  `bcryptjs`, and the `build:lib` script.
+  `bcryptjs` / `@types/bcryptjs`, and the `build:lib` script.
 
-- Released in lockstep with appkit, uikit and bloom on one shared version.
 ## [5.3.3] - 2026-09-26
 
 ### Fixed

@@ -293,6 +293,10 @@ export interface ProbeOptions {
   loginPath?: string;
   /** Paths to probe. Default: the endpoints the app's GET /api index lists. */
   paths?: string[];
+  /** Sent with every request, e.g. the app's X-Frontend-Key. */
+  headers?: Record<string, string>;
+  /** Feature names never to probe (endpoints that can't answer in a test environment). */
+  exclude?: string[];
   allowDestructive?: boolean;
 }
 
@@ -321,6 +325,8 @@ export async function probeTenants(root: string, options: ProbeOptions): Promise
     identities: options.identities,
     loginPath: options.loginPath,
     paths: options.paths,
+    headers: options.headers,
+    exclude: options.exclude,
     allowDestructive: options.allowDestructive ?? false,
   });
   const findings: Finding[] = report.findings.map((f: any) => ({

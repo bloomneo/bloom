@@ -113,7 +113,7 @@ location, the rule and the fix; exit code 1 means something must change.
 `[{"label","email","password"}]`, two users in different tenants) against the
 app running locally at `<url>`, and replays every id one tenant sees as the
 other (appkit's `verifyClass`): GET, plus a PATCH carrying only `{ "__appkitVerify": true }`.
-`--destructive` also replays DELETE. Use a disposable database.
+`--destructive` also replays DELETE. Use a disposable database. The app's frontend key is sent automatically; `--probe-exclude a,b` skips features that can't answer in a test environment (anything that reaches real servers).
 
 ## `bloom upgrade`
 

@@ -509,7 +509,7 @@ Usage:
   bloom create <project-name> [template]  Create new fullstack project
   bloom create . [template]               Install in current directory
   bloom start                             Start production server (requires build)
-  bloom check [--json] [--strict] [--no-db] [--probe <url>] [--destructive]
+  bloom check [--json] [--strict] [--no-db] [--probe <url>] [--destructive] [--probe-exclude a,b]
                                           Verify the app: route auth, served
                                           contracts, row-level security,
                                           versions, manifest; --probe attacks
@@ -770,7 +770,18 @@ if (command === 'create') {
       console.error('❌ BLOOM_CHECK_IDENTITIES must be a JSON array of { label, email, password }');
       process.exit(1);
     }
-    probe = { baseUrl, identities, allowDestructive: process.argv.includes('--destructive') };
+    // Bloom apps refuse /api requests without their frontend key; send it.
+    const frontendKey = process.env.BLOOM_FRONTEND_KEY || process.env.VITE_FRONTEND_KEY;
+    probe = {
+      baseUrl,
+      identities,
+      allowDestructive: process.argv.includes('--destructive'),
+      exclude: (() => {
+        const at = process.argv.indexOf('--probe-exclude');
+        return at === -1 ? undefined : (process.argv[at + 1] || '').split(',').map((s) => s.trim()).filter(Boolean);
+      })(),
+      ...(frontendKey ? { headers: { 'X-Frontend-Key': frontendKey } } : {}),
+    };
   }
   const report = await runCheck({
     strict: process.argv.includes('--strict'),

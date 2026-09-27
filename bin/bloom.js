@@ -514,6 +514,10 @@ Usage:
                                           contracts, row-level security,
                                           versions; --probe attacks a running
                                           local app across tenants
+  bloom upgrade [--write] [--to <ver>]    Move a Bloom 5 app to 6: pins, the
+                                          api-router swap, a CI workflow; lists
+                                          what must be done by hand. Dry run
+                                          unless --write (clean git tree)
   bloom manifest [--check]                Write bloom.manifest.json and the
                                           generated AGENTS.md API section;
                                           --check exits 1 if out of date
@@ -684,6 +688,38 @@ if (command === 'create') {
     console.error('❌ Error starting server:', error.message);
     process.exit(1);
   }
+} else if (command === 'upgrade') {
+  // Dry run by default. --write applies the mechanical edits, and only on a
+  // clean git tree so the result is one reviewable diff.
+  const { planUpgrade, applyUpgrade, formatPlan } = await import('../dist/upgrade/index.js');
+  const toAt = process.argv.indexOf('--to');
+  const version = toAt !== -1 ? process.argv[toAt + 1] : JSON.parse(readFileSync(join(__dirname, '..', 'package.json'), 'utf8')).version;
+  const write = process.argv.includes('--write');
+  const root = process.cwd();
+  if (!existsSync(join(root, 'package.json'))) {
+    console.error('❌ No package.json here. Run bloom upgrade in the app root.');
+    process.exit(1);
+  }
+  const plan = planUpgrade(root, version);
+  if (write && plan.edits.length) {
+    let dirty;
+    try {
+      dirty = execSync('git status --porcelain', { cwd: root, stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim();
+    } catch {
+      dirty = null;
+    }
+    if (dirty === null && !process.argv.includes('--force')) {
+      console.error('❌ Not a git repository. Commit the app to git first (or pass --force) so the upgrade is one reviewable diff.');
+      process.exit(1);
+    }
+    if (dirty && !process.argv.includes('--force')) {
+      console.error('❌ Uncommitted changes. Commit or stash them first (or pass --force) so the upgrade is one reviewable diff.');
+      process.exit(1);
+    }
+    applyUpgrade(root, plan);
+  }
+  const json = { version: plan.version, written: write, edits: plan.edits.map(({ after, ...e }) => e), manual: plan.manual };
+  console.log(process.argv.includes('--json') ? JSON.stringify(json, null, 2) : formatPlan(plan, write));
 } else if (command === 'manifest') {
   // Write bloom.manifest.json and the generated AGENTS.md section; with
   // --check, write nothing and exit 1 when either is out of date.

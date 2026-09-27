@@ -42,6 +42,14 @@ Work in progress on the `next` branch; see `MIGRATION-6.md`.
   output. `bloom create` writes it after install; `bloom check` reports
   `MANIFEST_STALE` / `MANIFEST_NOT_BUILT`.
 
+- **`bloom upgrade [--write] [--to <version>] [--json]`**: 5 → 6 codemods.
+  Dry run by default; `--write` needs a clean git tree. Pins the lockstep
+  versions, moves `server.ts` onto appkit's `createApiRouter`, adds the
+  check workflow, and lists the rest with fixes. Dry-run against the four
+  production apps: all four get the router swap; it also found midhuna and
+  oddits still importing `PageLayout` / `Header` / `HeaderNav` (removed in
+  uikit 4.0) and oddits skipping appkit 5's fail-closed tenant mode.
+
 - **The starter declares its routes as contracts.**
   `src/contracts/welcome.contract.ts` (public `GET /api/welcome` and
   `/api/welcome/:name`, zod params and response schemas) is served by a

@@ -4,8 +4,21 @@
 > The plan: `~/vc/production/BLOOMNEO-6-CHECKLIST.md` (Phases 6–8).
 
 Apps created by bloom 5 do not depend on bloom at runtime, so nothing breaks
-when bloom 6 ships. `bloom upgrade` (coming in 6.0) applies the 5 → 6 changes
-to an existing app.
+when bloom 6 ships. In the app root:
+
+```bash
+npx @bloomneo/bloom@6 upgrade           # dry run: what it would change, what is left to you
+npx @bloomneo/bloom@6 upgrade --write   # apply (needs a clean git tree)
+```
+
+It pins appkit, uikit and bloom to one 6.x version (adding `zod`, `tsx` and
+`@types/express`), swaps `server.ts` onto `createApiRouter` from
+`@bloomneo/appkit/server`, and adds a `bloom check` workflow. Everything it
+can't decide is listed with the file, the count and the fix: removed appkit
+and uikit APIs (matched by import and call, not by name alone), `(req as
+any).user` and middleware casts, the old router copies, removed env vars in
+`.env.example`, and the 4.x → 5 / 2.x → 4 breaking releases when an app
+skipped them.
 
 ## Versioning
 
@@ -70,9 +83,9 @@ working):
    adapter, `headerActions` and `sidebarFooter`; keep the `AuthGuard` around it.
 5. Contracts: add `src/contracts/`, include it in `tsconfig.api.json`, add an
    `@contracts/*` path (tsconfig.json) and alias (vite.config.ts).
-6. `.env`: every app needs `BLOOM_AUTH_SECRET` (32+ characters) once it serves
-   a contract — `route()` initialises appkit auth when it mounts, public
-   routes included.
+6. `.env`: an app that serves any non-public contract needs
+   `BLOOM_AUTH_SECRET` (32+ characters) — `route()` initialises appkit auth
+   when it mounts one. Public-only apps don't.
 7. Run `npx bloom check`.
 
 ## Databases

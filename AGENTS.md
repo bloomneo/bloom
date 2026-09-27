@@ -106,6 +106,18 @@ app running locally at `<url>`, and replays every id one tenant sees as the
 other (appkit's `verifyClass`): GET, plus a PATCH carrying only `{ "__appkitVerify": true }`.
 `--destructive` also replays DELETE. Use a disposable database.
 
+## `bloom upgrade`
+
+Moves a Bloom 5 app to 6. Dry run by default; `--write` applies (clean git
+tree required, `--force` overrides); `--to <version>` picks the version
+(default: this bloom's); `--json` for agents. Edits: version pins (+ `zod`,
+`tsx`, `@types/express`), `server.ts` onto `createApiRouter` from
+`@bloomneo/appkit/server`, a `bloom check` workflow. Everything else is
+listed by code with file, count and fix (`REMOVED_*`, `UPGRADE_REQ_ANY`,
+`UPGRADE_MIDDLEWARE_CAST`, `UPGRADE_OLD_API_ROUTER`, `UPGRADE_PAGE_ROUTER`,
+`UPGRADE_FROM_APPKIT_4`, `UPGRADE_FROM_UIKIT_2`, ...). Rerunning after
+`--write` plans no edits.
+
 ## `bloom manifest`
 
 Writes `bloom.manifest.json` — every contract (method, path, auth, tenant
@@ -138,6 +150,7 @@ bloom create . [template]                Scaffold into the current directory
 bloom start                              Run a scaffolded project's prod server (requires prior build)
 bloom check [--json] [--strict] [--no-db] [--probe <url>]  Verify the app (run in the app root; CI and agents: --json)
 bloom manifest [--check]                 Write bloom.manifest.json + the generated AGENTS.md API section
+bloom upgrade [--write] [--to <ver>]     Move a Bloom 5 app to 6 (dry run unless --write)
 bloom --help | -h | help                 Show usage
 bloom --version | -v | version           Print installed bloom version
 ```

@@ -9,7 +9,7 @@
  *
  * @llm-rule WHEN: Powering the admin audit page
  * @llm-rule AVOID: Exposing POST /api/audit — writes are server-side only
- * @llm-rule NOTE: Auto-discovered by api-router.ts via FBCA pattern
+ * @llm-rule NOTE: Auto-discovered by createApiRouter (@bloomneo/appkit/server) via the FBCA pattern
  */
 
 import express from 'express';

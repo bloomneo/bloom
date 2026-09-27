@@ -17,7 +17,7 @@ import { fileURLToPath } from 'url';
 import { loggerClass } from '@bloomneo/appkit/logger';
 import { errorClass } from '@bloomneo/appkit/error';
 import { configClass } from '@bloomneo/appkit/config';
-import { createApiRouter } from './lib/api-router.js';
+import { createApiRouter } from '@bloomneo/appkit/server';
 import { randomUUID } from 'node:crypto';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -219,28 +219,27 @@ async function startServer() {
   try {
     logger.info('Initializing server...');
 
-    // API routes with auto-discovery
-    app.use('/api', await createApiRouter());
-
     /*
-     * Unmatched /api/* is a 404, not the single-page app.
+     * API routes, auto-discovered from features/ by @bloomneo/appkit/server:
      *
-     * The SPA fallback below is a catch-all, and its comment claimed it served
-     * index.html "for all non-API routes" — but nothing excluded /api, so a path
-     * matching no route fell straight through to it. GET /api/does-not-exist
-     * answered 200 with a full HTML page.
+     *   features/<name>/<name>.route.ts   → mounted at /api/<name>
+     *   a default-exported contractRouter → mounted at its contracts' paths
      *
-     * That is the exact failure shared/api.ts had to grow a content-type check to
-     * survive: the client asked for JSON, got a webpage, and reported a parse
-     * error far from the mistyped path that caused it. A wrong route should say
-     * so, here, in the shape the caller expected.
+     * It also answers GET /api with every endpoint, answers unmatched /api/*
+     * with a JSON 404 (never the SPA's index.html), and warns once at boot
+     * about unguarded features, unmounted *.route.ts siblings and features
+     * that failed to load — with the real error.
+     *
+     * Boot messages go through the app logger so they land in the same
+     * stream as everything else.
      */
-    app.use('/api', (req, res) => {
-      res.status(404).json({
-        error: 'NOT_FOUND',
-        message: `No API route matches ${req.method} /api${req.path}`,
-      });
-    });
+    app.use(
+      '/api',
+      await createApiRouter({
+        featuresDir: path.join(__dirname, 'features'),
+        log: { info: (m) => logger.info(m), warn: (m) => logger.warn(m) },
+      }),
+    );
 
     // Check if frontend build exists and we're not in API-only dev mode
     const distPath = path.join(__dirname, '../../dist');

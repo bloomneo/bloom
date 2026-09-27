@@ -9,7 +9,7 @@
  */
 
 import 'dotenv/config';
-import express, { type Request } from 'express';
+import express from 'express';
 import cors from 'cors';
 import path from 'path';
 import fs from 'fs';
@@ -17,8 +17,7 @@ import { fileURLToPath } from 'url';
 import { loggerClass } from '@bloomneo/appkit/logger';
 import { errorClass } from '@bloomneo/appkit/error';
 import { configClass } from '@bloomneo/appkit/config';
-import { createApiRouter } from '@bloomneo/appkit/server';
-import { randomUUID } from 'node:crypto';
+import { createApiRouter, requestId } from '@bloomneo/appkit/server';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -43,8 +42,6 @@ function checkFrontendExists(distPath: string): boolean {
 const app = express();
 const PORT = config.get('server.port', process.env.PORT || 3000);
 
-/** Express's Request with the id the correlation middleware attaches. */
-type RequestWithId = Request & { requestId?: string };
 
 // Middleware (following AppKit recommended order)
 app.use(cors());
@@ -65,12 +62,13 @@ app.use(express.urlencoded({ extended: true }));
  * An inbound x-request-id is honoured so a proxy or a caller can supply its own
  * and the trace survives the hop.
  */
-app.use((req, res, next) => {
-  const incoming = req.get('x-request-id');
-  const requestId = incoming && incoming.length <= 200 ? incoming : randomUUID();
+// appkit's requestId() sets req.requestId, echoes x-request-id (honouring a
+// safe inbound one) and puts every log line written during the request under
+// `req=<id>`; the middleware below adds the one line per request.
+app.use(requestId());
 
-  (req as RequestWithId).requestId = requestId;
-  res.setHeader('x-request-id', requestId);
+app.use((req, res, next) => {
+  const id = req.requestId ?? '';
 
   /*
    * ── Why the facts live in the MESSAGE, not the metadata object ────────────
@@ -112,7 +110,7 @@ app.use((req, res, next) => {
     const ms = Number(process.hrtime.bigint() - startedAt) / 1e6;
     const line =
       `${req.method} ${req.originalUrl} -> ${res.statusCode} ` +
-      `${ms.toFixed(1)}ms req=${requestId.slice(0, 8)}`;
+      `${ms.toFixed(1)}ms req=${id}`;
 
     if (res.statusCode >= 500) logger.error(line);
     else if (res.statusCode >= 400) logger.warn(line);

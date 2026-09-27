@@ -38,6 +38,14 @@ Work in progress on the `next` branch; see `MIGRATION-6.md`.
 
 ### Changed
 
+- **Admin email settings are stored in the database, not `.env`.** The admin
+  layer rewrote `.env` to change the email provider, which failed on
+  read-only hosts (Fly) and needed a restart. Settings now live in
+  `app_settings` under `email.*` (API key and SMTP password encrypted with
+  `BLOOM_SECURITY_ENCRYPTION_KEY`, which the admin layer generates), are
+  applied immediately with appkit's `emailClass.reset()`, and are re-applied
+  at boot. `lib/env-file.ts` is gone. Same endpoints and response shape.
+
 - The package now has an import entry (contracts); importing it no longer
   runs the CLI (`main` pointed at `bin/bloom.js`).
 

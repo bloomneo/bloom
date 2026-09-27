@@ -81,3 +81,14 @@ SQLite stays the zero-setup default for new apps (`DATABASE_URL=file:./dev.db`).
 Postgres with `BLOOM_DB_TENANT=rls` is the production path for multi-tenant
 apps: appkit scopes every query to the caller's tenant with row-level security,
 and `bloom check` fails when a table with the tenant column lacks it.
+
+## Email settings (admin layer)
+
+Apps created from the admin layer stored email provider settings by
+rewriting `.env` (`src/api/lib/env-file.ts`). In 6.0 they live in
+`app_settings` (`email.*`), encrypted with `BLOOM_SECURITY_ENCRYPTION_KEY`,
+and apply live via `emailClass.reset()`. To move an existing app: copy
+`features/settings/email-settings.ts` from a new scaffold, point the two
+`/admin/email-env` handlers at it, add `BLOOM_SECURITY_ENCRYPTION_KEY`
+(64 hex chars) to the environment, and delete `lib/env-file.ts`.
+

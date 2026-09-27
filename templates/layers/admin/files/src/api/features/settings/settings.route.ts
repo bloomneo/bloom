@@ -20,10 +20,16 @@ import { securityClass } from '@bloomneo/appkit/security';
 import { settingsService } from './settings.service.js';
 import type { UpdateSettingInput } from './settings.types.js';
 import {
-  envPersistenceHint,
-  readEnvFile,
-  writeEnvFile,
-} from '../../lib/env-file.js';
+  EMAIL_KEYS,
+  EMAIL_SECRET_KEYS,
+  loadEmailSettings,
+  saveEmailSettings,
+  applySavedEmailSettings,
+  type EmailKey,
+} from './email-settings.js';
+
+// Saved email settings take effect at boot, not only after the next save.
+await applySavedEmailSettings();
 import { auditService } from '../audit/audit.service.js';
 
 const router = express.Router();
@@ -124,18 +130,6 @@ router.put(
  * admin UI turning into a general env editor that could, say,
  * rotate BLOOM_AUTH_SECRET.
  */
-const EMAIL_ENV_KEYS = [
-  'BLOOM_EMAIL_STRATEGY',
-  'BLOOM_EMAIL_FROM_NAME',
-  'BLOOM_EMAIL_FROM_EMAIL',
-  'RESEND_API_KEY',
-  'SMTP_HOST',
-  'SMTP_PORT',
-  'SMTP_USER',
-  'SMTP_PASS',
-] as const;
-
-const EMAIL_SECRET_KEYS = new Set<string>(['RESEND_API_KEY', 'SMTP_PASS']);
 
 function redactSecrets(values: Record<string, string>): Record<string, string> {
   const out: Record<string, string> = {};
@@ -147,36 +141,28 @@ function redactSecrets(values: Record<string, string>): Record<string, string> {
 
 /**
  * GET /api/settings/admin/email-env
- * Admin only. Returns the current email-related env values (secrets
- * masked) plus a hint about whether writes will persist.
+ * Admin only. Returns the current email settings (secrets masked):
+ * saved values, falling back to the environment.
  */
 router.get(
   '/admin/email-env',
   auth.requireLoginToken(),
   auth.requireUserRoles(['admin.system']),
   error.asyncRoute(async (_req, res) => {
-    const file = readEnvFile();
-    const values: Record<string, string> = {};
-    for (const key of EMAIL_ENV_KEYS) {
-      // Prefer the live process.env value (survives if dotenv already
-      // loaded it) and fall back to the file so a stale process can
-      // still show what's on disk.
-      values[key] = process.env[key] ?? file[key] ?? '';
-    }
+    const values = await loadEmailSettings();
     res.json({
       values: redactSecrets(values),
-      // Tells the UI whether the saved values are likely to survive a
-      // restart on this host. UI shows a disclaimer banner when not
-      // 'reliable'.
-      persistence: envPersistenceHint(),
+      // Stored in the database and applied live, so saves always persist.
+      persistence: 'reliable',
     });
   }),
 );
 
 /**
  * PUT /api/settings/admin/email-env
- * Admin only. Merges the submitted keys into the .env file + the
- * current process.env. Only keys in EMAIL_ENV_KEYS are accepted.
+ * Admin only. Saves the submitted keys (secrets encrypted) to app_settings
+ * and applies them immediately via emailClass.reset(). Only EMAIL_KEYS are
+ * accepted.
  *
  * Secrets sent as '********' (the UI's placeholder for
  * "don't overwrite") are skipped — saving a partial form shouldn't
@@ -190,7 +176,7 @@ router.put(
   error.asyncRoute(async (req, res) => {
     const body = (req.body ?? {}) as Record<string, string>;
     const updates: Record<string, string> = {};
-    const allowed = new Set<string>(EMAIL_ENV_KEYS);
+    const allowed = new Set<string>(EMAIL_KEYS);
 
     for (const [key, rawValue] of Object.entries(body)) {
       if (!allowed.has(key)) continue;
@@ -200,7 +186,7 @@ router.put(
       updates[key] = rawValue;
     }
 
-    writeEnvFile(updates);
+    await saveEmailSettings(updates as Partial<Record<EmailKey, string>>, String(req.user?.userId ?? ''));
 
     // Audit the change. Mask secrets in the audit entry itself so
     // reviewing the audit log doesn't leak credentials.
@@ -208,7 +194,7 @@ router.put(
       actorId: String(req.user?.userId ?? ''),
       actorType: 'admin',
       action: 'email.config.update',
-      entityType: 'env',
+      entityType: 'setting',
       description: 'Email provider config updated',
       newValue: Object.fromEntries(
         Object.entries(updates).map(([k, v]) => [
@@ -220,14 +206,10 @@ router.put(
       userAgent: req.get('user-agent') ?? undefined,
     });
 
-    const file = readEnvFile();
-    const values: Record<string, string> = {};
-    for (const key of EMAIL_ENV_KEYS) {
-      values[key] = process.env[key] ?? file[key] ?? '';
-    }
+    const values = await loadEmailSettings();
     res.json({
       values: redactSecrets(values),
-      persistence: envPersistenceHint(),
+      persistence: 'reliable',
     });
   }),
 );

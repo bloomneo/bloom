@@ -12,7 +12,8 @@
     "db:seed:admin": "node prisma/seeding/settings.seed.js"
   },
   "env": {
-    "ADMIN_USER_ROLES": "admin:system,moderator:manage,user:basic"
+    "ADMIN_USER_ROLES": "admin:system,moderator:manage,user:basic",
+    "BLOOM_SECURITY_ENCRYPTION_KEY": "{{GENERATE_HEX:64}}"
   },
   "next": [
     "npm run db:seed:admin   # load the default settings (after the auth layer's db push)",

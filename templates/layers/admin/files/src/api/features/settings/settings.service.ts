@@ -122,7 +122,10 @@ export const settingsService = {
    */
   async getAllSettings(): Promise<SettingRow[]> {
     const db = await databaseClass.get();
+    // Email provider settings (email.*) have their own form and encrypted
+    // secrets; keep them out of the general list.
     const rows = await db.appSetting.findMany({
+      where: { NOT: { key: { startsWith: 'email.' } } },
       orderBy: { key: 'asc' },
     });
     return rows as SettingRow[];

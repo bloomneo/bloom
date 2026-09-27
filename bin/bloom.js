@@ -6,7 +6,7 @@
  */
 
 import { execSync } from 'child_process';
-import { randomInt } from 'crypto';
+import { randomInt, randomBytes } from 'crypto';
 import {
   appendFileSync,
   copyFileSync,
@@ -415,7 +415,14 @@ function writeLayerEnv(layers, verbose, serviceName = 'app') {
     entries.push(`# ── ${name} ${'─'.repeat(Math.max(0, 66 - name.length))}`);
     for (const [key, raw] of Object.entries(meta.env)) {
       const gen = String(raw).match(/^\{\{GENERATE:([a-z_]*):(\d+)\}\}$/);
-      entries.push(`${key}=${gen ? generateRandomSecret(gen[1], Number(gen[2])) : raw}`);
+      // {{GENERATE_HEX:64}}: raw key material (e.g. an AES-256 key) as hex.
+      const hex = String(raw).match(/^\{\{GENERATE_HEX:(\d+)\}\}$/);
+      const value = gen
+        ? generateRandomSecret(gen[1], Number(gen[2]))
+        : hex
+          ? randomBytes(Math.ceil(Number(hex[1]) / 2)).toString('hex').slice(0, Number(hex[1]))
+          : raw;
+      entries.push(`${key}=${value}`);
     }
     entries.push('');
   }

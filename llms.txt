@@ -5,10 +5,13 @@ backend) and `@bloomneo/uikit` (React frontend) with Feature-Based
 Component Architecture (FBCA). Cross-surface: web, desktop (Electron),
 mobile (Capacitor).
 
-This file is the canonical machine-readable reference for the bloom CLI.
+This file is the canonical machine-readable reference for the bloom CLI
+(`bloom create`, `bloom check`, `bloom start`) and the route-contract API.
 Agents working in a scaffolded project should read the project's own
-`docs/appkit.md` + `docs/uikit.md` for library APIs — this file is only
-about `bloom create` and `bloom start`.
+`docs/appkit.md` + `docs/uikit.md` for library APIs.
+
+appkit, uikit and bloom release together on one version; a new app pins all
+three to `^6.0.0-alpha.0`.
 
 ---
 
@@ -34,6 +37,12 @@ const invoice = await api.call(getInvoice, { params: { id } });
 Exports: `defineRoute`, `createClient`, `ApiError`, `validate`, `buildPath`,
 `isContract`, `isTenantScoped`, contract types.
 
+Serving a contract (appkit): `export default await contractRouter([route(getInvoice,
+async ({ params, query, body, user }) => …)])` from `@bloomneo/appkit/server` in
+`src/api/features/<name>/<name>.route.ts`. `route()` applies the auth decision,
+the tenant context and validation (400 `VALIDATION_ERROR`); the handler returns
+the body.
+
 ---
 
 ## Commands
@@ -52,6 +61,15 @@ bloom create my-app userapp --verbose        # Debug logging
 
 Refuses to overwrite an existing directory (except `.`). Exits 1 on
 conflict.
+
+### `bloom check [--json] [--strict] [--no-db]`
+
+Run in an app root. Reports route files with no auth decision
+(`ROUTE_NO_AUTH_DECISION`), tenant tables without row-level security when
+`BLOOM_DB_TENANT=rls` (`RLS_TABLE_UNPROTECTED`, `RLS_NOT_CHECKED`), 6.x
+version drift (`VERSIONS_OUT_OF_STEP`) and, as info, apps with no contracts
+(`CONTRACTS_NONE`). Exit 1 when something must change; `--strict` fails on
+warnings too; `--no-db` skips the database check. A fresh scaffold passes.
 
 ### `bloom start`
 
@@ -84,6 +102,15 @@ Every preset is the `app` base plus layers (`auth`, `admin`, `desktop`,
 | `desktop-userapp` | auth, desktop | Electron wrapper | Prisma | `npx prisma db push && npm run dev:desktop` |
 | `mobile-basicapp` | mobile | Capacitor wrapper (iOS/Android) | — | `npm run mobile:add:ios` then `npm run mobile:ios` |
 
+`--legacy` and the frozen pre-5.1 template directories were removed in 6.0
+(`bloom create --legacy` exits 1). `npx @bloomneo/bloom@5 create` reproduces an
+old tree exactly.
+
+Databases: SQLite is the zero-setup default (`DATABASE_URL=file:./dev.db`).
+Production, and every multi-tenant app, uses Postgres with
+`BLOOM_DB_TENANT=rls` — appkit scopes queries to the caller's tenant with
+row-level security, and `bloom check` verifies the policies.
+
 ### Template picker
 
 - **Plain fullstack web app** → `basicapp`
@@ -100,15 +127,25 @@ Every template includes:
 
 - `AGENTS.md` — project-level agent rules (placeholders replaced at
   scaffold + re-filled by postinstall)
-- `package.json` — pins `@bloomneo/uikit@^4.1.6` + `@bloomneo/appkit@^5.1.2`,
-  plus a `postinstall` hook
+- `package.json` — pins `@bloomneo/appkit`, `@bloomneo/uikit` and
+  `@bloomneo/bloom` to one `^6.0.0-alpha.0`, plus `zod` and a `postinstall` hook
 - `scripts/copy-agent-docs.js` — postinstall script that populates:
   - `docs/appkit.md`, `docs/appkit-agents.md`
   - `docs/uikit.md`, `docs/uikit-agents.md`
   - `.claude/skills/` (every appkit + uikit skill)
-- `src/web/` (or `src/mobile/`) with FBCA feature structure
-- `src/api/` (web + desktop templates) with appkit + feature routes
-- Language: TypeScript; bundler: Vite; router: FBCA auto-discovery
+- `src/web/` with FBCA feature structure; `src/web/pages.ts` holds the page
+  glob that `<PageRouter>` (`@bloomneo/uikit/router`) routes from
+- `src/api/server.ts` mounting `createApiRouter` (`@bloomneo/appkit/server`),
+  with the frontend-key gate, request ids, `/health` and `POST /api/client-error`
+- `src/contracts/welcome.contract.ts` — the starter's public welcome routes as
+  contracts, served by `features/welcome/welcome.route.ts` and called from the
+  home page through `src/web/shared/client.ts`
+- auth layer: `/dashboard` is uikit's `AppShell` inside `AuthGuard`, with nav
+  collected from `shared/nav.*.ts`
+- `.env` with `VITE_API_URL`, `BLOOM_SERVICE_NAME`, matching
+  `BLOOM_FRONTEND_KEY`/`VITE_FRONTEND_KEY`, `BLOOM_AUTH_SECRET`, and each
+  layer's variables
+- Language: TypeScript; bundler: Vite
 
 ---
 
@@ -139,17 +176,30 @@ Every template includes:
 ## FBCA in scaffolded projects
 
 Features live under `src/web/features/<name>/pages/`. Each `.tsx` file
-becomes a route. Auto-discovery via `import.meta.glob` — no manual
-route registration. Dynamic segments use `[param]`; catch-all uses
-`[...path]`.
+becomes a route (`main` maps to `/`). Discovery is the glob in
+`src/web/pages.ts` — no manual route registration. Dynamic segments use
+`[param]`; catch-all uses `[...path]`; `_`-prefixed files and folders are not
+routes.
 
-Adding a new page = creating a file. Don't edit the page-router.
+Adding a new page = creating a file. Adding an API feature = creating
+`src/api/features/<name>/<name>.route.ts` (a plain router with a guard or
+`isPublic`, or a `contractRouter`). The app has no router of its own to edit.
 
 ---
 
 ## Migration
 
 Current release: **6.0.0-alpha.0** (pre-release of 6.0; stable is 5.3.3).
+
+### 6.0.0 (alpha) The starter is built on the 6.0 framework pieces: the API
+router is `createApiRouter` from `@bloomneo/appkit/server`, the page router is
+`<PageRouter>` from `@bloomneo/uikit/router` (the app keeps the glob in
+`src/web/pages.ts`), the dashboard shell is uikit's `AppShell`, and the welcome
+routes are contracts (`src/contracts/welcome.contract.ts`) called through a
+typed client. Apps depend on `@bloomneo/bloom` and `zod`; bcrypt,
+jsonwebtoken, helmet and morgan are no longer declared. `BLOOM_AUTH_SECRET` is
+in every app's `.env`. The frozen legacy templates and `--legacy` are gone.
+See `MIGRATION-6.md`.
 
 ### 5.3.3 Apps created by 5.3.2 did not compile: the `/api`
 404 handler in `server.ts` was never closed. 5.3.3 closes it, and every preset

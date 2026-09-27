@@ -1,444 +1,206 @@
-# 🌸 Bloom Framework
+# Bloom Framework
 
-A modern fullstack framework that combines **@bloomneo/uikit** (React frontend) and **@bloomneo/appkit** (Express backend) with Feature-Based Component Architecture (FBCA). One CLI scaffolds web, desktop (Electron), and mobile (Capacitor) apps from the same project.
+A full-stack framework that combines **@bloomneo/uikit** (React frontend) and **@bloomneo/appkit** (Express backend) with Feature-Based Component Architecture (FBCA). One CLI scaffolds web, desktop (Electron) and mobile (Capacitor) apps from the same project, and `@bloomneo/bloom` itself provides the route contracts both halves share.
 
 [![npm version](https://img.shields.io/npm/v/@bloomneo/bloom.svg)](https://www.npmjs.com/package/@bloomneo/bloom)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ```bash
 npm install -g @bloomneo/bloom
-bloom create my-app                # basicapp template
-bloom create my-app userapp        # auth + user management
+bloom create my-app                  # basicapp: web + API
+bloom create my-app userapp          # + sign-in, users, dashboard
+bloom create my-app adminapp         # + admin console
 bloom create my-app mobile-basicapp  # iOS + Android via Capacitor
 bloom create my-app desktop-basicapp # desktop via Electron
 ```
 
-## ✨ Features
+appkit, uikit and bloom are released together on one version (6.x). A new app
+pins all three to the same caret range.
 
-- 🎯 **Feature-Based Component Architecture (FBCA)** - Zero-config convention-based routing
-- ⚡ **Fullstack Integration** - Seamless frontend-backend communication
-- 🎨 **UIKit Components** - Production-ready React components with multiple themes
-- 🔧 **AppKit Backend** - Express.js with structured logging and error handling
-- 🚀 **Auto-Discovery Routing** - File-based routing similar to Next.js
-- 🔄 **Hot Reload** - Fast development with Vite and nodemon
-- 📦 **Zero Configuration** - Convention over configuration approach
-- 🎭 **Multi-Theme Support** - Built-in theme system (base, elegant, metro, studio, vivid)
-- 🖥️ **Desktop App Support** - Cross-platform desktop apps with Electron
-- 📱 **Mobile App Support** - Native iOS and Android apps with Capacitor
+## Features
 
-## 📦 Templates
+- **File-based pages** — `features/<name>/pages/**` become URLs through `@bloomneo/uikit/router`; the app keeps one glob.
+- **Feature-discovered API** — `features/<name>/<name>.route.ts` is mounted at `/api/<name>` by `@bloomneo/appkit/server`.
+- **Route contracts** — declare a route once (method, path, zod schemas, `auth`); the server enforces it and the client is typed from it.
+- **`bloom check`** — every route has an auth decision, tenant tables have row-level security, framework versions are in step.
+- **App shell** — the signed-in area is uikit's `AppShell` (sidebar, icon-rail collapse, mobile sheet, header).
+- **One log** — every request logged on completion with a request id; browser crashes reported to the same log.
+- **Desktop and mobile** — Electron and Capacitor wrap the same web build.
 
-- **basicapp** - Basic fullstack app with routing and features (default)
-- **userapp** - Complete user management with authentication, roles, admin panel, and database
-- **adminapp** - userapp + audit log, settings editor, dashboard, mobile bottom-nav, and public marketing + legal pages
-- **desktop-basicapp** - Cross-platform Electron desktop app with FBCA architecture
-- **desktop-userapp** - userapp wrapped as an Electron desktop app
-- **mobile-basicapp** - Native iOS and Android app with Capacitor 6 (wraps the same web build)
+## Templates
 
-## 🚀 Quick Start
+Every template is the `app` base plus layers. Flags add layers to any
+template: `bloom create my-app --auth --mobile`.
 
-### Installation
+| Template | Layers | What you get |
+|---|---|---|
+| `basicapp` (default) | — | Web app + API, pages, layouts, the welcome contract |
+| `userapp` | auth | Sign-in, registration, password reset, users, dashboard (Prisma) |
+| `adminapp` | auth, admin | userapp + admin console: users, audit log, settings |
+| `desktop-basicapp` | desktop | basicapp wrapped as an Electron app |
+| `desktop-userapp` | auth, desktop | userapp wrapped as an Electron app |
+| `mobile-basicapp` | mobile | basicapp wrapped for iOS and Android with Capacitor |
+
+The frozen pre-5.1 template directories and `--legacy` were removed in 6.0.
+For the exact old tree: `npx @bloomneo/bloom@5 create ...`.
+
+## Quick start
 
 ```bash
-npm install -g @bloomneo/bloom
-```
-
-### Create New Project
-
-```bash
-# Basic app (default)
-bloom create my-app
+bloom create my-app userapp
 cd my-app
-npm run dev
-
-# User management app
-bloom create my-userapp userapp
-cd my-userapp
-npx prisma db push
-npm run db:seed
-npm run dev
-
-# Admin console app (auth + users + audit log + settings dashboard)
-bloom create my-adminapp adminapp
-cd my-adminapp
-npx prisma db push
-npm run db:seed
-npm run dev
-
-# Desktop app (Electron)
-bloom create my-desktop-app desktop-basicapp
-cd my-desktop-app
-npm run dev
-
-# Mobile app (iOS + Android)
-bloom create my-mobile-app mobile-basicapp
-cd my-mobile-app
-npm install
-npm run dev                      # Start dev server
-npm run mobile:run:ios          # Run on iOS simulator
-npm run mobile:run:android      # Run on Android emulator
+npx prisma db push      # create the database (SQLite by default)
+npm run db:seed         # one user per role
+npm run dev             # API on :3000, web on :5173
 ```
 
-Your fullstack app runs on:
-- **Web Apps**: Frontend (http://localhost:5173) + Backend (http://localhost:3000)
-- **Desktop Apps**: Electron window (http://localhost:5183) + Backend (http://localhost:3000)
-- **Mobile Apps**: Native iOS/Android apps connecting to dev server (http://localhost:5173)
+`bloom create` prints the next steps for the layers it applied.
 
-## 📁 Project Structure
+### Databases
 
-### Web App Structure
+SQLite is the zero-setup default (`DATABASE_URL=file:./dev.db`), so a new app
+runs with nothing installed. For production — and for any multi-tenant app —
+use Postgres with `BLOOM_DB_TENANT=rls`: appkit then scopes every query to the
+caller's tenant with row-level security, and `bloom check` verifies that every
+table with a tenant column has RLS enabled, forced and a policy.
+
+## Project structure
 
 ```
 my-app/
 ├── src/
-│   ├── api/                    # Backend (AppKit)
+│   ├── contracts/
+│   │   └── welcome.contract.ts      # routes declared once, shared by web and API
+│   ├── api/                         # Express + @bloomneo/appkit
 │   │   ├── features/
-│   │   │   └── welcome/
-│   │   │       ├── welcome.route.ts
-│   │   │       └── welcome.service.ts
-│   │   ├── lib/
-│   │   └── server.ts
-│   └── web/                    # Frontend (UIKit)
-│       ├── features/
-│       │   ├── main/
-│       │   │   └── pages/
-│       │   │       └── index.tsx    # → /
-│       │   ├── gallery/
-│       │   │   └── pages/
-│       │   │       └── index.tsx    # → /gallery
-│       │   └── welcome/
-│       │       └── pages/
-│       │           └── index.tsx    # → /welcome
+│   │   │   ├── welcome/
+│   │   │   │   ├── welcome.route.ts     # contractRouter([route(getWelcome, …)])
+│   │   │   │   └── welcome.service.ts
+│   │   │   └── client-error/            # browser crash reports → server log
+│   │   └── server.ts                # createApiRouter, frontend key, request ids
+│   └── web/                         # React + @bloomneo/uikit
+│       ├── features/main/pages/     # index.tsx → /, about.tsx → /about …
+│       ├── pages.ts                 # the page glob <PageRouter> routes from
 │       ├── shared/
+│       │   ├── client.ts            # typed contract client
+│       │   ├── api.ts               # path-based client for plain routers
+│       │   └── layouts.tsx          # layout registry (layout.*.tsx)
 │       └── main.tsx
-├── dist/                       # Production build
-├── package.json
-└── tsconfig.json
+├── AGENTS.md                        # rules for coding agents
+├── docs/                            # framework docs, copied on npm install
+└── .env                             # generated, with secrets unique to the app
 ```
 
-### Desktop App Structure
-
-```
-my-desktop-app/
-├── src/
-│   └── desktop/
-│       ├── main/               # Backend (AppKit + Express)
-│       │   ├── features/
-│       │   ├── lib/
-│       │   └── server.ts
-│       └── renderer/           # Frontend (UIKit + React)
-│           ├── features/
-│           ├── shared/
-│           └── main.tsx
-├── electron/
-│   └── main.js                 # Electron main process
-├── dist/                       # Production build
-└── package.json
-```
-
-## 🎯 Feature-Based Architecture
-
-### Convention-Based Routing
-
-Bloom uses file-based routing where file paths automatically become routes:
+## Pages
 
 ```
 src/web/features/main/pages/index.tsx     → /
-src/web/features/gallery/pages/index.tsx  → /gallery
 src/web/features/blog/pages/index.tsx     → /blog
 src/web/features/blog/pages/[slug].tsx    → /blog/:slug
 src/web/features/docs/pages/[...path].tsx → /docs/*
+src/web/features/blog/pages/_card.tsx     → not a route (co-located helper)
 ```
 
-### Creating a New Feature
+Creating the file creates the route — the dev server picks it up without a
+restart. Every page is lazy-loaded inside a Suspense and an error boundary,
+and unknown paths get a 404. Layouts (`shared/layout.*.tsx`) wrap groups of
+pages: the auth layer's `/dashboard` shell is uikit's `AppShell` inside an
+`AuthGuard`.
 
-1. Create feature directory:
+## API routes and contracts
 
-```bash
-mkdir -p src/web/features/products/pages
+Declare the route:
+
+```ts
+// src/contracts/products.contract.ts
+import { z } from 'zod';
+import { defineRoute } from '@bloomneo/bloom';
+
+export const Product = z.object({ id: z.string(), name: z.string() });
+
+export const listProducts = defineRoute({
+  method: 'GET',
+  path: '/api/products',
+  query: z.object({ page: z.coerce.number().default(1) }),
+  response: z.array(Product),
+  auth: 'user',            // required: 'public' | 'user' | 'apiToken' | { roles: [...] }
+});
 ```
 
-2. Add a page component:
+Serve it:
 
-```tsx
-// src/web/features/products/pages/index.tsx
-import React from 'react';
-import { PageLayout } from '@bloomneo/uikit';
-
-const ProductsPage: React.FC = () => {
-  return (
-    <PageLayout>
-      <PageLayout.Content>
-        <h1>Products</h1>
-        <p>Your products page content here</p>
-      </PageLayout.Content>
-    </PageLayout>
-  );
-};
-
-export default ProductsPage;
-```
-
-3. Route `/products` is automatically available!
-
-## 🔧 Backend API Integration
-
-### Built-in API Hooks
-
-Bloom includes generic API hooks that auto-detect your environment:
-
-```tsx
-import { useApi } from '@bloomneo/uikit';
-
-const MyComponent = () => {
-  const { loading, error, get, post } = useApi();
-
-  const fetchData = async () => {
-    const result = await get('/api/welcome');
-    console.log(result);
-  };
-
-  return (
-    <button onClick={fetchData} disabled={loading}>
-      {loading ? 'Loading...' : 'Fetch Data'}
-    </button>
-  );
-};
-```
-
-### Backend Status Checking
-
-```tsx
-import { useBackendStatus } from '@bloomneo/uikit';
-
-const StatusCheck = () => {
-  const { isConnected, loading, checkStatus } = useBackendStatus();
-
-  return (
-    <div>
-      {isConnected ? '✅ Backend Connected' : '❌ Backend Disconnected'}
-    </div>
-  );
-};
-```
-
-## 📜 Available Scripts
-
-### Web App Scripts
-
-```bash
-npm run dev          # Both API (3000) + Web (5173)
-npm run dev:api      # Backend only
-npm run dev:web      # Frontend only
-npm run build        # Build both frontend and backend
-npm start           # Start production server
-```
-
-### Desktop App Scripts
-
-```bash
-npm run dev          # Both backend + Electron window
-npm run dev:web      # Vite dev server only (5183)
-npm run dev:electron # Electron window only
-npm run build        # Build both frontend and backend
-npm run electron:build # Build distributable desktop app
-npm start           # Start Electron in production mode
-```
-
-### Mobile App Scripts
-
-```bash
-npm run dev                  # Start dev server for hot reload
-npm run mobile:sync:android # Sync Android platform
-npm run mobile:sync:ios     # Sync iOS platform
-npm run mobile:run:android  # Run on Android emulator
-npm run mobile:run:ios      # Run on iOS simulator
-npm run android:build       # Build Android APK
-npm run ios:build           # Build iOS .app
-```
-
-### UserApp Database Commands
-
-```bash
-npm run db:generate  # Generate Prisma client
-npm run db:push     # Push schema to database
-npm run db:seed     # Seed with sample data
-```
-
-## 🎨 Themes
-
-Bloom includes 5 built-in themes:
-
-- **base** - Clean default configuration
-- **elegant** - Fresh sky blue theme with clean design
-- **metro** - Dark teal theme with bright yellow accents
-- **studio** - Sophisticated neutral theme with golden accents
-- **vivid** - Premium cursive theme with sophisticated typography
-
-Change theme in your components:
-
-```tsx
-import { useTheme } from '@bloomneo/uikit';
-
-const { theme, setTheme } = useTheme();
-setTheme('elegant');
-```
-
-## 🔧 Configuration
-
-### Environment Variables
-
-Create `.env` file in your project root:
-
-```env
-# Backend Configuration
-PORT=3000
-NODE_ENV=development
-BLOOM_FRONTEND_KEY=your-secret-key
-
-# API Configuration
-VITE_API_URL=http://localhost:3000
-```
-
-For **adminapp**, additional variables are generated in `.env`:
-
-```env
-# Admin Configuration
-ADMIN_USER_ROLES=admin.system:100,moderator.manage:50,user.basic:10
-ADMIN_ENABLE_AUDIT_LOG=true
-ADMIN_DASHBOARD_WIDGETS=users,signups,activity
-```
-
-### TypeScript Configuration
-
-Bloom includes optimized TypeScript configurations:
-
-- `tsconfig.json` - Frontend configuration
-- `tsconfig.api.json` - Backend configuration
-
-## 🌟 Examples
-
-### API Route (Backend)
-
-```typescript
+```ts
 // src/api/features/products/products.route.ts
-import express from 'express';
-import { errorClass } from '@bloomneo/appkit/error';
-import { loggerClass } from '@bloomneo/appkit/logger';
+import { route, contractRouter } from '@bloomneo/appkit/server';
+import { listProducts } from '../../../contracts/products.contract.js';
+import { productService } from './products.service.js';
 
-const router = express.Router();
-const error = errorClass.get();
-const logger = loggerClass.get('products');
-
-router.get(
-  '/',
-  error.asyncRoute(async (req, res) => {
-    logger.info('Getting products');
-    const products = await getProducts();
-    res.json(products);
-  })
-);
-
-export default router;
+export default await contractRouter([
+  route(listProducts, ({ query, user }) => productService.list(user, query.page)),
+]);
 ```
 
-### Page Component (Frontend)
+`route()` applies the auth decision, the tenant context and validation from the
+contract; the handler returns the body. Call it from the web:
 
-```tsx
-// src/web/features/products/pages/index.tsx
-import React, { useEffect, useState } from 'react';
-import { useApi, Button, Card } from '@bloomneo/uikit';
+```ts
+import { client } from '@/shared/client';
+import { listProducts } from '@contracts/products.contract';
 
-const ProductsPage = () => {
-  const [products, setProducts] = useState([]);
-  const { loading, get } = useApi();
-
-  useEffect(() => {
-    const loadProducts = async () => {
-      const data = await get('/api/products');
-      setProducts(data);
-    };
-    loadProducts();
-  }, []);
-
-  return (
-    <div className="space-y-4">
-      <h1>Products</h1>
-      {loading ? (
-        <p>Loading...</p>
-      ) : (
-        products.map((product) => (
-          <Card key={product.id}>
-            <h2>{product.name}</h2>
-            <p>{product.description}</p>
-          </Card>
-        ))
-      )}
-    </div>
-  );
-};
-
-export default ProductsPage;
+const products = await client.call(listProducts, { query: { page: 2 } }); // typed
 ```
 
-## 📚 Dependencies
+Plain Express routers (`export default router`) keep working next to
+contracts; guard them with `auth.requireLoginToken()` or declare them public
+with `export const isPublic = true`.
 
-### Core Dependencies (Web Apps)
+## bloom check
 
-- `@bloomneo/uikit` - React component library with FBCA support
-- `@bloomneo/appkit` - Express backend framework with structured logging
-- `react` & `react-dom` - React framework
-- `react-router-dom` - Client-side routing
-- `express` - Backend framework
-- `cors` - Cross-origin resource sharing
-- `dotenv` - Environment variable loading
+```bash
+npx bloom check            # human-readable
+npx bloom check --json     # for CI and agents
+npx bloom check --strict   # warnings fail too
+npx bloom check --no-db    # skip the row-level security check
+```
 
-### Core Dependencies (Desktop Apps)
+Each finding names the file, the rule and the fix; exit code 1 means something
+must change.
 
-- All web app dependencies, plus:
-- `electron` - Cross-platform desktop application framework
-- `electron-builder` - Package and build desktop apps
-- `wait-on` - Wait for ports to be ready
-- `cross-env` - Cross-platform environment variables
-- `helmet` - Security headers
-- `morgan` - HTTP request logger
+## Scripts
 
-### Development Dependencies
+```bash
+npm run dev          # API (3000) + web (5173)
+npm run dev:api      # API only
+npm run dev:web      # web only
+npm run typecheck    # web and API
+npm run build        # web + API into dist/
+npm start            # production server (serves the web build too)
+```
 
-- `vite` - Fast frontend build tool
-- `typescript` - Type safety
-- `nodemon` - Backend auto-reload (web apps)
-- `concurrently` - Run multiple commands
-- `tsx` - TypeScript execution
-- `eslint` - Code linting
+Layers add their own: `db:push`, `db:seed`, `db:studio` (auth),
+`db:seed:admin` (admin), `dev:desktop`, `build:desktop` (desktop),
+`mobile:add:ios`, `mobile:ios`, `mobile:android` (mobile).
 
-## 🤝 Contributing
+## Environment
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+`bloom create` writes `.env` with values unique to the app:
 
-## 📄 License
+```env
+VITE_API_URL=http://localhost:3000
+BLOOM_SERVICE_NAME=my-app
+BLOOM_FRONTEND_KEY=bloom_…      # production rejects /api calls without it
+VITE_FRONTEND_KEY=bloom_…       # the web client sends it; keep the two equal
+BLOOM_AUTH_SECRET=auth_…        # signs every JWT
+DATABASE_URL=file:./dev.db      # auth layer
+```
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+## Links
 
-## 🔗 Links
+- [UIKit](https://github.com/bloomneo/uikit)
+- [AppKit](https://github.com/bloomneo/appkit)
+- [Migrating to 6](./MIGRATION-6.md)
+- [Changelog](./CHANGELOG.md)
 
-- [UIKit Documentation](https://github.com/bloomneo/uikit)
-- [AppKit Documentation](https://github.com/bloomneo/appkit)
-- [FBCA Guide](https://docs.bloomneo.com/fbca)
+## License
 
-## 💖 Support
-
-If you like Bloom Framework, please consider:
-
-- ⭐ Starring the repository
-- 🐛 Reporting bugs and issues
-- 💡 Contributing new features
-- 📖 Improving documentation
-
----
-
-Made with ❤️ by the Bloomneo team
+MIT — see [LICENSE](LICENSE).

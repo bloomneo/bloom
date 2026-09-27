@@ -9,7 +9,9 @@
 |---|---|---|
 | A UIKit component's props | `node_modules/@bloomneo/uikit/dist/types/index.d.ts` | ~1.3k tok, complete public API |
 | An AppKit module's API | `node_modules/@bloomneo/appkit/dist/<module>/index.d.ts` | small, per-module |
-| A route this app serves | `src/web/shared/api-routes.ts` | generated, always current |
+| A contract route (method, path, schemas, auth) | `src/contracts/*.contract.ts` | the source of truth for both sides |
+| A plain-router route this app serves | `src/web/shared/api-routes.ts` | generated, always current |
+| Contracts, the client, `bloom check` | `node_modules/@bloomneo/bloom/llms.txt` | short |
 | Long-form explanation | `docs/` | ~23k tok — last resort, not first |
 
 The `.d.ts` is authoritative and matches the installed version. The prose does
@@ -25,13 +27,28 @@ that compiled cleanly. Strings are the failure surface.
 // ✗ compiles, 404s at runtime
 fetch('/api/user')
 
-// ✓ compile error if the route does not exist
+// ✓ a contract: path, params and response type all come from it
+import { client } from '@/shared/client';
+import { getWelcomeByName } from '@contracts/welcome.contract';
+const hello = await client.call(getWelcomeByName, { params: { name: 'Ada' } });
+
+// ✓ a plain router: compile error if the route does not exist
 import { api } from '@/shared/api';
 api.get('/api/user/admin/users')
 ```
 
-- **API calls** → `api.get/post/patch/delete` from `@/shared/api`. Never call
-  `fetch` directly. The client owns the base URL, the JWT and error shape.
+- **New API routes are contracts.** Declare the route in
+  `src/contracts/<name>.contract.ts` with `defineRoute` (from
+  `@bloomneo/bloom`) — `auth` is required: `'public'`, `'user'`, `'apiToken'`
+  or `{ roles: ['admin.system'] }`. Serve it from
+  `src/api/features/<name>/<name>.route.ts` with
+  `export default await contractRouter([route(contract, handler)])` (from
+  `@bloomneo/appkit/server`). Call it with `client.call(contract, input)`. A
+  contract file imports only `zod` and `@bloomneo/bloom` — both builds
+  compile it.
+- **API calls** → `client.call` (contracts) or `api.get/post/patch/delete`
+  from `@/shared/api` (plain routers). Never call `fetch` directly. The
+  clients own the base URL, the JWT, the frontend key and the error shape.
 - **Routes** → typed by `ApiRoute`, generated from the route files by
   `npm run gen:routes` (runs automatically on `npm run dev`).
 - **Roles** → `role.level` pairs, e.g. `'admin.system'`. The full list is in
@@ -39,6 +56,15 @@ api.get('/api/user/admin/users')
 
 ## Backend conventions
 
+- The API router is `createApiRouter` from `@bloomneo/appkit/server`
+  (mounted in `server.ts`). There is no router file in the app to edit: a
+  feature folder with a `<name>.route.ts` IS the registration.
+- **Every route has an auth decision**: the contract's `auth`, an
+  `auth.requireLoginToken()` / `requireUserRoles()` guard, or
+  `export const isPublic = true` in a plain router. `npx bloom check` fails
+  on a route file without one — run it after adding routes.
+- In a contract handler, don't re-check auth or re-validate input: `route()`
+  already applied the contract. Return the body; throw `error.notFound()` etc.
 - Get instances via `xxxClass.get()` — never `new SomethingClass()`.
 - Wrap async handlers: `error.asyncRoute(async (req, res) => { … })`.
 - **One route file per feature**: `features/<name>/<name>.route.ts` and no
@@ -54,11 +80,22 @@ api.get('/api/user/admin/users')
 ## Frontend conventions
 
 - A file's location is its URL. `features/todo/pages/index.tsx` → `/todo`.
-  Prefix with `_` to keep a file out of routing.
+  Prefix with `_` to keep a file out of routing. The router is `<PageRouter>`
+  from `@bloomneo/uikit/router`; the app's only routing code is the glob in
+  `src/web/pages.ts`.
+- The signed-in shell is uikit's `AppShell` (in
+  `shared/DashboardLayoutRoute.tsx`, auth layer). Don't hand-roll a sidebar.
 - Adding a sidebar entry means editing `shared/nav.base.ts` (auth layer) —
   layers contribute their own `nav.<layer>.ts`.
 - Never set a `theme-*` class on `<html>` by hand — `ThemeProvider` strips any
   class it did not set, and the change vanishes with no error.
+
+## Database
+
+SQLite (`DATABASE_URL=file:./dev.db`) is the zero-setup default. Production,
+and any multi-tenant app, runs on Postgres with `BLOOM_DB_TENANT=rls` — appkit
+scopes queries to the caller's tenant with row-level security, and
+`npx bloom check` fails on a tenant table without it.
 
 ## After changing the Prisma schema
 

@@ -1,9 +1,10 @@
 # AGENTS.md — @bloomneo/bloom
 
 > Rules for AI coding agents using `bloom` (v6.0.0-alpha.0) to scaffold full-stack
-> applications that combine `@bloomneo/appkit` (Express backend, pinned
-> `^5.1.2`) and `@bloomneo/uikit` (React frontend, pinned `^4.1.6`) via
-> Feature-Based Component Architecture (FBCA).
+> applications that combine `@bloomneo/appkit` (Express backend) and
+> `@bloomneo/uikit` (React frontend) via Feature-Based Component Architecture
+> (FBCA). All three packages release together: a new app pins appkit, uikit
+> and bloom to the same `^6.0.0-alpha.0`.
 >
 > Read this FIRST. If the project is already scaffolded, also read
 > `docs/appkit.md` + `docs/appkit-agents.md` + `docs/uikit.md` + `docs/uikit-agents.md`
@@ -11,7 +12,7 @@
 
 ## What bloom IS
 
-A **scaffolding CLI**. Nothing more. It:
+A **scaffolding CLI** (plus the route-contract API below). It:
 
 1. Copies the `app` base into a new project, then applies the layers the
    preset or flags ask for (`auth`, `admin`, `desktop`, `mobile`)
@@ -20,6 +21,28 @@ A **scaffolding CLI**. Nothing more. It:
 3. Runs `npm install` (unless `--skip-install` is passed)
 4. The scaffolded project's postinstall hydrates `docs/` and `.claude/skills/`
    with the currently-installed appkit + uikit agent docs and skills
+
+## The starter (6.0)
+
+What `bloom create` writes, and where each piece comes from:
+
+| Piece | In the app | From |
+|---|---|---|
+| API feature discovery, `GET /api` index, JSON 404, boot warnings | `server.ts`: `app.use('/api', await createApiRouter({ featuresDir }))` | `@bloomneo/appkit/server` |
+| Contract routes (auth, tenant context, validation applied) | `features/<name>/<name>.route.ts`: `export default await contractRouter([route(contract, handler)])` | `@bloomneo/appkit/server` |
+| Route contracts | `src/contracts/*.contract.ts` (`defineRoute`), shared by web and API | `@bloomneo/bloom` |
+| Typed client | `src/web/shared/client.ts` (`createClient`) | `@bloomneo/bloom` |
+| File-based pages, lazy loading, 404, error boundary | `main.tsx`: `<PageRouter pages={pages} layouts={layouts} onError={…} />`; the glob in `src/web/pages.ts` | `@bloomneo/uikit/router` |
+| Signed-in shell (auth layer) | `shared/DashboardLayoutRoute.tsx`: `<AuthGuard><AppShell …/></AuthGuard>`, nav from `shared/nav.*.ts` | `AppShell` from `@bloomneo/uikit` |
+| Verification | `npx bloom check` | `@bloomneo/bloom` |
+
+The app no longer carries its own api-router or page-router; don't add one
+back.
+
+**Database.** SQLite is the zero-setup default (`DATABASE_URL=file:./dev.db`).
+Production — and every multi-tenant app — uses Postgres with
+`BLOOM_DB_TENANT=rls`, so appkit scopes every query to the caller's tenant with
+row-level security and `bloom check` verifies each tenant table's policies.
 
 ## Route contracts (6.0)
 
@@ -49,6 +72,12 @@ const invoice = await api.call(getInvoice, { params: { id } });   // typed
 - Schemas are any Standard Schema: Zod 3.24+, Valibot, ArkType.
 - Exports: `defineRoute`, `createClient`, `ApiError`, `validate`,
   `buildPath`, `isContract`, `isTenantScoped`, and the contract types.
+- In a scaffolded app: contracts live in `src/contracts/<name>.contract.ts`
+  (imported by the web as `@contracts/<name>.contract`, by the API with a
+  relative `.js` path), the API serves them with `route()` from
+  `@bloomneo/appkit/server`, and the web calls them with
+  `client.call(contract, input)` from `@/shared/client`. A contract file may
+  import only zod and `@bloomneo/bloom` — it is compiled by both builds.
 
 ## `bloom check`
 
@@ -97,7 +126,7 @@ Every preset is the `app` base plus layers. Flags add layers to any preset.
 | What the user wants | Command | Layers | Database | Notes |
 |---|---|---|---|---|
 | Plain fullstack web app | `bloom create x` (`basicapp`) | — | — | Default. Runs with `npm run dev`. |
-| Web app with auth + users | `bloom create x userapp` | auth | Prisma (SQLite by default) | `npx prisma db push` before first run |
+| Web app with auth + users | `bloom create x userapp` | auth | Prisma (SQLite by default; Postgres + `BLOOM_DB_TENANT=rls` in production) | `npx prisma db push` before first run |
 | Admin console | `bloom create x adminapp` | auth, admin | Prisma | Users, audit log, settings |
 | Desktop app | `bloom create x desktop-basicapp` | desktop | — | Electron wraps the same web build and API |
 | Desktop app with auth | `bloom create x desktop-userapp` | auth, desktop | Prisma | |
@@ -112,36 +141,39 @@ Picking notes:
 ## Always do
 
 1. Use the canonical `bloom create <name>` command. Don't hand-clone the
-   template directories.
+   templates. (`--legacy` and the frozen pre-5.1 directories were removed in
+   6.0; `npx @bloomneo/bloom@5 create` reproduces an old tree exactly.)
 2. After scaffold, read `docs/appkit.md` + `docs/uikit.md` before
    generating any feature code — those are the version-matched API
    references copied by postinstall.
-3. Place new features under `src/web/features/<feature-name>/pages/`
-   (or `src/mobile/features/...`). FBCA's page-router auto-discovers
-   them via `import.meta.glob`.
+3. Place new pages under `src/web/features/<feature-name>/pages/`.
+   uikit's `<PageRouter>` routes them from the glob in `src/web/pages.ts`.
+   Declare new API routes as contracts in `src/contracts/`, serve them from
+   `src/api/features/<name>/<name>.route.ts`, and run `npx bloom check`.
 4. For `userapp`, run `npx prisma db push` + edit `.env` before
    `npm run dev`.
-5. Keep `@bloomneo/appkit` on `^5.1.2` and `@bloomneo/uikit` on
-   `^4.1.6` (what the 5.x templates ship). Don't change them unless
-   you're tracking a coordinated major.
+5. Keep `@bloomneo/appkit`, `@bloomneo/uikit` and `@bloomneo/bloom` on
+   the same version (`^6.0.0-alpha.0` today). `bloom check` reports
+   `VERSIONS_OUT_OF_STEP` when they drift.
 
 ## Never do
 
 1. Never import anything from `@bloomneo/bloom` except the contract API
    listed above.
-2. Never hand-edit the page-router in a scaffolded project. The router
-   auto-discovers features; adding a route means creating
-   `features/<name>/pages/index.tsx`, not touching the router.
+2. Never copy a page router or an API router into a scaffolded project.
+   Adding a page means creating `features/<name>/pages/index.tsx`; adding an
+   API feature means creating `src/api/features/<name>/<name>.route.ts`.
 3. Never overwrite a scaffolded project's `docs/appkit.md` /
    `docs/uikit.md` — they're regenerated from `node_modules` on every
    `npm install`. Edit the packages' actual llms.txt upstream, not the
    copy.
 4. Never use `bloom create` on an existing non-empty directory (other
    than `.`). It refuses and exits 1.
-5. Never pin appkit or uikit to `latest`. The templates pin to caret
-   ranges (`^5.1.2` appkit, `^4.1.6` uikit as of bloom 5.x) for a
-   reason — breaking changes in the ecosystem need a coordinated
-   bloom release, not silent drift via `latest`.
+5. Never pin appkit, uikit or bloom to `latest`. The templates pin one
+   caret range for all three — breaking changes in the ecosystem need a
+   coordinated release, not silent drift via `latest`.
+6. Never write an API route without an auth decision: a contract's `auth`,
+   an `auth.require…()` guard, or `export const isPublic = true`.
 
 ## FBCA (Feature-Based Component Architecture)
 
@@ -163,12 +195,13 @@ src/web/features/
     └── ...
 ```
 
-The page-router (`src/web/lib/page-router.tsx` in scaffolded projects)
-uses `import.meta.glob('../features/*/pages/**/*.{tsx,jsx}')` to
-auto-register routes. You don't manually add routes — you create files.
+`<PageRouter>` from `@bloomneo/uikit/router` routes the glob in
+`src/web/pages.ts` (`./features/*/pages/**/*.{tsx,jsx}`, minus `_`-prefixed
+files and folders). You don't manually add routes — you create files.
 
 API routes in FBCA live at `src/api/features/<name>/*.{route,service,types}.ts`
-and are registered via the api-router's auto-discovery.
+and are mounted by `createApiRouter` from `@bloomneo/appkit/server`: a plain
+router at `/api/<name>`, a `contractRouter` at its contracts' own paths.
 
 ## What the scaffolded project contains for agents
 
@@ -188,9 +221,10 @@ my-app/
 │   ├── ... (12 appkit skills)
 │   └── bloomneo-uikit/          — uikit skill
 └── src/
+    ├── contracts/*.contract.ts  — route contracts (web + API)
     ├── web/features/...         — frontend features
-    ├── api/features/...         — backend features
-    └── web/lib/page-router.tsx  — auto-discovery router
+    ├── web/pages.ts             — the page glob <PageRouter> routes from
+    └── api/features/...         — backend features
 ```
 
 Agents working in the scaffolded project should read `AGENTS.md`

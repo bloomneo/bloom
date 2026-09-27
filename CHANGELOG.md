@@ -26,10 +26,58 @@ Work in progress on the `next` branch; see `MIGRATION-6.md`.
   bloomneo-cloud and mishulegal pass; midhuna and oddits have public routes
   that don't declare `isPublic`.
 
+- **The starter declares its routes as contracts.**
+  `src/contracts/welcome.contract.ts` (public `GET /api/welcome` and
+  `/api/welcome/:name`, zod params and response schemas) is served by a
+  `contractRouter` and called from the home page through
+  `src/web/shared/client.ts` (`createClient` with `VITE_API_URL`, the auth
+  token and the frontend key).
+
+- **`bloom check` runs in CI against every booted web preset** and must
+  report `ok: true`.
+
 ### Changed
 
 - The package now has an import entry (contracts); importing it no longer
   runs the CLI (`main` pointed at `bin/bloom.js`).
+
+- **The starter is built on the 6.0 framework pieces.** `server.ts` mounts
+  `createApiRouter` from `@bloomneo/appkit/server` (the template's
+  `api-router.ts` is gone); `main.tsx` renders `<PageRouter>` from
+  `@bloomneo/uikit/router` with the glob in `src/web/pages.ts` (the
+  template's `page-router.tsx` is gone; the HMR plugin now watches
+  `pages.ts`); the auth layer's dashboard shell is uikit's `AppShell`
+  inside `AuthGuard`, and the admin console reuses it.
+
+- **Dependencies.** New apps pin `@bloomneo/appkit`, `@bloomneo/uikit` and
+  `@bloomneo/bloom` to `^6.0.0-alpha.0` and add `zod`; `@types/react` and
+  `@types/react-dom` follow React 19. `scripts/release-lockstep.mjs` rewrites
+  the bloom pin too.
+
+- **`BLOOM_AUTH_SECRET` is in every app's `.env`**, not only the auth
+  layer's: appkit's `route()` initialises auth when it mounts, public
+  contracts included.
+
+- **One success message.** `bloom create` prints generic next steps, then
+  each applied layer's `next` lines from its `layer.json` (declared since
+  5.1 and never printed). The auth layer's lines now name `/auth/login` and
+  the seeded `admin.system@<slug>.com`.
+
+- SQLite stays the zero-setup default; the docs name Postgres with
+  `BLOOM_DB_TENANT=rls` as the production path for multi-tenant apps.
+
+### Removed
+
+- **`--legacy` and the frozen template directories** (`basicapp`,
+  `userapp`, `adminapp`, `desktop-basicapp`, `desktop-userapp`,
+  `mobile-basicapp`), with the CLI code only they used
+  (`createUserappEnvFile`, `addViteApiUrl`, legacy placeholder secrets,
+  per-template success messages). `--legacy` now exits 1 and points at
+  `@bloomneo/bloom@5`.
+
+- **Unused dependencies in new apps**: `bcrypt`, `jsonwebtoken`, `helmet`,
+  `morgan` and their types, the base's prisma 5 entries, the auth layer's
+  `bcryptjs`, and the `build:lib` script.
 
 - Released in lockstep with appkit, uikit and bloom on one shared version.
 ## [5.3.3] - 2026-09-26

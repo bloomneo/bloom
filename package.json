@@ -25,7 +25,7 @@
     "test:build": "node --test tests/scaffold-build.test.mjs",
     "release": "node scripts/release-lockstep.mjs",
     "build": "rm -rf dist && tsc -p tsconfig.json",
-    "test:contract": "npm run build && node --test tests/contract.test.mjs && tsc --noEmit -p tests/types/tsconfig.json"
+    "test:contract": "npm run build && node --test tests/contract.test.mjs tests/check.test.mjs && tsc --noEmit -p tests/types/tsconfig.json"
   },
   "engines": {
     "node": ">=18.0.0"
@@ -94,6 +94,7 @@
   },
   "types": "./dist/index.d.ts",
   "devDependencies": {
+    "@types/node": "^20.19.43",
     "typescript": "^5.9.3",
     "zod": "^3.25.76"
   }

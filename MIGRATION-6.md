@@ -21,5 +21,8 @@ _None yet._
   Declare a route's method, path, schemas and `auth` once; the client is typed
   from it. A contract without `auth` does not compile. Existing `*.route.ts`
   files keep working; adopt contracts one feature at a time.
+- **`bloom check`** — run in an app root; reports routes without an auth
+  decision, tenant tables without row-level security, and version drift.
+  `--json` for CI and agents.
 - Apps add `@bloomneo/bloom` as a dependency to use contracts (the CLI is
   still the `bloom` binary).

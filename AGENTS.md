@@ -50,6 +50,21 @@ const invoice = await api.call(getInvoice, { params: { id } });   // typed
 - Exports: `defineRoute`, `createClient`, `ApiError`, `validate`,
   `buildPath`, `isContract`, `isTenantScoped`, and the contract types.
 
+## `bloom check`
+
+Run it in an app's root after every change. Each finding has a code, a
+location, the rule and the fix; exit code 1 means something must change.
+
+| Code | Meaning |
+|---|---|
+| `ROUTE_NO_AUTH_DECISION` | A route file has no auth guard and doesn't declare `export const isPublic = true` |
+| `RLS_TABLE_UNPROTECTED` | With `BLOOM_DB_TENANT=rls`: a table with the tenant column lacks enabled + forced row-level security and a policy |
+| `RLS_NOT_CHECKED` | The database check couldn't run (no `DATABASE_URL` or no Prisma client) |
+| `VERSIONS_OUT_OF_STEP` | appkit, uikit and bloom (6.x) aren't on one version |
+| `CONTRACTS_NONE` | Info: no routes are declared as contracts yet |
+
+`--strict` makes warnings fail too. `--no-db` skips the database check.
+
 ## What bloom is NOT
 - **Not a generator framework.** There is no `bloom add feature`, no
   `bloom add page`, no `bloom add component`. FBCA (see below) auto-discovers
@@ -63,6 +78,7 @@ const invoice = await api.call(getInvoice, { params: { id } });   // typed
 bloom create <project-name> [template]   Scaffold a new project
 bloom create . [template]                Scaffold into the current directory
 bloom start                              Run a scaffolded project's prod server (requires prior build)
+bloom check [--json] [--strict] [--no-db] Verify the app (run in the app root; CI and agents: --json)
 bloom --help | -h | help                 Show usage
 bloom --version | -v | version           Print installed bloom version
 ```

@@ -638,6 +638,9 @@ Usage:
   bloom create <project-name> [template]  Create new fullstack project
   bloom create . [template]               Install in current directory
   bloom start                             Start production server (requires build)
+  bloom check [--json] [--strict] [--no-db]
+                                          Verify the app: route auth, row-level
+                                          security, framework versions
   bloom --help | -h | help                Show this help
   bloom --version | -v | version          Print the installed bloom version
 
@@ -1101,6 +1104,23 @@ Next steps:
     console.error('❌ Error starting server:', error.message);
     process.exit(1);
   }
+} else if (command === 'check') {
+  // Load the app's .env without overriding what the shell already set, so
+  // DATABASE_URL / BLOOM_DB_TENANT match what the app runs with.
+  const envFile = join(process.cwd(), '.env');
+  if (existsSync(envFile)) {
+    for (const line of readFileSync(envFile, 'utf8').split('\n')) {
+      const m = line.match(/^([A-Z0-9_]+)=(.*)$/);
+      if (m && process.env[m[1]] === undefined) process.env[m[1]] = m[2].replace(/^["']|["']$/g, '');
+    }
+  }
+  const { runCheck, formatReport } = await import('../dist/check/index.js');
+  const report = await runCheck({
+    strict: process.argv.includes('--strict'),
+    skipDb: process.argv.includes('--no-db'),
+  });
+  console.log(process.argv.includes('--json') ? JSON.stringify(report, null, 2) : formatReport(report));
+  process.exit(report.ok ? 0 : 1);
 } else {
   console.error(`❌ Unknown command: ${command}`);
   process.exit(1);

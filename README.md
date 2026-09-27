@@ -165,6 +165,10 @@ BLOOM_CHECK_IDENTITIES='[{"label":"a","email":"a@x.test","password":"…"},{"lab
   npx bloom check --probe http://localhost:3000   # try to read tenant A's rows as tenant B
 ```
 
+`npx bloom manifest` writes `bloom.manifest.json` and an "API" section in
+your AGENTS.md from your contracts, so agents read the API from one place.
+`bloom check` fails when they drift from the code.
+
 In GitHub Actions (new apps ship this as `.github/workflows/bloom-check.yml`):
 
 ```yaml

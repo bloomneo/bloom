@@ -13,6 +13,8 @@
  *             has row-level security enabled, forced, and a policy
  *   versions  @bloomneo/appkit, uikit and bloom are on one version
  *   served    every exported contract is served by a route() in src/api
+ *   manifest  bloom.manifest.json and the generated AGENTS.md section are
+ *             up to date (when the app has a manifest)
  *   probe     (--probe) cross-tenant attack run against the running app,
  *             via appkit's verifyClass
  */
@@ -20,6 +22,7 @@ import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';
+import { manifestFiles, ManifestError, MANIFEST_FILE } from '../manifest/index.js';
 
 export type Severity = 'error' | 'warning' | 'info';
 
@@ -277,14 +280,35 @@ export async function probeTenants(root: string, options: ProbeOptions): Promise
   return findings;
 }
 
+/**
+ * Generated files match the code. Only for apps that have a manifest — an
+ * app opts in by running `bloom manifest` once.
+ */
+export function checkManifest(root: string): Finding[] {
+  if (!existsSync(join(root, MANIFEST_FILE))) return [];
+  try {
+    return manifestFiles(root).stale.map((file) => ({
+      code: 'MANIFEST_STALE',
+      severity: 'error' as const,
+      where: file,
+      rule: 'Generated files describe the code as it is.',
+      fix: 'Run `npx bloom manifest` and commit the result.',
+    }));
+  } catch (err) {
+    if (!(err instanceof ManifestError)) throw err;
+    return [{ code: 'MANIFEST_NOT_BUILT', severity: 'warning', where: MANIFEST_FILE, rule: err.message, fix: err.fix }];
+  }
+}
+
 export async function runCheck(options: CheckOptions = {}): Promise<CheckReport> {
   const root = options.root ?? process.cwd();
   const strict = options.strict ?? false;
   const routes = checkRoutes(root);
   const versions = checkVersions(root);
+  const manifest = checkManifest(root);
   const rls = options.skipDb ? { findings: [], tenantTables: null } : await checkRls(root);
   const probe = options.probe ? await probeTenants(root, options.probe) : [];
-  const findings = [...routes.findings, ...rls.findings, ...versions.findings, ...probe];
+  const findings = [...routes.findings, ...rls.findings, ...versions.findings, ...manifest, ...probe];
   const failing = findings.filter((f) => f.severity === 'error' || (strict && f.severity === 'warning'));
   return {
     ok: failing.length === 0,

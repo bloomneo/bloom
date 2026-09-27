@@ -95,6 +95,8 @@ location, the rule and the fix; exit code 1 means something must change.
 | `TENANT_CROSS_TENANT_*` | With `--probe`: one tenant read (or changed) another tenant's row on the running app |
 | `PROBE_INCONCLUSIVE` | With `--probe`: the probe couldn't log in or found nothing to probe. Not a pass |
 | `PROBE_NOT_RUN` | With `--probe`: `@bloomneo/appkit` isn't installed in the app |
+| `MANIFEST_STALE` | `bloom.manifest.json` or the generated AGENTS.md / llms.txt section no longer matches the code |
+| `MANIFEST_NOT_BUILT` | Warning: the app has a manifest but it couldn't be rebuilt (e.g. no `tsx`) |
 
 `--strict` makes warnings fail too. `--no-db` skips the database check.
 
@@ -103,6 +105,18 @@ location, the rule and the fix; exit code 1 means something must change.
 app running locally at `<url>`, and replays every id one tenant sees as the
 other (appkit's `verifyClass`): GET, plus a PATCH carrying only `{ "__appkitVerify": true }`.
 `--destructive` also replays DELETE. Use a disposable database.
+
+## `bloom manifest`
+
+Writes `bloom.manifest.json` — every contract (method, path, auth, tenant
+scope, input and response types), every feature and how it decides auth, and
+the Prisma models with a tenant column — and a generated "This app's API"
+section in the app's AGENTS.md (and llms.txt, if present), between
+`<!-- bloom:manifest:start -->` / `end` markers. Text outside the markers is
+kept. Output is sorted with no timestamps, so it only changes when the API
+does. `bloom create` writes it after install; from then on `bloom check`
+fails when it is stale. `--check` exits 1 without writing. Contract files are
+loaded with the app's `tsx`.
 
 In CI: new apps ship `.github/workflows/bloom-check.yml`, which runs the
 `bloomneo/bloom@v6` action (`action.yml` in this repo). Inputs: `strict`,
@@ -123,6 +137,7 @@ bloom create <project-name> [template]   Scaffold a new project
 bloom create . [template]                Scaffold into the current directory
 bloom start                              Run a scaffolded project's prod server (requires prior build)
 bloom check [--json] [--strict] [--no-db] [--probe <url>]  Verify the app (run in the app root; CI and agents: --json)
+bloom manifest [--check]                 Write bloom.manifest.json + the generated AGENTS.md API section
 bloom --help | -h | help                 Show usage
 bloom --version | -v | version           Print installed bloom version
 ```

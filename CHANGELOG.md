@@ -35,6 +35,13 @@ Work in progress on the `next` branch; see `MIGRATION-6.md`.
   `.github/workflows/bloom-check.yml` using it (strict). The release script
   moves the `v<major>` tag on stable releases.
 
+- **`bloom manifest [--check]`**: writes `bloom.manifest.json` (contracts
+  with auth, tenant scope and input/response types rendered as short TS
+  types; features; tenant-scoped Prisma models) and a generated API section
+  in the app's AGENTS.md / llms.txt, keeping hand-written text. Deterministic
+  output. `bloom create` writes it after install; `bloom check` reports
+  `MANIFEST_STALE` / `MANIFEST_NOT_BUILT`.
+
 - **The starter declares its routes as contracts.**
   `src/contracts/welcome.contract.ts` (public `GET /api/welcome` and
   `/api/welcome/:name`, zod params and response schemas) is served by a

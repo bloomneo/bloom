@@ -514,6 +514,9 @@ Usage:
                                           contracts, row-level security,
                                           versions; --probe attacks a running
                                           local app across tenants
+  bloom manifest [--check]                Write bloom.manifest.json and the
+                                          generated AGENTS.md API section;
+                                          --check exits 1 if out of date
   bloom --help | -h | help                Show this help
   bloom --version | -v | version          Print the installed bloom version
 
@@ -632,6 +635,15 @@ if (command === 'create') {
       if (verbose) console.log('🔍 [DEBUG] Running: npm install');
       execSync('npm install', { stdio: verbose ? 'inherit' : 'pipe' });
       if (verbose) console.log('🔍 [DEBUG] Dependencies installed');
+      // The manifest opts the app into drift checking (bloom check fails when
+      // it is stale). It needs the installed tsx, so only after install.
+      try {
+        const { writeManifest } = await import('../dist/manifest/index.js');
+        writeManifest(process.cwd());
+        if (verbose) console.log('🔍 [DEBUG] Wrote bloom.manifest.json');
+      } catch (err) {
+        console.warn(`⚠️  bloom.manifest.json not written (${err.message}). Run: npx bloom manifest`);
+      }
     }
 
     console.log(successMessage({ label, projectName, isCurrentDir, layers, skipInstall }));
@@ -670,6 +682,28 @@ if (command === 'create') {
     execSync('npm run start:api', { stdio: 'inherit' });
   } catch (error) {
     console.error('❌ Error starting server:', error.message);
+    process.exit(1);
+  }
+} else if (command === 'manifest') {
+  // Write bloom.manifest.json and the generated AGENTS.md section; with
+  // --check, write nothing and exit 1 when either is out of date.
+  const { manifestFiles, writeManifest, ManifestError } = await import('../dist/manifest/index.js');
+  const checkOnly = process.argv.includes('--check');
+  try {
+    const files = checkOnly ? manifestFiles(process.cwd()) : writeManifest(process.cwd());
+    const count = JSON.parse(files.expected['bloom.manifest.json']).contracts.length;
+    if (checkOnly) {
+      if (files.stale.length) {
+        console.error(`❌ Out of date: ${files.stale.join(', ')}. Run: npx bloom manifest`);
+        process.exit(1);
+      }
+      console.log(`✅ manifest up to date (${count} contracts)`);
+    } else {
+      console.log(files.stale.length ? `✅ wrote ${files.stale.join(', ')} (${count} contracts)` : `✅ manifest already up to date (${count} contracts)`);
+    }
+  } catch (err) {
+    if (!(err instanceof ManifestError)) throw err;
+    console.error(`❌ ${err.message}\n   fix: ${err.fix}`);
     process.exit(1);
   }
 } else if (command === 'check') {

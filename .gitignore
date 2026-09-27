@@ -46,10 +46,9 @@ Thumbs.db
 
 # Build files
 build/
-scripts/
-# Allow template scripts (they ship as part of scaffolded projects)
-!templates/*/scripts/
-!templates/*/scripts/**
+# bloom's own scripts/ (drift check, release) are tracked: CI runs them.
+# A bare `scripts/` rule here once hid check-doc-drift.mjs from git, so
+# every CI run failed on a file that only existed on one laptop.
 
 # Temporary files
 temp/

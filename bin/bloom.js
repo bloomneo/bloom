@@ -509,9 +509,11 @@ Usage:
   bloom create <project-name> [template]  Create new fullstack project
   bloom create . [template]               Install in current directory
   bloom start                             Start production server (requires build)
-  bloom check [--json] [--strict] [--no-db]
-                                          Verify the app: route auth, row-level
-                                          security, framework versions
+  bloom check [--json] [--strict] [--no-db] [--probe <url>]
+                                          Verify the app: route auth, served
+                                          contracts, row-level security,
+                                          versions; --probe attacks a running
+                                          local app across tenants
   bloom --help | -h | help                Show this help
   bloom --version | -v | version          Print the installed bloom version
 
@@ -681,9 +683,25 @@ if (command === 'create') {
     }
   }
   const { runCheck, formatReport } = await import('../dist/check/index.js');
+  // --probe <baseUrl>: identities come from BLOOM_CHECK_IDENTITIES (JSON array
+  // of { label, email, password }) — two users in different tenants.
+  const probeAt = process.argv.indexOf('--probe');
+  let probe;
+  if (probeAt !== -1) {
+    const baseUrl = process.argv[probeAt + 1] || 'http://localhost:3000';
+    let identities = [];
+    try {
+      identities = JSON.parse(process.env.BLOOM_CHECK_IDENTITIES || '[]');
+    } catch {
+      console.error('❌ BLOOM_CHECK_IDENTITIES must be a JSON array of { label, email, password }');
+      process.exit(1);
+    }
+    probe = { baseUrl, identities, allowDestructive: process.argv.includes('--destructive') };
+  }
   const report = await runCheck({
     strict: process.argv.includes('--strict'),
     skipDb: process.argv.includes('--no-db'),
+    probe,
   });
   console.log(process.argv.includes('--json') ? JSON.stringify(report, null, 2) : formatReport(report));
   process.exit(report.ok ? 0 : 1);

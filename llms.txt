@@ -62,13 +62,16 @@ bloom create my-app userapp --verbose        # Debug logging
 Refuses to overwrite an existing directory (except `.`). Exits 1 on
 conflict.
 
-### `bloom check [--json] [--strict] [--no-db]`
+### `bloom check [--json] [--strict] [--no-db] [--probe <url>] [--destructive]`
 
 Run in an app root. Reports route files with no auth decision
 (`ROUTE_NO_AUTH_DECISION`), tenant tables without row-level security when
 `BLOOM_DB_TENANT=rls` (`RLS_TABLE_UNPROTECTED`, `RLS_NOT_CHECKED`), 6.x
 version drift (`VERSIONS_OUT_OF_STEP`) and, as info, apps with no contracts
-(`CONTRACTS_NONE`). Exit 1 when something must change; `--strict` fails on
+(`CONTRACTS_NONE`), and contracts no `route()` serves (`CONTRACT_NOT_SERVED`).
+`--probe <url>` logs in as the users in `BLOOM_CHECK_IDENTITIES` (JSON) against
+the local running app and reports any row one tenant can reach from another
+(`TENANT_*`; `PROBE_INCONCLUSIVE` is a failure, not a pass). Exit 1 when something must change; `--strict` fails on
 warnings too; `--no-db` skips the database check. A fresh scaffold passes.
 
 ### `bloom start`

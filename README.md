@@ -161,6 +161,8 @@ npx bloom check            # human-readable
 npx bloom check --json     # for CI and agents
 npx bloom check --strict   # warnings fail too
 npx bloom check --no-db    # skip the row-level security check
+BLOOM_CHECK_IDENTITIES='[{"label":"a","email":"a@x.test","password":"…"},{"label":"b","email":"b@x.test","password":"…"}]' \
+  npx bloom check --probe http://localhost:3000   # try to read tenant A's rows as tenant B
 ```
 
 Each finding names the file, the rule and the fix; exit code 1 means something

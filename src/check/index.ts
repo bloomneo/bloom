@@ -12,10 +12,14 @@
  *   rls       with BLOOM_DB_TENANT=rls, every table with the tenant column
  *             has row-level security enabled, forced, and a policy
  *   versions  @bloomneo/appkit, uikit and bloom are on one version
+ *   served    every exported contract is served by a route() in src/api
+ *   probe     (--probe) cross-tenant attack run against the running app,
+ *             via appkit's verifyClass
  */
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { createRequire } from 'node:module';
+import { pathToFileURL } from 'node:url';
 
 export type Severity = 'error' | 'warning' | 'info';
 
@@ -48,6 +52,8 @@ export interface CheckOptions {
   strict?: boolean;
   /** Skip the database check even when BLOOM_DB_TENANT=rls. */
   skipDb?: boolean;
+  /** Run the cross-tenant probe against a running local server. */
+  probe?: ProbeOptions;
 }
 
 function walk(dir: string, match: (file: string) => boolean, out: string[] = []): string[] {
@@ -95,8 +101,30 @@ export function checkRoutes(root: string): { findings: Finding[]; routeFiles: nu
   }
 
   let contracts = 0;
+  const declared: Array<{ name: string; file: string }> = [];
   for (const file of contractFiles) {
-    contracts += (readFileSync(file, 'utf8').match(/\bdefineRoute\s*\(/g) ?? []).length;
+    const src = readFileSync(file, 'utf8');
+    contracts += (src.match(/\bdefineRoute\s*\(/g) ?? []).length;
+    for (const m of src.matchAll(/export\s+const\s+([A-Za-z_$][\w$]*)\s*=\s*defineRoute\s*\(/g)) {
+      declared.push({ name: m[1], file });
+    }
+  }
+  // A contract nothing serves is a client call that will 404 — the one
+  // mismatch the type system can't see, because the server side is wired
+  // at runtime.
+  const apiSources = walk(join(root, 'src', 'api'), (f) => /\.[jt]s$/.test(f) && !/\.d\.ts$/.test(f))
+    .map((f) => readFileSync(f, 'utf8'))
+    .join('\n');
+  for (const { name, file } of declared) {
+    if (!new RegExp(`\\broute\\s*\\(\\s*(?:[\\w$]+\\.)?${name}\\b`).test(apiSources)) {
+      findings.push({
+        code: 'CONTRACT_NOT_SERVED',
+        severity: 'error',
+        where: relative(root, file),
+        rule: 'Every declared contract is served by the API.',
+        fix: `Serve it: route(${name}, handler) in a feature's contractRouter([...]) — or delete the contract.`,
+      });
+    }
   }
   if (routeFiles.length && contracts === 0) {
     findings.push({
@@ -192,13 +220,71 @@ export async function checkRls(root: string): Promise<{ findings: Finding[]; ten
   }
 }
 
+export interface ProbeOptions {
+  /** Base URL of the app, running locally. */
+  baseUrl: string;
+  /** At least two same-role users in different tenants: [{ label, email, password }]. */
+  identities: Array<{ label: string; email: string; password: string; crossTenant?: boolean }>;
+  loginPath?: string;
+  /** Paths to probe. Default: the endpoints the app's GET /api index lists. */
+  paths?: string[];
+  allowDestructive?: boolean;
+}
+
+/**
+ * Log in as each identity against the running app and replay every id one
+ * tenant can see as every other tenant — appkit's verifyClass, loaded from
+ * the app's own node_modules. Probes local servers only.
+ */
+export async function probeTenants(root: string, options: ProbeOptions): Promise<Finding[]> {
+  let verifyClass: any;
+  try {
+    const req = createRequire(join(root, 'package.json'));
+    const path = req.resolve('@bloomneo/appkit/verify');
+    verifyClass = (await import(pathToFileURL(path).href)).verifyClass;
+  } catch {
+    return [{
+      code: 'PROBE_NOT_RUN',
+      severity: 'warning',
+      where: 'node_modules/@bloomneo/appkit',
+      rule: 'The tenant probe uses appkit\'s verifyClass.',
+      fix: 'Install @bloomneo/appkit in the app.',
+    }];
+  }
+  const report = await verifyClass.get().run({
+    baseUrl: options.baseUrl,
+    identities: options.identities,
+    loginPath: options.loginPath,
+    paths: options.paths,
+    allowDestructive: options.allowDestructive ?? false,
+  });
+  const findings: Finding[] = report.findings.map((f: any) => ({
+    code: `TENANT_${String(f.kind).toUpperCase().replace(/-/g, '_')}`,
+    severity: 'error' as const,
+    where: `${f.method} ${f.path}`,
+    rule: 'One tenant can never read or change another tenant\'s data.',
+    fix: `${f.detail} Scope the route: contract tenant: true / database.context(), or BLOOM_DB_TENANT=rls with policies.`,
+  }));
+  if (!report.ok && findings.length === 0) {
+    findings.push({
+      code: 'PROBE_INCONCLUSIVE',
+      severity: 'error',
+      where: options.baseUrl,
+      rule: 'A probe that could not run is not a pass.',
+      fix: `Skipped: ${report.skipped.join('; ') || 'no checks ran'}.`,
+    });
+  }
+  return findings;
+}
+
 export async function runCheck(options: CheckOptions = {}): Promise<CheckReport> {
   const root = options.root ?? process.cwd();
   const strict = options.strict ?? false;
   const routes = checkRoutes(root);
   const versions = checkVersions(root);
   const rls = options.skipDb ? { findings: [], tenantTables: null } : await checkRls(root);
-  const findings = [...routes.findings, ...rls.findings, ...versions.findings];
+  const probe = options.probe ? await probeTenants(root, options.probe) : [];
+  const findings = [...routes.findings, ...rls.findings, ...versions.findings, ...probe];
   const failing = findings.filter((f) => f.severity === 'error' || (strict && f.severity === 'warning'));
   return {
     ok: failing.length === 0,

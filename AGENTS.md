@@ -91,8 +91,18 @@ location, the rule and the fix; exit code 1 means something must change.
 | `RLS_NOT_CHECKED` | The database check couldn't run (no `DATABASE_URL` or no Prisma client) |
 | `VERSIONS_OUT_OF_STEP` | appkit, uikit and bloom (6.x) aren't on one version |
 | `CONTRACTS_NONE` | Info: no routes are declared as contracts yet |
+| `CONTRACT_NOT_SERVED` | A contract in `src/**/*.contract.ts` has no `route(contract, handler)` in `src/api` |
+| `TENANT_CROSS_TENANT_*` | With `--probe`: one tenant read (or changed) another tenant's row on the running app |
+| `PROBE_INCONCLUSIVE` | With `--probe`: the probe couldn't log in or found nothing to probe. Not a pass |
+| `PROBE_NOT_RUN` | With `--probe`: `@bloomneo/appkit` isn't installed in the app |
 
 `--strict` makes warnings fail too. `--no-db` skips the database check.
+
+`--probe <url>` logs in as each identity in `BLOOM_CHECK_IDENTITIES` (JSON:
+`[{"label","email","password"}]`, two users in different tenants) against the
+app running locally at `<url>`, and replays every id one tenant sees as the
+other (appkit's `verifyClass`): GET, plus a PATCH carrying only `{ "__appkitVerify": true }`.
+`--destructive` also replays DELETE. Use a disposable database.
 
 ## What bloom is NOT
 - **Not a generator framework.** There is no `bloom add feature`, no
@@ -107,7 +117,7 @@ location, the rule and the fix; exit code 1 means something must change.
 bloom create <project-name> [template]   Scaffold a new project
 bloom create . [template]                Scaffold into the current directory
 bloom start                              Run a scaffolded project's prod server (requires prior build)
-bloom check [--json] [--strict] [--no-db] Verify the app (run in the app root; CI and agents: --json)
+bloom check [--json] [--strict] [--no-db] [--probe <url>]  Verify the app (run in the app root; CI and agents: --json)
 bloom --help | -h | help                 Show usage
 bloom --version | -v | version           Print installed bloom version
 ```

@@ -6,7 +6,7 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync, existsSync, symlinkSync } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
 import { tmpdir } from 'node:os';
 import { execFileSync } from 'node:child_process';
@@ -90,4 +90,65 @@ test('CLI: exit code follows the result; --json is machine-readable', () => {
   const report = JSON.parse(out);
   assert.equal(report.ok, true);
   assert.equal(report.summary.routeFiles, 1);
+});
+
+test('a declared contract that no route() serves is an error', async () => {
+  const root = app({
+    'src/contracts/plans.contract.ts': `export const listPlans = defineRoute({});\nexport const getPlan = defineRoute({});`,
+    'src/api/features/plans/plans.route.ts': `export default await contractRouter([route(listPlans, h)]);`,
+  });
+  const report = await runCheck({ root });
+  const unserved = report.findings.filter((f) => f.code === 'CONTRACT_NOT_SERVED');
+  assert.equal(unserved.length, 1);
+  assert.match(unserved[0].fix, /route\(getPlan, handler\)/);
+});
+
+// Needs the sibling appkit checkout (verifyClass). Skipped where it isn't there.
+const APPKIT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', 'appkit');
+const haveAppkit = existsSync(join(APPKIT, 'dist', 'verify', 'index.js'));
+
+test('--probe with no appkit installed says the probe did not run', async () => {
+  const { probeTenants } = await import('../dist/check/index.js');
+  const findings = await probeTenants(app({}), { baseUrl: 'http://127.0.0.1:1', identities: [] });
+  assert.deepEqual(findings.map((f) => f.code), ['PROBE_NOT_RUN']);
+});
+
+test('--probe reports cross-tenant reads from a running app', { skip: !haveAppkit && 'no sibling appkit build' }, async () => {
+  const { createServer } = await import('node:http');
+  const rows = { 'a@x.test': '11111111-1111-4111-8111-111111111111', 'b@x.test': '22222222-2222-4222-8222-222222222222' };
+  // A deliberately leaky app: every tenant can read every row.
+  const server = createServer((req, res) => {
+    const token = (req.headers.authorization ?? '').replace('Bearer ', '');
+    const send = (status, body) => {
+      res.writeHead(status, { 'content-type': 'application/json' });
+      res.end(body === undefined ? '' : JSON.stringify(body));
+    };
+    let raw = '';
+    req.on('data', (c) => (raw += c));
+    req.on('end', () => {
+      if (req.method === 'POST' && req.url === '/api/auth/login') return send(200, { token: JSON.parse(raw).email });
+      if (!token) return send(401, { error: 'no token' });
+      if (req.method === 'GET' && req.url === '/api/notes') return send(200, [{ id: rows[token] }]);
+      return send(200, { ok: true });
+    });
+  });
+  await new Promise((r) => server.listen(0, '127.0.0.1', r));
+  try {
+    const root = app({});
+    mkdirSync(join(root, 'node_modules', '@bloomneo'), { recursive: true });
+    symlinkSync(APPKIT, join(root, 'node_modules', '@bloomneo', 'appkit'), 'dir');
+    const { probeTenants } = await import('../dist/check/index.js');
+    const findings = await probeTenants(root, {
+      baseUrl: `http://127.0.0.1:${server.address().port}`,
+      identities: [
+        { label: 'firm-a', email: 'a@x.test', password: 'p' },
+        { label: 'firm-b', email: 'b@x.test', password: 'p' },
+      ],
+      paths: ['/api/notes'],
+    });
+    assert.ok(findings.some((f) => f.code === 'TENANT_CROSS_TENANT_READ' && f.severity === 'error'), JSON.stringify(findings));
+  } finally {
+    server.closeAllConnections?.();
+    server.close();
+  }
 });

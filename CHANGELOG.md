@@ -17,7 +17,7 @@ Work in progress on the `next` branch; see `MIGRATION-6.md`.
   tests and a compile-time test (`tests/types/`) that proves the negative
   cases fail to compile.
 
-- **`bloom check`** (`--json`, `--strict`, `--no-db`): route files without
+- **`bloom check`** (`--json`, `--strict`, `--no-db`, `--probe <url>`): route files without
   an auth decision (recognises every appkit guard, including app wrappers
   like `requireLoginOrApiToken`), tenant tables without enabled + forced RLS
   and a policy (queried through the app's own Prisma client, so bloom needs
@@ -25,6 +25,9 @@ Work in progress on the `next` branch; see `MIGRATION-6.md`.
   a location, the rule and the fix. Run against the four production apps:
   bloomneo-cloud and mishulegal pass; midhuna and oddits have public routes
   that don't declare `isPublic`.
+  Contracts that no `route()` serves are an error (`CONTRACT_NOT_SERVED`).
+  `--probe <url>` runs appkit's cross-tenant probe against the running app
+  with users from `BLOOM_CHECK_IDENTITIES`; an inconclusive probe fails.
 
 - **The starter declares its routes as contracts.**
   `src/contracts/welcome.contract.ts` (public `GET /api/welcome` and

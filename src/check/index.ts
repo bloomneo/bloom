@@ -250,8 +250,34 @@ export async function checkRls(root: string): Promise<{ findings: Finding[]; ten
       FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
       WHERE c.relkind = 'r' AND n.nspname NOT IN ('pg_catalog', 'information_schema')`;
     const exempt = (process.env.BLOOM_DB_RLS_EXEMPT ?? '').split(',').map((s) => s.trim()).filter(Boolean);
-    const children = tenantChildren(rows.map((r) => r.table), edges, exempt);
+    // The tenant table itself (cloud's `customers`: its tenant is its own id)
+    // has no tenant column and is nobody's child — name it to have it checked.
+    const roots = (process.env.BLOOM_DB_TENANT_ROOT ?? '').split(',').map((s) => s.trim()).filter(Boolean);
     const byName = new Map(status.map((s) => [s.table, s]));
+    for (const root of roots) {
+      const s = byName.get(root);
+      if (!s) {
+        findings.push({
+          code: 'RLS_TABLE_UNPROTECTED',
+          severity: 'error',
+          where: `table ${root}`,
+          rule: 'BLOOM_DB_TENANT_ROOT names a table that exists.',
+          fix: `No table "${root}" — fix BLOOM_DB_TENANT_ROOT.`,
+        });
+        continue;
+      }
+      const missing = [!s.rls && 'enabled', !s.forced && 'forced', !s.policies && 'a policy'].filter(Boolean);
+      if (missing.length) {
+        findings.push({
+          code: 'RLS_TABLE_UNPROTECTED',
+          severity: 'error',
+          where: `table ${root}`,
+          rule: 'The tenant table itself has row-level security: each tenant sees only its own row.',
+          fix: `Missing: ${missing.join(', ')}. Apply database.rlsPolicyStatements({ table: '${root}', column: 'id' }) in a migration.`,
+        });
+      }
+    }
+    const children = tenantChildren([...rows.map((r) => r.table), ...roots], edges, exempt);
     for (const [table, via] of [...children].sort(([a], [b]) => a.localeCompare(b))) {
       const s = byName.get(table);
       const missing = [!s?.rls && 'enabled', !s?.forced && 'forced', !s?.policies && 'a policy'].filter(Boolean);

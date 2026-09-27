@@ -13,6 +13,8 @@ commands that verify and upgrade an app. See `MIGRATION-6.md`; `npx
 - **`RLS_CHILD_UNPROTECTED`** (after rc.0): `bloom check` follows foreign keys from tenant tables through children and grandchildren and fails on any without row-level security, with the exact `via` policy to apply. `BLOOM_DB_RLS_EXEMPT` names deliberately shared tables. Found in the bloomneo-cloud pilot: `deployments`, `domains` and `uptime_checks` hold tenant data with no tenant column.
 
 - **`bloom check --probe`** (after rc.1) sends the app's frontend key (`BLOOM_FRONTEND_KEY` / `VITE_FRONTEND_KEY`, read from the app's `.env`) and takes `--probe-exclude a,b` for features that can't answer in a test environment. Proven on the bloomneo-cloud pilot with row-level security on: two customers, 83 checks, no cross-tenant read or write.
+
+- **`BLOOM_DB_TENANT_ROOT`** (after rc.1): names the tenant table itself (bloomneo-cloud's `customers`, whose tenant is its own id). `bloom check` requires it to have row-level security and follows foreign keys from it.
 ### Added
 
 - **Route contracts** (`@bloomneo/bloom`, also `@bloomneo/bloom/contract`):

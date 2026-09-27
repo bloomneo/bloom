@@ -278,3 +278,33 @@ test('bloom create with invalid template exits 1', () => {
   }
   assert.equal(exitCode, 1, 'invalid template exits 1');
 });
+
+test('bloom create --legacy exits 1 (removed in 6.0)', () => {
+  const tmp = mkdtempSync(join(tmpdir(), 'bloom-legacy-'));
+  let exitCode = 0;
+  let stderr = '';
+  try {
+    execSync(`node "${BLOOM_CLI}" create test userapp --legacy --skip-install`, { cwd: tmp, stdio: 'pipe' });
+  } catch (err) {
+    exitCode = err.status ?? 0;
+    stderr = err.stderr?.toString() ?? '';
+  } finally {
+    rmSync(tmp, { recursive: true, force: true });
+  }
+  assert.equal(exitCode, 1, '--legacy exits 1');
+  assert.match(stderr, /removed in 6\.0/, 'and says why');
+  assert.ok(!existsSync(join(tmp, 'test')), 'nothing was scaffolded');
+});
+
+test('success message prints each applied layer\'s next steps', () => {
+  const tmp = mkdtempSync(join(tmpdir(), 'bloom-next-'));
+  try {
+    const out = execSync(`node "${BLOOM_CLI}" create next-app adminapp --skip-install`, { cwd: tmp, stdio: 'pipe' }).toString();
+    assert.match(out, /Next steps:/);
+    assert.match(out, /auth layer:\n\s+npx prisma db push/, 'auth layer next lines are printed');
+    assert.match(out, /admin layer:\n\s+npm run db:seed:admin/, 'admin layer next lines are printed');
+    assert.match(out, /admin\.system@next-app\.com/, 'placeholders in next lines are filled');
+  } finally {
+    rmSync(tmp, { recursive: true, force: true });
+  }
+});

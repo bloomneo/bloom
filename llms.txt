@@ -122,7 +122,6 @@ Every template includes:
 --admin             Add the admin layer (implies --auth)
 --desktop           Add the Electron wrapper
 --mobile            Add the Capacitor wrapper
---legacy            Use the frozen pre-5.1 template directory (removed in 6.0)
 ```
 
 ---

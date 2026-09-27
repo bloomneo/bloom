@@ -18,8 +18,8 @@
     "DEFAULT_USER_PASSWORD": "admin123"
   },
   "next": [
-    "npx prisma db push      # create the database",
-    "npm run db:seed         # add the default admin user",
-    "Sign in at /login with admin@example.com / admin123"
+    "npx prisma db push      # create the database (SQLite by default: DATABASE_URL in .env)",
+    "npm run db:seed         # one user per role, password DEFAULT_USER_PASSWORD from .env",
+    "Sign in at /auth/login as admin.system@{{PROJECT_SLUG}}.com"
   ]
 }

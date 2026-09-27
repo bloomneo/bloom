@@ -3,12 +3,10 @@
   "description": "Email/password auth: login, register, password reset, email verification, AuthGuard, and the Prisma User model.",
   "requires": [],
   "dependencies": {
-    "@prisma/client": "^6.2.1",
-    "bcryptjs": "^2.4.3"
+    "@prisma/client": "^6.2.1"
   },
   "devDependencies": {
-    "prisma": "^6.2.1",
-    "@types/bcryptjs": "^2.4.6"
+    "prisma": "^6.2.1"
   },
   "scripts": {
     "db:push": "prisma db push",

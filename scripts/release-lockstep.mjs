@@ -79,6 +79,7 @@ const REPOS = [
       // Scaffolded apps pin the framework version they were made with.
       ['templates/app/package.json.template', new RegExp(`"@bloomneo/uikit": "\\^${V}"`)],
       ['templates/app/package.json.template', new RegExp(`"@bloomneo/appkit": "\\^${V}"`)],
+      ['templates/app/package.json.template', new RegExp(`"@bloomneo/bloom": "\\^${V}"`)],
     ],
   },
 ];

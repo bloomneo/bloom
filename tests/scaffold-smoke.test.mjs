@@ -76,6 +76,22 @@ function assertCommonShape(projectRoot, projectName, { expectAppkit }) {
     'uikit pinned to caret range, not "latest"',
   );
 
+  // 6.0: apps import route contracts (defineRoute, createClient) from bloom,
+  // and every @bloomneo package is released on one version.
+  assert.match(
+    pkg.dependencies?.['@bloomneo/bloom'] ?? '',
+    /^\^\d+\.\d+\.\d+(-[0-9A-Za-z]+(\.[0-9A-Za-z]+)*)?$/,
+    'bloom pinned to caret range (apps import contracts from it)',
+  );
+  const pins = ['appkit', 'uikit', 'bloom']
+    .map((n) => pkg.dependencies?.[`@bloomneo/${n}`])
+    .filter(Boolean);
+  assert.equal(new Set(pins).size, 1, `@bloomneo/* pins are in lockstep: ${pins.join(', ')}`);
+  for (const dead of ['bcrypt', 'jsonwebtoken', 'helmet', 'morgan']) {
+    assert.ok(!pkg.dependencies?.[dead], `${dead} is not declared (nothing imports it)`);
+  }
+  assert.ok(!pkg.scripts?.['build:lib'], 'no build:lib script (there is no tsconfig.lib.json)');
+
   assert.match(
     pkg.scripts?.postinstall ?? '',
     /copy-agent-docs/,

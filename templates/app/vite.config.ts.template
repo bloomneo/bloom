@@ -1,4 +1,4 @@
-import { defineConfig, type Plugin, type ViteDevServer } from 'vite'
+import { defineConfig, normalizePath, type Plugin, type ViteDevServer } from 'vite'
 import react from '@vitejs/plugin-react-swc'
 import path from 'path'
 import tailwindcss from '@tailwindcss/vite'
@@ -10,8 +10,8 @@ const __dirname = path.dirname(__filename)
 
 // https://vitejs.dev/config/
 /**
- * Page discovery is `import.meta.glob`, which Vite resolves when it transforms
- * page-router.tsx — ONCE. Create a new page while the dev server is running and
+ * Page discovery is `import.meta.glob` in src/web/pages.ts, which Vite resolves
+ * when it transforms that file — ONCE. Create a new page while the dev server is running and
  * the glob is never re-evaluated, so the route simply does not exist.
  *
  * The symptom is the worst kind: a silent 404. Or, if a sibling dynamic route
@@ -24,6 +24,8 @@ const __dirname = path.dirname(__filename)
  */
 function bloomPageRouterHmr(): Plugin {
   const isPage = (file: string) => /[\\/]features[\\/][^\\/]+[\\/]pages[\\/].*\.(tsx|jsx)$/.test(file);
+  // The one module that runs the page glob.
+  const globFile = normalizePath(path.resolve(__dirname, 'src/web/pages.ts'));
 
   return {
     name: 'bloom:page-router-hmr',
@@ -32,16 +34,11 @@ function bloomPageRouterHmr(): Plugin {
       const refresh = (file: string) => {
         if (!isPage(file)) return;
 
-        // Invalidate every module that ran the glob, then reload: the glob is
+        // Invalidate the module that ran the glob, then reload: the glob is
         // baked into the transformed source, so re-running it means re-transforming.
-        let invalidated = 0;
-        for (const [id, mod] of server.moduleGraph.idToModuleMap) {
-          if (/page-router\.(tsx|jsx|ts|js)$/.test(id)) {
-            server.moduleGraph.invalidateModule(mod);
-            invalidated++;
-          }
-        }
-        if (!invalidated) return;
+        const mods = server.moduleGraph.getModulesByFile(globFile);
+        if (!mods?.size) return;
+        for (const mod of mods) server.moduleGraph.invalidateModule(mod);
 
         server.config.logger.info(
           `  \x1b[32m[bloom]\x1b[0m page routes changed — reloading (${path.basename(file)})`,

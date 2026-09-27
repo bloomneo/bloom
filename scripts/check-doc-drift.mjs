@@ -90,9 +90,10 @@ const BANNED = [
   // Deep imports are non-canonical per uikit AGENTS.md "Never deep-import
   // as primary." The flat `from '@bloomneo/uikit'` is the teaching
   // default. Allow /styles and /fouc — those are legitimate side-effect
-  // imports for CSS + the FOUC helper.
+  // imports for CSS + the FOUC helper — and /router, the page router's own
+  // entry (it needs react-router-dom, an optional peer).
   {
-    pattern: /from\s+['"]@bloomneo\/uikit\/(?!styles|fouc)/,
+    pattern: /from\s+['"]@bloomneo\/uikit\/(?!styles|fouc|router['"])/,
     now: "from '@bloomneo/uikit' (flat imports are canonical)",
   },
 ];

@@ -9,7 +9,8 @@
  * up with two 340-line copies of the same shell kept in sync by hand.
  *
  * Instead each layer drops a `nav.<layer>.ts` here exporting its own items.
- * AppShell globs them at BUILD time and merges. Adding a layer is adding one
+ * DashboardLayoutRoute globs them at BUILD time, merges them and hands them to
+ * uikit's <AppShell>. Adding a layer is adding one
  * small file; the shell is never touched and cannot drift.
  */
 import { LayoutDashboard, User } from 'lucide-react';
@@ -21,7 +22,7 @@ export type NavItem = {
   icon: LucideIcon;
   /** Exact-match the route. Needed for index routes like /dashboard. */
   end?: boolean;
-  /** Hide from anyone without this role. Presentation only — see AppShell. */
+  /** Hide from anyone without this role. Presentation only — see DashboardLayoutRoute. */
   role?: string;
   /** Starts a labelled group above this item. */
   section?: string;

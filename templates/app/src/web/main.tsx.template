@@ -14,6 +14,11 @@
  * styles/brand.css. Setting that class on <html> by hand does NOT work —
  * ThemeProvider strips any `theme-*` class it did not set itself.
  *
+ * ── Routing ──────────────────────────────────────────────────────────────
+ * <PageRouter> comes from @bloomneo/uikit/router; the app supplies only the
+ * page glob (./pages.ts). Every page is lazy-loaded inside a Suspense and an
+ * error boundary, and unknown paths get a 404.
+ *
  * ── Layouts ──────────────────────────────────────────────────────────────
  * PageRouter takes a `layouts` list. Each entry is a matcher plus a shell
  * that renders <Outlet />; matched pages mount inside it and the shell stays
@@ -36,7 +41,8 @@ import { ThemeProvider, ToastProvider, ConfirmProvider, TooltipProvider } from '
 import './styles/index.css';
 import { brand } from '@/shared/brand';
 import { layouts } from '@/shared/layouts';
-import { PageRouter } from '@/lib/page-router';
+import { PageRouter } from '@bloomneo/uikit/router';
+import { pages, routeBase } from './pages';
 import { Providers } from '@/shared/providers';
 import { reportClientError, installGlobalErrorReporting } from '@/shared/reportError';
 
@@ -79,12 +85,13 @@ createRoot(rootEl).render(
                 because some of them redirect and need router context. */}
             <Providers>
               <PageRouter
+                pages={pages}
+                routeBase={routeBase}
                 layouts={layouts}
                 /*
-                 * PageRouter has always accepted this and no template ever
-                 * passed one, so a render crash called nothing and the only
-                 * other trace was a dev-only console line. In production a page
-                 * could throw, blank out, and leave no record anywhere.
+                 * Without this a render crash leaves only a dev-only console
+                 * line: in production a page could throw, blank out, and leave
+                 * no record anywhere. This sends it to the server log.
                  */
                 onError={(error, info) =>
                   reportClientError({

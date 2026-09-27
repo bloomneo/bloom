@@ -1,4 +1,4 @@
-# @bloomneo/bloom v6.0.0-rc.1
+# @bloomneo/bloom v6.0.0-rc.2
 
 Scaffolding CLI for full-stack apps combining `@bloomneo/appkit` (Express
 backend) and `@bloomneo/uikit` (React frontend) with Feature-Based
@@ -249,7 +249,7 @@ Adding a new page = creating a file. Adding an API feature = creating
 
 ## Migration
 
-Current release: **6.0.0-rc.1** (pre-release of 6.0; stable is 5.3.3).
+Current release: **6.0.0-rc.2** (pre-release of 6.0; stable is 5.3.3).
 
 ### 6.0.0 (alpha) The starter is built on the 6.0 framework pieces: the API
 router is `createApiRouter` from `@bloomneo/appkit/server`, the page router is

@@ -1,4 +1,4 @@
-# @bloomneo/bloom v5.3.3
+# @bloomneo/bloom v6.0.0-alpha.0
 
 Scaffolding CLI for full-stack apps combining `@bloomneo/appkit` (Express
 backend) and `@bloomneo/uikit` (React frontend) with Feature-Based
@@ -126,7 +126,9 @@ Adding a new page = creating a file. Don't edit the page-router.
 
 ## Migration
 
-Current release: **5.3.3**. Apps created by 5.3.2 did not compile: the `/api`
+Current release: **6.0.0-alpha.0** (pre-release of 6.0; stable is 5.3.3).
+
+### 5.3.3 Apps created by 5.3.2 did not compile: the `/api`
 404 handler in `server.ts` was never closed. 5.3.3 closes it, and every preset
 is now installed, typechecked and booted (development and production) in CI.
 Also: `.env` now carries `BLOOM_SERVICE_NAME` (production refused to start

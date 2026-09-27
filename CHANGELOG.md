@@ -2,6 +2,13 @@
 
 All notable changes to Bloom Framework will be documented in this file.
 
+## [6.0.0] - Unreleased
+
+Work in progress on the `next` branch; see `MIGRATION-6.md`.
+
+### Changed
+
+- Released in lockstep with appkit, uikit and bloom on one shared version.
 ## [5.3.3] - 2026-09-26
 
 ### Fixed

@@ -60,7 +60,7 @@ function assertCommonShape(projectRoot, projectName, { expectAppkit }) {
   if (expectAppkit) {
     assert.match(
       pkg.dependencies?.['@bloomneo/appkit'] ?? '',
-      /^\^\d+\.\d+\.\d+$/,
+      /^\^\d+\.\d+\.\d+(-[0-9A-Za-z]+(\.[0-9A-Za-z]+)*)?$/,
       'appkit pinned to caret range, not "latest"',
     );
   } else {
@@ -72,7 +72,7 @@ function assertCommonShape(projectRoot, projectName, { expectAppkit }) {
 
   assert.match(
     pkg.dependencies?.['@bloomneo/uikit'] ?? '',
-    /^\^\d+\.\d+\.\d+$/,
+    /^\^\d+\.\d+\.\d+(-[0-9A-Za-z]+(\.[0-9A-Za-z]+)*)?$/,
     'uikit pinned to caret range, not "latest"',
   );
 

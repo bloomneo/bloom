@@ -1,11 +1,11 @@
 {
   "name": "@bloomneo/bloom",
-  "version": "5.3.3",
+  "version": "6.0.0-alpha.0",
   "description": "Scaffolding CLI that combines @bloomneo/uikit (React) and @bloomneo/appkit (Express) with Feature-Based Component Architecture (FBCA) into full-stack web/desktop/mobile apps.",
   "type": "module",
   "main": "./bin/bloom.js",
   "bin": {
-    "bloom": "./bin/bloom.js"
+    "bloom": "bin/bloom.js"
   },
   "files": [
     "bin",
@@ -14,6 +14,7 @@
     "llms.txt",
     "README.md",
     "CHANGELOG.md",
+    "MIGRATION-6.md",
     "LICENSE"
   ],
   "scripts": {
@@ -21,14 +22,15 @@
     "test:smoke": "node --test tests/scaffold-smoke.test.mjs",
     "check:docs": "node scripts/check-doc-drift.mjs",
     "prepublishOnly": "npm test",
-    "test:build": "node --test tests/scaffold-build.test.mjs"
+    "test:build": "node --test tests/scaffold-build.test.mjs",
+    "release": "node scripts/release-lockstep.mjs"
   },
   "engines": {
     "node": ">=18.0.0"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/bloomneo/bloom.git"
+    "url": "git+https://github.com/bloomneo/bloom.git"
   },
   "homepage": "https://github.com/bloomneo/bloom#readme",
   "bugs": {

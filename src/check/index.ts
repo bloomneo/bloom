@@ -177,6 +177,33 @@ function loadAppPrisma(root: string): any | null {
   }
 }
 
+/**
+ * Tables that reach a tenant table through foreign keys (children,
+ * grandchildren, …) and so hold tenant data without a tenant column of their
+ * own. Each maps to the edge that reaches it: its parent and its foreign key.
+ */
+export function tenantChildren(
+  tenantTables: Iterable<string>,
+  edges: Array<{ child: string; parent: string; fk: string }>,
+  exempt: Iterable<string> = [],
+): Map<string, { parent: string; fk: string; parentIsTenant: boolean }> {
+  const tenant = new Set(tenantTables);
+  const skip = new Set(exempt);
+  const found = new Map<string, { parent: string; fk: string; parentIsTenant: boolean }>();
+  let grew = true;
+  while (grew) {
+    grew = false;
+    for (const e of edges) {
+      if (e.child === e.parent || tenant.has(e.child) || skip.has(e.child) || found.has(e.child)) continue;
+      if (tenant.has(e.parent) || found.has(e.parent)) {
+        found.set(e.child, { parent: e.parent, fk: e.fk, parentIsTenant: tenant.has(e.parent) });
+        grew = true;
+      }
+    }
+  }
+  return found;
+}
+
 export async function checkRls(root: string): Promise<{ findings: Finding[]; tenantTables: number | null }> {
   const findings: Finding[] = [];
   if (process.env.BLOOM_DB_TENANT !== 'rls') return { findings, tenantTables: null };
@@ -206,6 +233,41 @@ export async function checkRls(root: string): Promise<{ findings: Finding[]; ten
         ON col.table_schema = n.nspname AND col.table_name = c.relname AND col.column_name = ${column}
       WHERE c.relkind = 'r' AND n.nspname NOT IN ('pg_catalog', 'information_schema')
       ORDER BY c.relname`;
+    // Children of tenant tables hold tenant data too, reached through a
+    // foreign key instead of a column. A child left without a policy is a
+    // cross-tenant read that the column check above can't see.
+    const edges: Array<{ child: string; parent: string; fk: string }> = await db.$queryRaw`
+      SELECT child.relname AS "child", parent.relname AS "parent", a.attname AS "fk"
+      FROM pg_constraint k
+      JOIN pg_class child ON child.oid = k.conrelid
+      JOIN pg_class parent ON parent.oid = k.confrelid
+      JOIN pg_namespace n ON n.oid = child.relnamespace
+      JOIN pg_attribute a ON a.attrelid = k.conrelid AND a.attnum = k.conkey[1]
+      WHERE k.contype = 'f' AND n.nspname NOT IN ('pg_catalog', 'information_schema')`;
+    const status: Array<{ table: string; rls: boolean; forced: boolean; policies: number }> = await db.$queryRaw`
+      SELECT c.relname AS "table", c.relrowsecurity AS "rls", c.relforcerowsecurity AS "forced",
+             (SELECT count(*)::int FROM pg_policies p WHERE p.schemaname = n.nspname AND p.tablename = c.relname) AS "policies"
+      FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+      WHERE c.relkind = 'r' AND n.nspname NOT IN ('pg_catalog', 'information_schema')`;
+    const exempt = (process.env.BLOOM_DB_RLS_EXEMPT ?? '').split(',').map((s) => s.trim()).filter(Boolean);
+    const children = tenantChildren(rows.map((r) => r.table), edges, exempt);
+    const byName = new Map(status.map((s) => [s.table, s]));
+    for (const [table, via] of [...children].sort(([a], [b]) => a.localeCompare(b))) {
+      const s = byName.get(table);
+      const missing = [!s?.rls && 'enabled', !s?.forced && 'forced', !s?.policies && 'a policy'].filter(Boolean);
+      if (!missing.length) continue;
+      const viaArg = `{ parent: '${via.parent}', foreignKey: '${via.fk}'${via.parentIsTenant ? '' : ', column: false'} }`;
+      findings.push({
+        code: 'RLS_CHILD_UNPROTECTED',
+        severity: 'error',
+        where: `table ${table}`,
+        rule: `Tables that reach a ${column} table through a foreign key hold tenant data and need row-level security too.`,
+        fix:
+          `Missing: ${missing.join(', ')}. Scope it through ${via.parent}: database.rlsPolicyStatements({ table: '${table}', via: ${viaArg} }) ` +
+          `in a migration. If it is shared on purpose, add it to BLOOM_DB_RLS_EXEMPT.`,
+      });
+    }
+
     for (const row of rows) {
       const missing = [!row.rls && 'enabled', !row.forced && 'forced', row.policies === 0 && 'a policy'].filter(Boolean);
       if (!missing.length) continue;

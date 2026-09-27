@@ -96,6 +96,7 @@ location, the rule and the fix; exit code 1 means something must change.
 | `CONTRACT_NOT_SERVED` | error | A contract in `src/**/*.contract.ts` has no `route(contract, handler)` in `src/api` |
 | `CONTRACTS_NONE` | info | No routes are declared as contracts yet |
 | `RLS_TABLE_UNPROTECTED` | error | With `BLOOM_DB_TENANT=rls`: a table with the tenant column lacks enabled + forced row-level security and a policy |
+| `RLS_CHILD_UNPROTECTED` | error | With `BLOOM_DB_TENANT=rls`: a table reaching a tenant table through a foreign key (child, grandchild) has no policy. Fix: `rlsPolicyStatements({ table, via: { parent, foreignKey } })`; exempt deliberately shared tables with `BLOOM_DB_RLS_EXEMPT=a,b` |
 | `RLS_NOT_CHECKED` | warning | The database check couldn't run (no `DATABASE_URL` or no Prisma client) |
 | `VERSIONS_OUT_OF_STEP` | warning | appkit, uikit and bloom (6.x) aren't on one version |
 | `MANIFEST_STALE` | error | `bloom.manifest.json` or the generated AGENTS.md / llms.txt section no longer matches the code |

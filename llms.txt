@@ -74,7 +74,7 @@ Run in an app root (reads the app's `.env` without overriding the shell).
 Reports route files with no auth decision (`ROUTE_NO_AUTH_DECISION`),
 contracts no `route()` serves (`CONTRACT_NOT_SERVED`), apps with no
 contracts yet (`CONTRACTS_NONE`, info), tenant tables without row-level
-security when `BLOOM_DB_TENANT=rls` (`RLS_TABLE_UNPROTECTED`,
+security when `BLOOM_DB_TENANT=rls` (`RLS_TABLE_UNPROTECTED`, `RLS_CHILD_UNPROTECTED` (child tables reached by foreign key; exempt with `BLOOM_DB_RLS_EXEMPT`),
 `RLS_NOT_CHECKED`), 6.x version drift (`VERSIONS_OUT_OF_STEP`) and a stale
 manifest (`MANIFEST_STALE`, `MANIFEST_NOT_BUILT`). `--probe <url>` logs in as
 the users in `BLOOM_CHECK_IDENTITIES` (JSON: `[{"label","email","password"}]`,

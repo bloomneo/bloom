@@ -9,6 +9,8 @@ an imported package (route contracts) as well as the CLI, and gains the
 commands that verify and upgrade an app. See `MIGRATION-6.md`; `npx
 @bloomneo/bloom@6 upgrade` moves a Bloom 5 app.
 
+
+- **`RLS_CHILD_UNPROTECTED`** (after rc.0): `bloom check` follows foreign keys from tenant tables through children and grandchildren and fails on any without row-level security, with the exact `via` policy to apply. `BLOOM_DB_RLS_EXEMPT` names deliberately shared tables. Found in the bloomneo-cloud pilot: `deployments`, `domains` and `uptime_checks` hold tenant data with no tenant column.
 ### Added
 
 - **Route contracts** (`@bloomneo/bloom`, also `@bloomneo/bloom/contract`):

@@ -152,3 +152,19 @@ test('--probe reports cross-tenant reads from a running app', { skip: !haveAppki
     server.close();
   }
 });
+
+test('tenantChildren follows foreign keys from tenant tables, through grandchildren, minus exemptions', async () => {
+  const { tenantChildren } = await import('../dist/check/index.js');
+  const edges = [
+    { child: 'deployments', parent: 'deploy_targets', fk: 'deployTargetId' },
+    { child: 'deploy_logs', parent: 'deployments', fk: 'deploymentId' },
+    { child: 'deploy_targets', parent: 'customers', fk: 'customerId' }, // tenant → tenant: not a child
+    { child: 'customers', parent: 'service_plans', fk: 'planId' },     // tenant points at a shared table
+    { child: 'audit_logs', parent: 'users', fk: 'userId' },
+    { child: 'users', parent: 'users', fk: 'invitedBy' },               // self-reference
+  ];
+  const found = tenantChildren(['customers', 'deploy_targets', 'users'], edges, ['audit_logs']);
+  assert.deepEqual([...found.keys()].sort(), ['deploy_logs', 'deployments']);
+  assert.deepEqual(found.get('deployments'), { parent: 'deploy_targets', fk: 'deployTargetId', parentIsTenant: true });
+  assert.deepEqual(found.get('deploy_logs'), { parent: 'deployments', fk: 'deploymentId', parentIsTenant: false });
+});

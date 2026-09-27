@@ -10,12 +10,17 @@
  * Slow (one npm install per preset), so it only runs when asked:
  *   BLOOM_SMOKE_BUILD=1 npm run test:build
  *   BLOOM_SMOKE_BUILD=1 BLOOM_SMOKE_PRESETS=adminapp npm run test:build
+ *
+ * Unreleased framework: BLOOM_LOCAL_PACKS=<dir> installs @bloomneo/*
+ * tarballs from <dir> (made with `npm pack` in appkit, uikit and bloom)
+ * instead of the npm registry, so a template can be tested against
+ * framework changes before they are published.
  */
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execSync, spawn } from 'node:child_process';
-import { mkdtempSync, existsSync, readFileSync } from 'node:fs';
+import { mkdtempSync, existsSync, readFileSync, writeFileSync, readdirSync } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
@@ -91,8 +96,23 @@ for (const preset of selected) {
   test(`${preset.name}: installs, typechecks${preset.boot ? ', builds and boots' : ''}`, { skip: !ENABLED && 'set BLOOM_SMOKE_BUILD=1', timeout: 15 * 60 * 1000 }, async () => {
     const tmp = mkdtempSync(join(tmpdir(), `bloom-build-${preset.name}-`));
     const project = `build-${preset.name}`;
-    run(`node "${BLOOM_CLI}" create ${project} ${preset.name}`, tmp);
+    const localPacks = process.env.BLOOM_LOCAL_PACKS;
+    run(`node "${BLOOM_CLI}" create ${project} ${preset.name}${localPacks ? ' --skip-install' : ''}`, tmp);
     const root = join(tmp, project);
+    if (localPacks) {
+      // Point @bloomneo/* at local tarballs, then install.
+      const packs = readdirSync(localPacks).filter((f) => /^bloomneo-(appkit|uikit|bloom)-.*\.tgz$/.test(f));
+      const pkgPath = join(root, 'package.json');
+      const pkg = JSON.parse(readFileSync(pkgPath, 'utf8'));
+      for (const file of packs) {
+        const name = `@bloomneo/${file.split('-')[1]}`;
+        for (const field of ['dependencies', 'devDependencies']) {
+          if (pkg[field]?.[name]) pkg[field][name] = `file:${join(resolve(localPacks), file)}`;
+        }
+      }
+      writeFileSync(pkgPath, JSON.stringify(pkg, null, 2));
+      run('npm install --no-audit --no-fund', root);
+    }
 
     run('npm run typecheck', root);
 

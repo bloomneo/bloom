@@ -156,5 +156,22 @@ for (const preset of selected) {
     } finally {
       prod.kill();
     }
+
+    // bloom check: every route file has an auth decision (a guard or
+    // isPublic), contracts are counted, and the framework versions agree.
+    // --no-db: the RLS check needs Postgres with BLOOM_DB_TENANT=rls.
+    let checkOut;
+    try {
+      checkOut = run(`node "${BLOOM_CLI}" check --no-db --json`, root);
+    } catch (err) {
+      checkOut = err.stdout?.toString() ?? '';
+    }
+    const report = JSON.parse(checkOut);
+    assert.equal(
+      report.ok,
+      true,
+      `bloom check fails on a fresh ${preset.name}:\n${JSON.stringify(report.findings, null, 2)}`,
+    );
+    assert.ok(report.summary.contracts > 0, 'the starter declares its welcome routes as contracts');
   });
 }

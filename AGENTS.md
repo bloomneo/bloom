@@ -1,6 +1,6 @@
 # AGENTS.md — @bloomneo/bloom
 
-> Rules for AI coding agents using `bloom` (v6.0.0-rc.3) to scaffold full-stack
+> Rules for AI coding agents using `bloom` (v6.0.0-rc.4) to scaffold full-stack
 > applications that combine `@bloomneo/appkit` (Express backend) and
 > `@bloomneo/uikit` (React frontend) via Feature-Based Component Architecture
 > (FBCA). All three packages release together: a new app pins appkit, uikit

@@ -29,9 +29,9 @@
     "gen:routes": "node scripts/gen-api-routes.mjs"
   },
   "dependencies": {
-    "@bloomneo/uikit": "^6.0.0-rc.3",
-    "@bloomneo/appkit": "^6.0.0-rc.3",
-    "@bloomneo/bloom": "^6.0.0-rc.3",
+    "@bloomneo/uikit": "^6.0.0-rc.4",
+    "@bloomneo/appkit": "^6.0.0-rc.4",
+    "@bloomneo/bloom": "^6.0.0-rc.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router-dom": "^6.26.0",

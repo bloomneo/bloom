@@ -165,6 +165,15 @@ BLOOM_CHECK_IDENTITIES='[{"label":"a","email":"a@x.test","password":"…"},{"lab
   npx bloom check --probe http://localhost:3000   # try to read tenant A's rows as tenant B
 ```
 
+In GitHub Actions (new apps ship this as `.github/workflows/bloom-check.yml`):
+
+```yaml
+- uses: actions/checkout@v4
+- uses: bloomneo/bloom@v6
+  with:
+    strict: true
+```
+
 Each finding names the file, the rule and the fix; exit code 1 means something
 must change.
 

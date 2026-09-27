@@ -148,4 +148,11 @@ for (const repo of REPOS) {
   sh(`git tag v${version}`, dir);
   console.log(`${repo.name}: committed and tagged v${version}`);
 }
+// Apps' CI runs `uses: bloomneo/bloom@v<major>` (action.yml); a stable
+// release moves that tag. Pre-releases never do.
+const major = `v${version.split('.')[0]}`;
+if (distTag === 'latest') {
+  sh(`git tag -f ${major}`, join(ROOT, 'bloom'));
+  console.log(`bloom: moved ${major} to v${version} (push it with: git push -f origin ${major})`);
+}
 step(`published ${version}. Push "${branch}" and the v${version} tags in each repo when ready.`);

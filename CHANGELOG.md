@@ -29,6 +29,12 @@ Work in progress on the `next` branch; see `MIGRATION-6.md`.
   `--probe <url>` runs appkit's cross-tenant probe against the running app
   with users from `BLOOM_CHECK_IDENTITIES`; an inconclusive probe fails.
 
+- **GitHub Action** (`uses: bloomneo/bloom@v6`): runs the app's own
+  `bloom check --json`, fails the job on failure, and writes findings as PR
+  annotations and a job summary. New apps ship
+  `.github/workflows/bloom-check.yml` using it (strict). The release script
+  moves the `v<major>` tag on stable releases.
+
 - **The starter declares its routes as contracts.**
   `src/contracts/welcome.contract.ts` (public `GET /api/welcome` and
   `/api/welcome/:name`, zod params and response schemas) is served by a

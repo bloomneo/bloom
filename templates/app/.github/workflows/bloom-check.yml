@@ -1,0 +1,18 @@
+# Every push and pull request: every route has an auth decision, every
+# declared contract is served, and appkit/uikit/bloom are on one version.
+# Findings show on the PR as annotations and in the job summary.
+name: bloom check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: bloomneo/bloom@v6
+        with:
+          strict: true

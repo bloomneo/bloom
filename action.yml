@@ -1,0 +1,92 @@
+# bloom check as a GitHub Action.
+#
+#   - uses: actions/checkout@v4
+#   - uses: bloomneo/bloom@next          # pin a tag (e.g. v6.0.0) once released
+#     with:
+#       strict: true
+#
+# Runs the app's own installed bloom (so the check matches the app's version)
+# and falls back to the latest published one. The findings go to the job
+# summary; the step fails when bloom check fails.
+name: bloom check
+description: Verify a Bloom app — auth decision on every route, row-level security, contracts, lockstep versions.
+branding:
+  icon: shield
+  color: green
+
+inputs:
+  working-directory:
+    description: The app's root.
+    default: .
+  strict:
+    description: Fail on warnings too.
+    default: 'false'
+  database:
+    description: Run the row-level security check (needs DATABASE_URL and a generated Prisma client).
+    default: 'false'
+  install:
+    description: Run `npm ci` first. Turn off if an earlier step already installed.
+    default: 'true'
+  node-version:
+    description: Node version to set up. Empty to use the runner's.
+    default: '22'
+
+outputs:
+  report:
+    description: The report as JSON (bloom check --json).
+    value: ${{ steps.check.outputs.report }}
+
+runs:
+  using: composite
+  steps:
+    - if: inputs.node-version != ''
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+
+    - if: inputs.install == 'true'
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: npm ci --no-audit --no-fund
+
+    - id: check
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        STRICT: ${{ inputs.strict }}
+        DATABASE: ${{ inputs.database }}
+        APP_DIR: ${{ inputs.working-directory }}
+      run: |
+        args=(--json)
+        [ "$STRICT" = "true" ] && args+=(--strict)
+        [ "$DATABASE" = "true" ] || args+=(--no-db)
+        if [ -x node_modules/.bin/bloom ]; then bloom=node_modules/.bin/bloom; else bloom="npx -y @bloomneo/bloom@latest"; fi
+
+        set +e
+        report=$($bloom check "${args[@]}")
+        code=$?
+        set -e
+
+        {
+          echo 'report<<BLOOM_CHECK_EOF'
+          echo "$report"
+          echo 'BLOOM_CHECK_EOF'
+        } >> "$GITHUB_OUTPUT"
+
+        # Human-readable findings in the job summary, and as annotations.
+        REPORT="$report" node -e '
+          const r = JSON.parse(process.env.REPORT);
+          const rows = r.findings.map((f) => `| ${f.severity} | \`${f.code}\` | ${f.where} | ${f.fix.replace(/\|/g, "\\|")} |`);
+          const out = [`### bloom check: ${r.ok ? "passed" : "failed"}${r.strict ? " (strict)" : ""}`, ""];
+          if (rows.length) out.push("| | Code | Where | Fix |", "|---|---|---|---|", ...rows);
+          require("fs").appendFileSync(process.env.GITHUB_STEP_SUMMARY, out.join("\n") + "\n");
+          for (const f of r.findings) {
+            const level = f.severity === "error" ? "error" : f.severity === "warning" ? "warning" : "notice";
+            const dir = (process.env.APP_DIR || ".").replace(/\/$/, "");
+            const path = dir === "." ? f.where : `${dir}/${f.where}`;
+            const file = /^[\w./-]+\.(ts|tsx|js|mjs|json|prisma)$/.test(f.where) ? `file=${path},` : "";
+            console.log(`::${level} ${file}title=${f.code}::${f.rule} Fix: ${f.fix}`.replace(/\n/g, " "));
+          }
+        ' || echo "$report"
+
+        exit $code

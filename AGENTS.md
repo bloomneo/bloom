@@ -104,6 +104,11 @@ app running locally at `<url>`, and replays every id one tenant sees as the
 other (appkit's `verifyClass`): GET, plus a PATCH carrying only `{ "__appkitVerify": true }`.
 `--destructive` also replays DELETE. Use a disposable database.
 
+In CI: new apps ship `.github/workflows/bloom-check.yml`, which runs the
+`bloomneo/bloom@v6` action (`action.yml` in this repo). Inputs: `strict`,
+`database` (run the RLS check; needs `DATABASE_URL`), `working-directory`,
+`install`, `node-version`. Findings become PR annotations and a job summary.
+
 ## What bloom is NOT
 - **Not a generator framework.** There is no `bloom add feature`, no
   `bloom add page`, no `bloom add component`. FBCA (see below) auto-discovers

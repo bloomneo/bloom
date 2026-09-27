@@ -1,29 +1,32 @@
-### Welcome API Testing with Frontend Key
+### Welcome API — declared in src/contracts/welcome.contract.ts
 ### Base URL: http://localhost:3000
-### Note: In development, X-Frontend-Key is not required but shown for testing
+### In development the X-Frontend-Key header is not required; in production it is.
 
-### 1. Basic hello (without key - should work in dev)
+### 1. Hello
 GET http://localhost:3000/api/welcome
 
 ###
 
-### 2. Basic hello (with frontend key)
+### 2. Hello, by name
+GET http://localhost:3000/api/welcome/Ada
+
+###
+
+### 3. Too long a name — the contract answers 400 VALIDATION_ERROR before the handler runs
+GET http://localhost:3000/api/welcome/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+
+###
+
+### 4. With the frontend key (what production requires)
 GET http://localhost:3000/api/welcome
 X-Frontend-Key: {{frontendKey}}
 
 ###
 
-### 3. Test with wrong key (should fail in production)
-GET http://localhost:3000/api/welcome
-X-Frontend-Key: wrong_key_123
-
-###
-
-### Health Check (not protected)
+### Health check (not behind the frontend key)
 GET http://localhost:3000/health
 
 ###
 
-### API Info (protected)
+### API index — every endpoint, with its method and auth for contract routes
 GET http://localhost:3000/api
-X-Frontend-Key: {{frontendKey}}

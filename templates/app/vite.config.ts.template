@@ -80,6 +80,9 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src/web"),
+      // Route contracts are shared with the API (src/contracts is outside the
+      // web root), so they get their own alias rather than a ../../ path.
+      "@contracts": path.resolve(__dirname, "./src/contracts"),
     },
   },
   server: {

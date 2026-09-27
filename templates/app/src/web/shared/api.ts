@@ -1,5 +1,10 @@
 /**
- * The one way to call this app's API.
+ * Calling this app's API by path.
+ *
+ * Routes declared as contracts (src/contracts/*.contract.ts) are called
+ * through `client.call(contract, input)` from shared/client.ts instead — the
+ * contract types the input and the response. This module stays for routes
+ * that are plain Express routers, which is what the auth and admin layers use.
  *
  * ── What this is defending against ────────────────────────────────────────
  * Three mistakes, all of which were made building this app, none of which the
@@ -39,6 +44,14 @@ const FRONTEND_KEY = import.meta.env.VITE_FRONTEND_KEY as string | undefined;
 
 /** Same key the auth feature writes. Read here so no feature repeats it. */
 const TOKEN_KEY = 'auth_token';
+
+/**
+ * The signed-in user's bearer token, or null. Shared with the contract client
+ * (shared/client.ts) so both ways of calling the API authenticate the same way.
+ */
+export function getToken(): string | null {
+  return typeof window !== 'undefined' ? localStorage.getItem(TOKEN_KEY) : null;
+}
 
 /*
  * The x-request-id of the most recent API response.
@@ -89,7 +102,7 @@ export async function request<T = unknown>(path: ApiRoute, opts: Options = {}): 
     if (qs.toString()) url += `?${qs}`;
   }
 
-  const token = typeof window !== 'undefined' ? localStorage.getItem(TOKEN_KEY) : null;
+  const token = getToken();
 
   const res = await fetch(url, {
     ...rest,

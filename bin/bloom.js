@@ -424,6 +424,11 @@ function writeLayerEnv(layers, verbose, serviceName = 'app') {
     `BLOOM_FRONTEND_KEY=${frontendKey}`,
     `VITE_FRONTEND_KEY=${frontendKey}`,
     '',
+    '# Signs every JWT this app issues (appkit auth). Contract routes read it',
+    '# when they mount, public ones included, so every app has one from the',
+    '# start. Rotating it signs every user out.',
+    `BLOOM_AUTH_SECRET=${generateRandomSecret('auth_', 36)}`,
+    '',
   ];
   for (const { name, meta } of layers) {
     if (!meta.env) continue;

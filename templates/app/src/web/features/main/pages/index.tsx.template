@@ -20,6 +20,8 @@ import {
 } from '@bloomneo/uikit';
 import { ArrowRight, Check, Bell, Trash2, Copy, CornerDownLeft } from 'lucide-react';
 import { brand } from '@/shared/brand';
+import { client } from '@/shared/client';
+import { getWelcome, getWelcomeByName } from '@contracts/welcome.contract';
 
 /* ── hero backdrop ─────────────────────────────────────────────────────────
  * Two blooms drifting on the compositor, tinted from chart tokens so the whole
@@ -167,6 +169,57 @@ function Playground() {
   );
 }
 
+/* ── the API, typed end to end ─────────────────────────────────────────────
+ * Both calls go through route contracts (src/contracts/welcome.contract.ts):
+ * the URL, the params and the response type all come from the contract the
+ * server enforces. Rename the route there and this stops compiling. */
+function ApiDemo() {
+  const [hello, setHello] = React.useState<string | null>(null);
+  const [failed, setFailed] = React.useState<string | null>(null);
+  const [name, setName] = React.useState('');
+
+  React.useEffect(() => {
+    client
+      .call(getWelcome)
+      .then((res) => setHello(res.message))
+      .catch((err: Error) => setFailed(err.message));
+  }, []);
+
+  return (
+    <div className="space-y-4">
+      <p className="text-sm text-muted-foreground">
+        <code className="font-mono text-xs">GET /api/welcome</code> answered:{' '}
+        {failed ? (
+          <span className="text-destructive">{failed} — is the API running? (npm run dev)</span>
+        ) : (
+          <span className="font-medium text-foreground">{hello ?? '…'}</span>
+        )}
+      </p>
+      <form
+        className="flex flex-wrap items-end gap-2"
+        onSubmit={async (e) => {
+          e.preventDefault();
+          try {
+            const res = await client.call(getWelcomeByName, { params: { name } });
+            toast.success(res.message);
+          } catch (err) {
+            // A blank or 100+ character name is refused by the contract's
+            // params schema on the server: a 400 naming the field.
+            toast.error((err as Error).message);
+          }
+        }}
+      >
+        <FormField label="Your name" className="min-w-0 flex-1">
+          <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ada" />
+        </FormField>
+        <Button type="submit" variant="outline">
+          Say hello
+        </Button>
+      </form>
+    </div>
+  );
+}
+
 const EDITS: [string, string][] = [
   ['src/web/shared/brand.ts', 'Name, tagline, navigation.'],
   ['src/web/styles/brand.css', 'Colour tokens — the whole visual identity.'],
@@ -222,6 +275,19 @@ export default function Home() {
         <Card>
           <CardContent>
             <Playground />
+          </CardContent>
+        </Card>
+      </section>
+
+      {/* ── api ──────────────────────────────────────────────────────────── */}
+      <section>
+        <div className="mb-4 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          <h2 className="text-lg font-semibold tracking-tight">The API, typed end to end</h2>
+          <span className="text-sm text-muted-foreground">one contract, both sides</span>
+        </div>
+        <Card>
+          <CardContent>
+            <ApiDemo />
           </CardContent>
         </Card>
       </section>

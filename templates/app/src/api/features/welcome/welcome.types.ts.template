@@ -1,18 +1,13 @@
 /**
- * Welcome Feature Type Definitions - Shared interfaces and types
- * @module {{projectName}}/welcome-types
- * @file {{projectName}}/src/api/features/{featureName}/{featureName}.types.ts
+ * Welcome types — derived from the contract, never written twice.
+ * @file {{projectName}}/src/api/features/welcome/welcome.types.ts
  *
- * @llm-rule WHEN: Need type safety for welcome feature data structures
- * @llm-rule AVOID: Defining types inline - reduces reusability and consistency
- * @llm-rule NOTE: Shared across service and route layers for type consistency
+ * @llm-rule WHEN: A service needs the shape a route returns
+ * @llm-rule AVOID: Hand-writing an interface that duplicates a contract's response schema — they drift
+ * @llm-rule NOTE: ContractResponse<typeof x> is the type the client receives, too
  */
+import type { ContractResponse } from '@bloomneo/bloom';
+import type { getWelcome, getWelcomeByName } from '../../../contracts/welcome.contract.js';
 
-export interface WelcomeResponse {
-  message: string;
-  timestamp: string;
-}
-
-export interface PersonalizedWelcomeResponse extends WelcomeResponse {
-  name: string;
-}
+export type WelcomeResponse = ContractResponse<typeof getWelcome>;
+export type PersonalizedWelcomeResponse = ContractResponse<typeof getWelcomeByName>;

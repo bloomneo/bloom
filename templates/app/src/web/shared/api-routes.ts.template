@@ -6,15 +6,15 @@
  *
  * This checked-in copy is the seed for a fresh clone: it lets `tsc` run before
  * anyone has started the dev server.
+ *
+ * Only plain-router routes are listed. Contract routes (src/contracts) are
+ * called with `client.call(contract)` and typed by the contract itself.
  */
 
 export type ApiRoute =
-  | '/api/client-error'
-  | '/api/welcome'
-  | `/api/welcome/${string}`;
+  | '/api/client-error';
 
 /** Every route, for runtime assertions and tooling. */
 export const API_ROUTES = [
   '/api/client-error',
-  '/api/welcome',
 ] as const;

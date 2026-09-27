@@ -50,10 +50,13 @@ const body = `/**
  *
  * Every path the API actually serves, as a type. Passing a path that is not
  * in this union is a compile error, not a 404 at runtime.
+ *
+ * Only plain-router routes are listed. Contract routes (src/contracts) are
+ * called with \`client.call(contract)\` and typed by the contract itself.
  */
 
 export type ApiRoute =
-${uniq.map((p) => (hasParam(p) ? `  | \`${p}\`` : `  | '${p}'`)).join('\n')};
+${uniq.length ? uniq.map((p) => (hasParam(p) ? `  | \`${p}\`` : `  | '${p}'`)).join('\n') : '  never'};
 
 /** Every route, for runtime assertions and tooling. */
 export const API_ROUTES = [

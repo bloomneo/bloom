@@ -1,57 +1,30 @@
 /**
- * Welcome Feature Routes - Express endpoints with AppKit integration
- * @module bloomneo/welcome-routes
- * @file bloomneo/src/api/features/{featureName}/{featureName}.route.ts
+ * Welcome routes — the server half of src/contracts/welcome.contract.ts.
  *
- * @llm-rule WHEN: Need HTTP endpoints for welcome feature with error handling
- * @llm-rule AVOID: Adding routes without asyncRoute wrapper - breaks error handling
- * @llm-rule NOTE: Auto-discovered by api-router.ts using FBCA pattern, exports default Express router
+ * @llm-rule WHEN: Serving routes declared as contracts (defineRoute)
+ * @llm-rule AVOID: Re-checking auth or re-validating input here — route() already applied the contract
+ * @llm-rule NOTE: Default-export a contractRouter; createApiRouter mounts it at the contracts' own paths
+ *
+ * `route(contract, handler)` applies, from the contract alone and in order:
+ * the auth decision, the tenant context (for non-public routes), and
+ * validation of params, query and body. The handler receives the validated
+ * values and RETURNS the body — 200 (201 for POST, 204 for undefined).
+ * Errors thrown from it (error.badRequest(), error.notFound(), …) reach the
+ * app's error handler as usual.
+ *
+ * No `isPublic` export is needed: each contract carries its own `auth`, and
+ * both the boot check and `bloom check` read it from there.
+ *
+ * ── On logging inside a route ─────────────────────────────────────────────
+ * server.ts records every request on completion, with the path, status and
+ * duration. Don't open a handler with an "arrived" line; log decisions and
+ * failures.
  */
-
-import express from 'express';
-import { errorClass } from '@bloomneo/appkit/error';
+import { route, contractRouter } from '@bloomneo/appkit/server';
+import { getWelcome, getWelcomeByName } from '../../../contracts/welcome.contract.js';
 import { welcomeService } from './welcome.service.js';
 
-const router = express.Router();
-const error = errorClass.get();
-
-/*
- * ── On logging inside a route ─────────────────────────────────────────────
- *
- * These handlers used to open with a line announcing that the request had
- * arrived. Two reasons that is gone, and both generalise to any feature you
- * add:
- *
- *   It was already logged. server.ts records every request on completion,
- *   with the real path, the status and the duration. An arrival line is the
- *   same event told worse — it cannot know how the request ended.
- *
- *   It named the route "/api/{featureName}". That is the scaffold's own
- *   placeholder, left in a runtime string, so the log confidently reported an
- *   endpoint that does not exist. A log that lies is worse than a log that is
- *   quiet, and worst of all for a reader — human or agent — trying to work out
- *   which route actually ran.
- *
- * Log decisions and failures. Narration is the request line's job.
- */
-
-// GET /api/welcome — replies "hello"
-router.get('/', error.asyncRoute(async (_req, res) => {
-  const result = await welcomeService.getHello();
-  res.json(result);
-}));
-
-// GET /api/welcome/:name — replies "hello :name"
-router.get('/:name', error.asyncRoute(async (req, res) => {
-  const name = req.params.name;
-  const result = await welcomeService.getHelloWithName(name);
-  res.json(result);
-}));
-
-/**
- * Deliberately public: this is the scaffold's demo endpoint, and a new
- * project should be able to curl it before any user exists.
- */
-export const isPublic = true;
-
-export default router;
+export default await contractRouter([
+  route(getWelcome, () => welcomeService.getHello()),
+  route(getWelcomeByName, ({ params }) => welcomeService.getHelloWithName(params.name)),
+]);

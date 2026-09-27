@@ -24,7 +24,8 @@
     /* Path mapping */
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/web/*"]
+      "@/*": ["./src/web/*"],
+      "@contracts/*": ["./src/contracts/*"]
     }
   },
   "include": ["src", "vite.config.ts"]

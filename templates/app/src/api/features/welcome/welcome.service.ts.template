@@ -47,41 +47,20 @@ export const welcomeService = {
   },
 
   /**
-   * Get hello message with name
+   * Get hello message with name.
+   *
+   * No input checks here: the contract's params schema (1–100 characters)
+   * already rejected anything else with a 400 before this ran.
    */
   async getHelloWithName(name: string): Promise<PersonalizedWelcomeResponse> {
     try {
-      // Validate input. These warns survive the default scope because the
-      // offending value is in the message — that is the whole convention.
-      if (!name || typeof name !== 'string') {
-        logger.warn(`welcome: rejected non-string name (${typeof name})`);
-        throw error.badRequest('Name must be a valid string');
-      }
-
-      if (name.length > 100) {
-        logger.warn(`welcome: rejected name of ${name.length} chars (max 100)`);
-        throw error.badRequest('Name must be less than 100 characters');
-      }
-
-      // Get welcome format from config
       const welcomeFormat = config.get('welcome.format', 'hello {name}') as string;
-      const message = welcomeFormat.replace('{name}', name);
-
-      const result = {
-        message,
+      return {
+        message: welcomeFormat.replace('{name}', name),
         name,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
-
-      return result;
-
     } catch (err: any) {
-      // Re-throw AppKit errors as-is
-      if (err.statusCode) {
-        throw err;
-      }
-
-      // Convert other errors to server errors
       logger.error(`welcome.getHelloWithName failed for "${name}": ${err?.message ?? err}`);
       throw error.serverError('Failed to generate personalized welcome message');
     }

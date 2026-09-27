@@ -21,11 +21,36 @@ A **scaffolding CLI**. Nothing more. It:
 4. The scaffolded project's postinstall hydrates `docs/` and `.claude/skills/`
    with the currently-installed appkit + uikit agent docs and skills
 
-## What bloom is NOT
+## Route contracts (6.0)
 
-- **Not a runtime library.** Nothing ships in `node_modules` for your app
-  to import. If you find yourself typing `import { ... } from '@bloomneo/bloom'`
-  in scaffolded code, stop — that's wrong.
+bloom is also imported, for one thing: route contracts. A contract declares
+an API route once — method, path, input and output schemas, and who may call
+it — and both the server (appkit) and the client are typed from it.
+
+```ts
+import { z } from 'zod';
+import { defineRoute, createClient } from '@bloomneo/bloom';
+
+export const getInvoice = defineRoute({
+  method: 'GET',
+  path: '/api/invoices/:id',
+  params: z.object({ id: z.string() }),
+  response: Invoice,
+  auth: { roles: ['admin.tenant', 'user.basic'] },   // required: 'public' | 'user' | 'apiToken' | { roles }
+});
+
+const api = createClient({ baseUrl: import.meta.env.VITE_API_URL, getToken });
+const invoice = await api.call(getInvoice, { params: { id } });   // typed
+```
+
+- **`auth` is required.** A route without an auth decision does not compile;
+  write `auth: 'public'` for a public one.
+- Non-public routes run inside the caller's tenant unless `tenant: false`.
+- Schemas are any Standard Schema: Zod 3.24+, Valibot, ArkType.
+- Exports: `defineRoute`, `createClient`, `ApiError`, `validate`,
+  `buildPath`, `isContract`, `isTenantScoped`, and the contract types.
+
+## What bloom is NOT
 - **Not a generator framework.** There is no `bloom add feature`, no
   `bloom add page`, no `bloom add component`. FBCA (see below) auto-discovers
   new files — you create them by hand.
@@ -86,8 +111,8 @@ Picking notes:
 
 ## Never do
 
-1. Never import from `@bloomneo/bloom` in application code — bloom is a
-   CLI, not a library.
+1. Never import anything from `@bloomneo/bloom` except the contract API
+   listed above.
 2. Never hand-edit the page-router in a scaffolded project. The router
    auto-discovers features; adding a route means creating
    `features/<name>/pages/index.tsx`, not touching the router.

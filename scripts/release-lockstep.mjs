@@ -71,7 +71,7 @@ const REPOS = [
   },
   {
     name: 'bloom',
-    build: null,
+    build: 'npm run build', // route contracts (src/ → dist/)
     strings: [
       ['AGENTS.md', new RegExp(`using \`bloom\` \\(v${V}\\)`)],
       ['llms.txt', new RegExp(`^# @bloomneo\\/bloom v${V}`, 'm')],

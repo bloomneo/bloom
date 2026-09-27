@@ -17,4 +17,9 @@ _None yet._
 
 ## Added
 
-_None yet._
+- **Route contracts** — `import { defineRoute, createClient } from '@bloomneo/bloom'`.
+  Declare a route's method, path, schemas and `auth` once; the client is typed
+  from it. A contract without `auth` does not compile. Existing `*.route.ts`
+  files keep working; adopt contracts one feature at a time.
+- Apps add `@bloomneo/bloom` as a dependency to use contracts (the CLI is
+  still the `bloom` binary).

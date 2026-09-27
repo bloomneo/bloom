@@ -12,6 +12,30 @@ about `bloom create` and `bloom start`.
 
 ---
 
+## Route contracts (6.0)
+
+```ts
+import { z } from 'zod';
+import { defineRoute, createClient } from '@bloomneo/bloom';
+
+export const getInvoice = defineRoute({
+  method: 'GET',                        // GET | POST | PUT | PATCH | DELETE
+  path: '/api/invoices/:id',            // must start with /api; :params need a params schema
+  params: z.object({ id: z.string() }), // params | query | body | response: any Standard Schema
+  response: Invoice,
+  auth: { roles: ['admin.tenant'] },    // REQUIRED: 'public' | 'user' | 'apiToken' | { roles: [...] }
+  tenant: true,                         // default: true unless auth is 'public'
+});
+
+const api = createClient({ baseUrl, getToken, frontendKey });
+const invoice = await api.call(getInvoice, { params: { id } });
+```
+
+Exports: `defineRoute`, `createClient`, `ApiError`, `validate`, `buildPath`,
+`isContract`, `isTenantScoped`, contract types.
+
+---
+
 ## Commands
 
 ### `bloom create <project-name> [template]`

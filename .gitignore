@@ -54,3 +54,6 @@ build/
 temp/
 tmp/
 *.tgz
+
+# Build output of src/ (contracts); built by prepublishOnly and CI.
+dist/

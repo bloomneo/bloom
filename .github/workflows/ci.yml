@@ -29,6 +29,11 @@ jobs:
       - name: Scaffold smoke tests
         run: npm run test:smoke
 
+      - run: npm ci
+
+      - name: Route contracts (runtime + compile-time)
+        run: npm run test:contract
+
   # Installs every preset for real, typechecks it, and boots the web presets.
   # The file-only smoke tests above could not catch a server.ts that failed
   # to parse (5.3.2); this job can.

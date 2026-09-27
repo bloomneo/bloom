@@ -6,7 +6,21 @@ All notable changes to Bloom Framework will be documented in this file.
 
 Work in progress on the `next` branch; see `MIGRATION-6.md`.
 
+### Added
+
+- **Route contracts** (`@bloomneo/bloom`, also `@bloomneo/bloom/contract`):
+  `defineRoute` over any Standard Schema (Zod 3.24+, Valibot, ArkType), with
+  `auth` required at the type level and checked again at load time for JS
+  callers; `createClient` for typed calls (params, query, body, bearer
+  token, frontend key, request ids, HTML-instead-of-JSON detection);
+  `validate`, `buildPath`, `isContract`, `isTenantScoped`. Covered by runtime
+  tests and a compile-time test (`tests/types/`) that proves the negative
+  cases fail to compile.
+
 ### Changed
+
+- The package now has an import entry (contracts); importing it no longer
+  runs the CLI (`main` pointed at `bin/bloom.js`).
 
 - Released in lockstep with appkit, uikit and bloom on one shared version.
 ## [5.3.3] - 2026-09-26

@@ -3,11 +3,11 @@
   "version": "6.0.0-alpha.0",
   "description": "Scaffolding CLI that combines @bloomneo/uikit (React) and @bloomneo/appkit (Express) with Feature-Based Component Architecture (FBCA) into full-stack web/desktop/mobile apps.",
   "type": "module",
-  "main": "./bin/bloom.js",
   "bin": {
     "bloom": "bin/bloom.js"
   },
   "files": [
+    "dist",
     "bin",
     "templates",
     "AGENTS.md",
@@ -18,12 +18,14 @@
     "LICENSE"
   ],
   "scripts": {
-    "test": "npm run check:docs && npm run test:smoke",
+    "test": "npm run check:docs && npm run test:smoke && npm run test:contract",
     "test:smoke": "node --test tests/scaffold-smoke.test.mjs",
     "check:docs": "node scripts/check-doc-drift.mjs",
-    "prepublishOnly": "npm test",
+    "prepublishOnly": "npm run build && npm test",
     "test:build": "node --test tests/scaffold-build.test.mjs",
-    "release": "node scripts/release-lockstep.mjs"
+    "release": "node scripts/release-lockstep.mjs",
+    "build": "rm -rf dist && tsc -p tsconfig.json",
+    "test:contract": "npm run build && node --test tests/contract.test.mjs && tsc --noEmit -p tests/types/tsconfig.json"
   },
   "engines": {
     "node": ">=18.0.0"
@@ -78,5 +80,21 @@
   "funding": {
     "type": "github",
     "url": "https://github.com/sponsors/bloomneo"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./contract": {
+      "types": "./dist/contract/index.d.ts",
+      "import": "./dist/contract/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "types": "./dist/index.d.ts",
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "zod": "^3.25.76"
   }
 }

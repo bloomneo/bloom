@@ -50,11 +50,11 @@ const BANNED = [
     now: 'one of: basicapp, userapp, adminapp, desktop-basicapp, desktop-userapp, mobile-basicapp',
   },
 
-  // Bloom is a CLI, not a library. Anyone documenting
-  // `import { X } from '@bloomneo/bloom'` is confused.
+  // 6.0: bloom is imported for route contracts. Only the contract API
+  // exists; anything else imported from it is invented.
   {
-    pattern: /import\s+[^;]*from\s+['"]@bloomneo\/bloom['"]/,
-    now: 'Bloom is a CLI. Use `bloom create <name>` in a terminal, not an import.',
+    pattern: /import\s+\{[^}]*\b(?!(?:defineRoute|createClient|ApiError|validate|buildPath|isContract|isTenantScoped|CONTRACT|type|RouteContract|Contract|ContractInput|ContractResponse|ContractParams|ContractQuery|ContractBody|RequiresInput|RouteAuth|HttpMethod|StandardSchemaV1|ClientOptions|ContractClient|ValidationIssue|Validated)\b)[A-Za-z_]+[^}]*\}\s*from\s+['"]@bloomneo\/bloom['"]/,
+    now: '@bloomneo/bloom exports defineRoute, createClient, ApiError, validate, buildPath, isContract, isTenantScoped and contract types',
   },
 
   // appkit 2.0.0 renames — pre-2.0 names are gone, no alias kept. Templates
